@@ -1,0 +1,1 @@
+Windows artifact build request for Cabinet WS Standalone.
