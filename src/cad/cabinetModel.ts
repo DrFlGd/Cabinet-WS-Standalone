@@ -1,4 +1,4 @@
-import type { CabinetDocument, CabinetParameters, CadPart, SectionNode, StockChoice } from './types';
+import type { CabinetDocument, CabinetParameters, CadPart, CadProfileHole, SectionNode, StockChoice } from './types';
 import type { DisplayUnits } from './units';
 import { makeUtilityDefaults, UTILITY_STARTERS } from './utilityStarters';
 import { cloneSectionNodes, sectionLayoutErrors, sectionPanels, sectionRects, sectionRoot, treeErrors } from './sections';
@@ -551,10 +551,10 @@ function addDrawerBox(
 ) {
   const sideClearance = Math.min(13, Math.max(6, area.width * 0.04));
   const wall = Math.min(p.drawerMaterialThickness, Math.max(6, area.width / 8));
-  const bottom = Math.min(p.drawerBottomThickness, Math.max(2, area.frontHeight / 6));
   const width = Math.max(30, area.width - 2 * sideClearance);
   const depth = Math.max(60, area.depth - 24);
-  const height = Math.max(28, Math.min(area.frontHeight - 24, 180));
+  const height = Math.max(4, Math.min(area.frontHeight - 8, 180));
+  const bottom = Math.min(p.drawerBottomThickness, Math.max(2, height / 3));
   const x = area.x + sideClearance;
   const y = 12;
   const z = area.z + Math.max(8, Math.min(16, (area.frontHeight - height) / 2));
@@ -660,8 +660,8 @@ function sidePanelHoles(
   base: number,
   depth: number,
   height: number,
-): NonNullable<CadPart['geometry']>['holes'] {
-  const holes: NonNullable<NonNullable<CadPart['geometry']>['holes']> = [];
+): CadProfileHole[] {
+  const holes: CadProfileHole[] = [];
   const interiorBottom = base + stockThickness(p.carcassStock, p.materialThickness);
   const interiorTop = height - stockThickness(p.carcassStock, p.materialThickness);
 
