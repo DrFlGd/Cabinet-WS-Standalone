@@ -60,6 +60,87 @@ export type JoineryStyle = 'butt' | 'screw' | 'dado' | 'tab_slot';
 export type FrontMountStyle = 'overlay' | 'inset_flush';
 export type ShelfStyle = 'fixed' | 'adjustable';
 export type LayoutMode = 'legacy' | 'sections';
+export type DrawerMount = 'wood_rails' | 'metal_slides';
+export type HingeStyle = 'none' | 'euro_35mm';
+export type HardwareDrillingMode = 'off' | 'recommended';
+
+export type HardwareCategory = 'drawer_slide' | 'hinge';
+
+export type HardwareDefinition = {
+  id: string;
+  category: HardwareCategory;
+  manufacturer: string;
+  family: string;
+  model: string;
+  label: string;
+  targets: string[];
+  verification: {
+    status: string;
+    verified: boolean;
+    notes: string;
+  };
+  source: {
+    type: string;
+    title: string;
+    manufacturer?: string;
+    url?: string;
+    retrieved?: string;
+  };
+  geometrySupport?: {
+    status: string;
+    notes: string;
+  };
+  mountingSpecs?: Record<string, unknown>;
+  requiredClearances: {
+    sidePerSide?: number;
+    frontSetback?: number;
+  };
+  dimensions: {
+    length?: number;
+    height?: number;
+    cupDiameter?: number;
+    cupDepth?: number;
+    cupCenterFromDoorEdge?: number;
+  };
+  drilling: {
+    enabled: boolean;
+    cabinetHolesX?: number[];
+    drawerHolesX?: number[];
+    cabinetHoleDiameter?: number;
+    drawerHoleDiameter?: number;
+    cabinetHoleZFromDrawerBottom?: number;
+    drawerHoleZFromDrawerBottom?: number;
+    doorFixingEnabled?: boolean;
+    doorFixingHoleDiameter?: number;
+    doorFixingHoleSpacing?: number;
+    plateHolesEnabled?: boolean;
+    plateHoleDiameter?: number;
+    plateCenterFromFront?: number;
+    plateHoleSpacing?: number;
+  };
+  frontMountStyle?: FrontMountStyle;
+};
+
+export type HardwareInstance = {
+  id: string;
+  definitionId: string;
+  category: HardwareCategory;
+  manufacturer: string;
+  model: string;
+  label: string;
+  position: Vec3;
+  size: Vec3;
+  mountingReference: {
+    partId: string;
+    face: string;
+  };
+  keepout: {
+    position: Vec3;
+    size: Vec3;
+  };
+  drilling: HardwareDefinition['drilling'];
+  verificationStatus: string;
+};
 
 export type SectionNode = [
   parent: number,
@@ -126,6 +207,34 @@ export type CabinetParameters = {
   doorGap: number;
   drawerGap: number;
   shelfStyle: ShelfStyle;
+
+  drawerMount: DrawerMount;
+  drawerSlideId: string;
+  metalSlideClearancePerSide: number;
+  metalSlideLength: number;
+  metalSlideFrontSetback: number;
+  metalSlideEnvelopeHeight: number;
+  includeMetalSlideHoles: boolean;
+  hardwareDrillingMode: HardwareDrillingMode;
+  metalSlideCabinetHolesX: number[];
+  metalSlideDrawerHolesX: number[];
+  metalSlideCabinetHoleDiameter: number;
+  metalSlideDrawerHoleDiameter: number;
+  metalSlideCabinetHoleZFromDrawerBottom: number;
+  metalSlideDrawerHoleZFromDrawerBottom: number;
+
+  hingeStyle: HingeStyle;
+  hingeId: string;
+  hingeCupDiameter: number;
+  hingeCupDepth: number;
+  hingeCupCenterFromDoorEdge: number;
+  hingeDoorFixingEnabled: boolean;
+  hingeDoorFixingHoleDiameter: number;
+  hingeDoorFixingHoleSpacing: number;
+  hingePlateHolesEnabled: boolean;
+  hingePlateHoleDiameter: number;
+  hingePlateCenterFromFront: number;
+  hingePlateHoleSpacing: number;
 };
 
 export type CabinetDocument = {
@@ -137,6 +246,7 @@ export type CabinetDocument = {
   displayUnits: DisplayUnits;
   parameters: CabinetParameters;
   parts: CadPart[];
+  hardware: HardwareInstance[];
 };
 
 export type ViewPreset = 'iso' | 'front' | 'right' | 'top';
