@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { Columns3, GripVertical, Rows3 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Columns3, GripVertical, Rows3 } from 'lucide-react';
 import {
   cloneSectionNodes,
   collapseSection,
@@ -18,6 +18,10 @@ type Props = {
   parameters: CabinetParameters;
   thickness: number;
   units: DisplayUnits;
+  expanded: boolean;
+  selectedSectionId: number;
+  onToggle: () => void;
+  onSelectedSectionChange: (sectionId: number) => void;
   onChange: (nodes: SectionNode[]) => void;
 };
 
@@ -31,8 +35,16 @@ type DragState = {
   rects: ReturnType<typeof sectionRects>;
 };
 
-export default function SectionLayoutPanel({ parameters, thickness, units, onChange }: Props) {
-  const [selected, setSelected] = useState(0);
+export default function SectionLayoutPanel({
+  parameters,
+  thickness,
+  units,
+  expanded,
+  selectedSectionId,
+  onToggle,
+  onSelectedSectionChange,
+  onChange,
+}: Props) {
   const [draft, setDraft] = useState<SectionNode[] | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
   const dragRef = useRef<DragState | null>(null);
@@ -45,7 +57,7 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
     [nodes, parameters, thickness],
   );
 
-  const selectedId = Math.min(Math.max(0, selected), Math.max(0, nodes.length - 1));
+  const selectedId = Math.min(Math.max(0, selectedSectionId), Math.max(0, nodes.length - 1));
   const node = nodes[selectedId];
   const rect = rects[selectedId];
   const highlighted = errors.length ? new Set<number>() : selectedSectionIds(nodes, selectedId);
@@ -103,7 +115,7 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
       rects,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
-    setSelected(nodes[current][0]);
+    onSelectedSectionChange(nodes[current][0]);
   }
 
   function moveDrag(event: React.PointerEvent<SVGSVGElement>) {
@@ -144,15 +156,24 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
   const format = (value: number) => `${formatDimension(value, units)} ${units}`;
 
   return (
-    <section className="panel section-layout-panel">
-      <div className="section-layout-heading">
+    <section className={`panel section-layout-panel ${expanded ? 'expanded' : 'collapsed'}`}>
+      <button
+        type="button"
+        className="section-layout-heading section-layout-toggle"
+        onClick={onToggle}
+        aria-expanded={expanded}
+      >
         <div>
           <span className="eyebrow">SECTION LAYOUT</span>
           <strong>Front elevation editor</strong>
         </div>
-        <span>{nodes.length}/31 nodes</span>
-      </div>
+        <span className="section-layout-toggle-status">
+          {nodes.length}/31 nodes
+          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </span>
+      </button>
 
+      {expanded && <div className="section-layout-content">
       {errors.length ? (
         <div className="section-error" role="alert">{errors[0]}</div>
       ) : (
@@ -187,7 +208,7 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
                   className={highlighted.has(sectionRect.id) ? 'section-leaf selected' : 'section-leaf'}
                   onPointerDown={event => {
                     event.stopPropagation();
-                    setSelected(sectionRect.id);
+                    onSelectedSectionChange(sectionRect.id);
                   }}
                 >
                   <rect x={x + 1} y={y + 1} width={Math.max(1, sectionRect.w - 2)} height={Math.max(1, sectionRect.h - 2)} />
@@ -246,7 +267,7 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
                 value: String(index),
                 label: `Section ${index + 1} · ${candidate[2] === 'leaf' ? candidate[5] : candidate[2] === 'x' ? 'left/right split' : 'top/bottom split'}`,
               }))}
-              onChange={value => setSelected(Number(value))}
+              onChange={value => onSelectedSectionChange(Number(value))}
             />
           </label>
 
@@ -429,7 +450,7 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
                 onClick={() => {
                   const next = collapseSection(nodes, selectedId);
                   commit(next);
-                  setSelected(Math.min(selectedId, next.length - 1));
+                  onSelectedSectionChange(Math.min(selectedId, next.length - 1));
                 }}
               >
                 Replace subtree with one opening
@@ -440,6 +461,7 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
       )}
 
       <div className="section-layout-tip"><GripVertical size={12} /> Drag divider lines directly in the front view. Fixed sizes remain exact; dragged neighbors become proportional.</div>
+      </div>}
     </section>
   );
 }
