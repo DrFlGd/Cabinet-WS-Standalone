@@ -1,6 +1,6 @@
 import type { DisplayUnits } from './units';
 
-export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware';
+export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware' | 'worktop';
 
 export type Vec3 = { x: number; y: number; z: number };
 
@@ -16,23 +16,81 @@ export type CadPart = {
   metadata?: Record<string, string | number | boolean>;
 };
 
+export type StockChoice =
+  | 'custom_mm'
+  | '1/8_nominal'
+  | '1/4_nominal'
+  | '3/8_nominal'
+  | '1/2_nominal'
+  | '5/8_nominal'
+  | '3/4_nominal'
+  | '1_nominal';
+
+export type CabinetContents = 'drawers' | 'doors' | 'combo';
+export type TopStyle = 'full' | 'stretchers';
+export type BackStyle = 'panel' | 'structural_panel' | 'stretchers' | 'none';
+export type MountStyle = 'floor' | 'wall';
+export type BaseStyle = 'toe_kick' | 'flat' | 'leveling_feet' | 'casters';
+export type SideToeKickCutout = 'none' | 'left' | 'right' | 'both';
+export type BottomWidthStyle = 'joined' | 'full_width';
+export type JoineryStyle = 'butt' | 'screw' | 'dado' | 'tab_slot';
+export type FrontMountStyle = 'overlay' | 'inset_flush';
+export type ShelfStyle = 'fixed' | 'adjustable';
+
 export type CabinetParameters = {
   width: number;
   height: number;
   depth: number;
+
+  carcassStock: StockChoice;
+  backStock: StockChoice;
   materialThickness: number;
   backThickness: number;
-  shelfCount: number;
-  doorCount: number;
+  drawerMaterialThickness: number;
+  drawerBottomThickness: number;
+  drawerFrontThickness: number;
+  doorThickness: number;
+
+  cabinetContents: CabinetContents;
   drawerCount: number;
+  doorCount: number;
+  shelfCount: number;
+
+  topStyle: TopStyle;
+  topStretcherDepth: number;
+  backStyle: BackStyle;
+  backInset: number;
+  backStretcherCount: number;
+  backStretcherHeight: number;
+
+  mountStyle: MountStyle;
+  baseStyle: BaseStyle;
   toeKickHeight: number;
   toeKickDepth: number;
-  faceGap: number;
+  sideToeKickCutout: SideToeKickCutout;
+  bottomWidthStyle: BottomWidthStyle;
+
+  includeWorktop: boolean;
+  worktopThickness: number;
+  worktopSideOverhang: number;
+  worktopFrontOverhang: number;
+  worktopBackOverhang: number;
+
+  joineryStyle: JoineryStyle;
+  dadoDepth: number;
+  dadoFitClearance: number;
+
+  frontMountStyle: FrontMountStyle;
+  frontEdgeReveal: number;
+  doorGap: number;
+  drawerGap: number;
+  shelfStyle: ShelfStyle;
 };
 
 export type CabinetDocument = {
   version: 2;
   id: string;
+  family: 'utility';
   name: string;
   units: 'mm';
   displayUnits: DisplayUnits;
