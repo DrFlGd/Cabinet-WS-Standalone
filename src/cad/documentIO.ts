@@ -9,7 +9,7 @@ type StoredDocumentV2 = {
   name: string;
   units: 'mm';
   displayUnits: DisplayUnits;
-  parameters: Partial<CabinetParameters> & Record<string, unknown>;
+  parameters: Partial<CabinetParameters>;
 };
 
 export type ImportReport = {
