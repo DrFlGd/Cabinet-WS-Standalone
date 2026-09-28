@@ -9,7 +9,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "desktop": "electron .",
-    "desktop:dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\""
+    "desktop:dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && cross-env VITE_DEV_SERVER_URL=http://127.0.0.1:5173 electron .\"",
+    "desktop:dist": "npm run build && electron-builder --win portable"
   },
   "dependencies": {
     "@vitejs/plugin-react": "6.0.2",
@@ -28,6 +29,25 @@
     "cross-env": "10.1.0",
     "electron": "44.4.3",
     "typescript": "5.9.3",
-    "wait-on": "9.0.1"
+    "wait-on": "9.0.1",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.cabinetworkshop.standalone",
+    "productName": "Cabinet WS Standalone",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "artifactName": "Cabinet-WS-Standalone-${version}-Windows-x64.${ext}"
+    }
   }
 }
