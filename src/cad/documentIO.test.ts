@@ -151,6 +151,34 @@ describe('Cabinet WS project migrations', () => {
     expect(parsed.report.warnings.join(' ')).not.toMatch(/mixed_bays/);
   });
 
+  it('preserves custom drawer-height weights when converting web mixed bays', () => {
+    const parsed = parseDocumentWithReport(JSON.stringify({
+      version: 2,
+      engineFamily: 'modular_organization',
+      family: 1,
+      values: {
+        cabinet_width: 1200,
+        cabinet_height: 900,
+        cabinet_depth: 610,
+        cabinet_layout_mode: 'mixed_bays',
+        mixed_bay_count: 2,
+        mixed_bay_types: ['drawers', 'drawers'],
+        mixed_bay_width_weights: [1, 2],
+        mixed_bay_drawer_counts: [3, 2],
+        mixed_bay_drawer_height_modes: ['custom_weights', 'graduated'],
+        mixed_bay_drawer_graduated_steps: [0.35, 0.5],
+        mixed_bay_drawer_height_weights: [[0.75, 1, 1.5], [1, 1]],
+        include_mixed_bay_partitions: true,
+      },
+    }));
+
+    const nodes = parsed.document.parameters.sectionNodes;
+    expect(nodes[1][7]).toBe('custom_weights');
+    expect(nodes[1][9]).toEqual([0.75, 1, 1.5]);
+    expect(nodes[2][7]).toBe('graduated');
+    expect(nodes[2][8]).toBe(0.5);
+  });
+
   it('imports a valid web section tree without rewriting it', () => {
     const sectionNodes = [
       [-1, 0, 'x', 'weight', 1, 'open', 0, 'equal', 0.25, [1], 'panel', 0],
