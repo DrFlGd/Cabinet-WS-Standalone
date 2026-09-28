@@ -5728,3 +5728,37 @@ export function applyHardwareProfile(parameters: CabinetParameters, id: string):
   if (!profile) return parameters;
   return { ...parameters, ...profile.parameterPatch };
 }
+
+export function bestHardwareMatch(category: HardwareCategory, parameters: Partial<CabinetParameters>) {
+  const candidates = HARDWARE_CATALOG.filter(profile => profile.category === category);
+  let best: { profile: HardwareDefinition; score: number } | null = null;
+
+  for (const profile of candidates) {
+    const patch = profile.parameterPatch;
+    const keys = category === 'drawer_slide'
+      ? ['metalSlideClearancePerSide', 'metalSlideLength', 'metalSlideFrontSetback', 'metalSlideEnvelopeHeight', 'includeMetalSlideHoles'] as const
+      : ['frontMountStyle', 'hingeCupDiameter', 'hingeCupDepth', 'hingeCupCenterFromDoorEdge', 'hingeDoorFixingEnabled', 'hingePlateHolesEnabled'] as const;
+    let compared = 0;
+    let score = 0;
+
+    for (const key of keys) {
+      const requested = parameters[key];
+      const expected = patch[key];
+      if (requested === undefined || expected === undefined) continue;
+      compared += 1;
+      if (typeof requested === 'number' && typeof expected === 'number') {
+        const tolerance = Math.max(0.05, Math.abs(expected) * 0.002);
+        if (Math.abs(requested - expected) <= tolerance) score += 2;
+        else score -= 2;
+      } else if (requested === expected) {
+        score += 2;
+      } else {
+        score -= 2;
+      }
+    }
+
+    if (compared >= 2 && (!best || score > best.score)) best = { profile, score };
+  }
+
+  return best && best.score > 0 ? best.profile : null;
+}
