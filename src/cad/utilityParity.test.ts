@@ -12,6 +12,7 @@ describe('Utility Cabinet web parity fixtures', () => {
       depth: 610,
       materialThickness: 18,
       backThickness: 6,
+      layoutMode: 'legacy',
       cabinetContents: 'combo',
       drawerCount: 2,
       doorCount: 2,
@@ -32,7 +33,7 @@ describe('Utility Cabinet web parity fixtures', () => {
     });
   });
 
-  it('ports the supported Utility starter envelopes and construction choices', () => {
+  it('ports all currently supported Utility starter configurations', () => {
     expect(UTILITY_STARTERS.map(starter => starter.id)).toEqual([
       'default',
       'utility_3_drawer_base',
@@ -40,9 +41,29 @@ describe('Utility Cabinet web parity fixtures', () => {
       'utility_door_base',
       'utility_2_drawer_2_door',
       'utility_1_drawer_2_door',
+      'utility_wide_3_section_drawers',
+      'utility_wide_4_section_drawers',
+      'utility_wide_mixed_base',
       'utility_tall_2_door_storage',
       'utility_2_door_wall',
     ]);
+
+    expect(utilityStarter('utility_wide_3_section_drawers').parameters).toMatchObject({
+      width: 1200,
+      height: 900,
+      depth: 610,
+      layoutMode: 'sections',
+    });
+
+    expect(utilityStarter('utility_wide_4_section_drawers').parameters).toMatchObject({
+      width: 1600,
+      layoutMode: 'sections',
+    });
+
+    expect(utilityStarter('utility_wide_mixed_base').parameters).toMatchObject({
+      width: 1400,
+      layoutMode: 'sections',
+    });
 
     expect(utilityStarter('utility_tall_2_door_storage').parameters).toMatchObject({
       width: 900,
@@ -96,6 +117,14 @@ describe('Utility Cabinet web parity fixtures', () => {
     ]) {
       expect(ids.has(id), id).toBe(true);
     }
+  });
+
+  it('generates semantic divider and front bodies for wide section starters', () => {
+    const doc = buildCabinetDocument(utilityStarter('utility_wide_3_section_drawers').parameters);
+    expect(doc.parts.filter(part => part.category === 'divider')).toHaveLength(2);
+    expect(doc.parts.filter(part => part.id.includes(':drawer:') && part.category === 'front')).toHaveLength(12);
+    expect(doc.parts.some(part => part.id === 'section:SEC-1-DIV-1')).toBe(true);
+    expect(doc.parts.some(part => part.id === 'section:SEC-1-DIV-2')).toBe(true);
   });
 
   it('groups the two Utility side panels in the prototype BOM', () => {
