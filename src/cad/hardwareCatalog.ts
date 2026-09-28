@@ -5719,6 +5719,7 @@ export function hardwareProfiles(category: HardwareCategory, query = '') {
       profile.family,
       profile.model,
       profile.verification.status,
+      profile.verification.status.replaceAll('_', ' '),
     ].join(' ').toLowerCase().includes(needle))
     .sort((a, b) => a.manufacturer.localeCompare(b.manufacturer) || a.label.localeCompare(b.label));
 }
