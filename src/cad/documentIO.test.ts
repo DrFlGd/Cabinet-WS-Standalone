@@ -18,7 +18,7 @@ describe('Cabinet WS project migrations', () => {
     expect(document.parameters).toEqual(DEFAULT_PARAMETERS);
   });
 
-  it('migrates early standalone faceGap projects into separate front controls', () => {
+  it('migrates early standalone faceGap projects into separate front controls and legacy layout mode', () => {
     const oldV2 = JSON.stringify({
       version: 2,
       name: 'v0.2 cabinet',
@@ -44,18 +44,22 @@ describe('Cabinet WS project migrations', () => {
     expect(document.parameters.doorGap).toBe(4);
     expect(document.parameters.drawerGap).toBe(4);
     expect(document.parameters.carcassStock).toBe('custom_mm');
+    expect(document.parameters.layoutMode).toBe('legacy');
   });
 
-  it('round-trips schema v2 display-unit preferences without converting geometry', () => {
-    const original = buildCabinetDocument(DEFAULT_PARAMETERS, 'Imperial display', 'in');
+  it('round-trips schema v2 section layouts without converting geometry', () => {
+    const original = buildCabinetDocument({
+      ...DEFAULT_PARAMETERS,
+      layoutMode: 'sections',
+    }, 'Section cabinet', 'in');
     const loaded = parseDocument(serializeDocument(original));
 
     expect(loaded.displayUnits).toBe('in');
     expect(loaded.parameters.width).toBe(DEFAULT_PARAMETERS.width);
-    expect(loaded.parameters.materialThickness).toBe(DEFAULT_PARAMETERS.materialThickness);
+    expect(loaded.parameters.sectionNodes).toEqual(DEFAULT_PARAMETERS.sectionNodes);
   });
 
-  it('imports a Cabinet Workshop Utility project into supported v0.3 parameters', () => {
+  it('imports a Cabinet Workshop Utility project into supported standalone parameters', () => {
     const webProject = JSON.stringify({
       version: 2,
       engine: 5,
@@ -107,6 +111,7 @@ describe('Cabinet WS project migrations', () => {
       depth: 500,
       carcassStock: '3/4_nominal',
       backStock: '1/4_nominal',
+      layoutMode: 'legacy',
       cabinetContents: 'doors',
       shelfCount: 4,
       shelfStyle: 'adjustable',
@@ -116,25 +121,62 @@ describe('Cabinet WS project migrations', () => {
     expect(parsed.report.ignoredFieldCount).toBeGreaterThan(0);
   });
 
-  it('warns when importing a web Utility layout that depends on future Sections support', () => {
+  it('converts Cabinet Workshop mixed bays into the v0.4 section tree', () => {
     const parsed = parseDocumentWithReport(JSON.stringify({
       version: 2,
       engineFamily: 'modular_organization',
       family: 1,
       values: {
         design_name: 'Mixed bay source',
-        cabinet_width: 1200,
+        cabinet_width: 1400,
         cabinet_height: 900,
         cabinet_depth: 610,
         cabinet_layout_mode: 'mixed_bays',
-        cabinet_contents: 'drawers',
+        mixed_bay_count: 3,
+        mixed_bay_types: ['drawers', 'drawers', 'door', 'open'],
+        mixed_bay_width_weights: [1, 1, 1.2, 1],
+        mixed_bay_drawer_counts: [4, 3, 0, 0],
+        mixed_bay_shelf_counts: [0, 0, 2, 0],
+        mixed_bay_door_counts: [1, 1, 1, 1],
+        include_mixed_bay_partitions: true,
+        cabinet_contents: 'combo',
       },
     }));
 
-    expect(parsed.report.warnings.join(' ')).toMatch(/mixed_bays/);
+    expect(parsed.document.parameters.layoutMode).toBe('sections');
+    expect(parsed.document.parameters.sectionNodes).toHaveLength(4);
+    expect(parsed.document.parameters.sectionNodes[0][2]).toBe('x');
+    expect(parsed.document.parameters.sectionNodes[3][5]).toBe('doors');
+    expect(parsed.document.parameters.sectionNodes[3][11]).toBe(2);
+    expect(parsed.report.warnings.join(' ')).not.toMatch(/mixed_bays/);
   });
 
-  it('rejects non-Utility Cabinet Workshop projects in v0.3', () => {
+  it('imports a valid web section tree without rewriting it', () => {
+    const sectionNodes = [
+      [-1, 0, 'x', 'weight', 1, 'open', 0, 'equal', 0.25, [1], 'panel', 0],
+      [0, 0, 'leaf', 'weight', 1, 'drawers', 3, 'equal', 0.25, [1, 1, 1], 'panel', 0],
+      [0, 1, 'leaf', 'mm', 320, 'doors', 2, 'equal', 0.25, [1, 1], 'panel', 2],
+    ];
+
+    const parsed = parseDocumentWithReport(JSON.stringify({
+      version: 2,
+      engineFamily: 'modular_organization',
+      family: 1,
+      values: {
+        cabinet_width: 1000,
+        cabinet_height: 900,
+        cabinet_depth: 610,
+        cabinet_layout_mode: 'sections',
+        section_nodes: sectionNodes,
+      },
+    }));
+
+    expect(parsed.document.parameters.layoutMode).toBe('sections');
+    expect(parsed.document.parameters.sectionNodes).toEqual(sectionNodes);
+    expect(parsed.report.warnings).toEqual([]);
+  });
+
+  it('rejects non-Utility Cabinet Workshop projects in v0.4', () => {
     expect(() => parseDocument(JSON.stringify({
       version: 2,
       engineFamily: 'modular_organization',
