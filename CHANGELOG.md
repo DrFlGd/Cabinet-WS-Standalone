@@ -4,6 +4,29 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.5.2] - 2026-09-28
+
+### Changed
+
+- Renamed **Front elevation editor** to **Manual Layout Editor**.
+- Manual Layout Editor is now always the primary left-side editing workspace instead of appearing only when Sections/Bays mode is active.
+- Moved the **Layout mode** selector out of the general Properties panel and to the top of Manual Layout Editor so the layout choice lives with the layout tools.
+- Simple Cabinet mode now keeps Manual Layout Editor visible with a concise summary and an in-place path to switch into Sections/Bays.
+- Sections/Bays mode activates the existing divider/opening editor in the same primary pane.
+- The generated Parts/Model browser moved from below the section editor into a collapsible secondary drawer immediately to its right.
+- The Parts drawer defaults collapsed, giving Manual Layout and the 3D viewport more room; opening it expands the left workspace horizontally instead of stealing height from Manual Layout.
+- The primary Manual Layout pane is wider than the old left rail and the divider canvas receives a larger working area.
+- Existing 3D selection and contextual right-side Properties behavior is preserved.
+
+### Testing
+
+- Updated the desktop-interface regression guard to require Manual Layout Editor, its top-level Layout mode selector, the collapsible Parts drawer, and contextual part editing wiring.
+- The general parameter schema is guarded against reintroducing a duplicate Layout mode selector.
+
+### Compatibility
+
+- No project-file schema change. Existing schema-v2 projects keep their stored Simple/Sections layout mode and section tree.
+
 ## [0.5.1] - 2026-09-28
 
 ### Changed
