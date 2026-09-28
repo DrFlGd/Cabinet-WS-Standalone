@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Columns3, GripVertical, Rows3 } from 'lucide-react';
+import { Columns3, GripVertical, Rows3 } from 'lucide-react';
 import {
   cloneSectionNodes,
   collapseSection,
@@ -18,9 +18,8 @@ type Props = {
   parameters: CabinetParameters;
   thickness: number;
   units: DisplayUnits;
-  expanded: boolean;
   selectedSectionId: number;
-  onToggle: () => void;
+  onLayoutModeChange: (mode: CabinetParameters['layoutMode']) => void;
   onSelectedSectionChange: (sectionId: number) => void;
   onChange: (nodes: SectionNode[]) => void;
 };
@@ -39,9 +38,8 @@ export default function SectionLayoutPanel({
   parameters,
   thickness,
   units,
-  expanded,
   selectedSectionId,
-  onToggle,
+  onLayoutModeChange,
   onSelectedSectionChange,
   onChange,
 }: Props) {
@@ -156,24 +154,38 @@ export default function SectionLayoutPanel({
   const format = (value: number) => `${formatDimension(value, units)} ${units}`;
 
   return (
-    <section className={`panel section-layout-panel ${expanded ? 'expanded' : 'collapsed'}`}>
-      <button
-        type="button"
-        className="section-layout-heading section-layout-toggle"
-        onClick={onToggle}
-        aria-expanded={expanded}
-      >
+    <section className="panel section-layout-panel">
+      <div className="section-layout-heading">
         <div>
-          <span className="eyebrow">SECTION LAYOUT</span>
-          <strong>Front elevation editor</strong>
+          <span className="eyebrow">LAYOUT</span>
+          <strong>Manual Layout Editor</strong>
         </div>
-        <span className="section-layout-toggle-status">
-          {nodes.length}/31 nodes
-          {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        </span>
-      </button>
+        <span className="section-layout-node-count">{parameters.layoutMode === 'sections' ? `${nodes.length}/31 nodes` : 'Simple mode'}</span>
+      </div>
 
-      {expanded && <div className="section-layout-content">
+      <div className="section-layout-mode">
+        <span>Layout mode</span>
+        <SelectControl
+          ariaLabel="Layout mode"
+          value={parameters.layoutMode}
+          options={[
+            { value: 'legacy', label: 'Simple cabinet' },
+            { value: 'sections', label: 'Sections / bays' },
+          ]}
+          onChange={value => onLayoutModeChange(value as CabinetParameters['layoutMode'])}
+        />
+      </div>
+
+      {parameters.layoutMode === 'legacy' ? (
+        <div className="section-simple-summary">
+          <span className="eyebrow">SIMPLE LAYOUT ACTIVE</span>
+          <strong>{parameters.cabinetContents === 'combo' ? 'Drawers + doors' : parameters.cabinetContents === 'drawers' ? 'Drawers' : 'Doors'}</strong>
+          <p>
+            {parameters.drawerCount} drawer row{parameters.drawerCount === 1 ? '' : 's'} · {parameters.doorCount} door{parameters.doorCount === 1 ? '' : 's'}
+          </p>
+          <p>Choose <b>Sections / bays</b> above to edit openings and dividers manually.</p>
+        </div>
+      ) : <div className="section-layout-content">
       {errors.length ? (
         <div className="section-error" role="alert">{errors[0]}</div>
       ) : (
@@ -460,7 +472,7 @@ export default function SectionLayoutPanel({
         </div>
       )}
 
-      <div className="section-layout-tip"><GripVertical size={12} /> Drag divider lines directly in the front view. Fixed sizes remain exact; dragged neighbors become proportional.</div>
+      <div className="section-layout-tip"><GripVertical size={12} /> Drag divider lines directly in the manual layout view. Fixed sizes remain exact; dragged neighbors become proportional.</div>
       </div>}
     </section>
   );
