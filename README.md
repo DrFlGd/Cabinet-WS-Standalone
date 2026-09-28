@@ -134,45 +134,21 @@ This is useful for testing development builds without setting up a local Windows
 
 ## Publish a named GitHub release
 
-Tagged versions are published automatically by `.github/workflows/release.yml`.
+Named releases are published by `.github/workflows/release.yml`. The workflow supports explicit `v*` tags and a `release-request.json` file on `main`.
 
-The release tag **must exactly match the version in `package.json`**. For example, to publish version `0.2.0`:
+The requested version must exactly match `package.json`. For example, to publish `0.4.0`:
 
-1. Update `package.json`:
+1. Set `"version": "0.4.0"` in `package.json` and push that change.
+2. Set `"version": "0.4.0"` in `release-request.json` and push it to `main`.
+3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.4.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
 
-   ```json
-   "version": "0.2.0"
-   ```
+An explicit matching `v0.4.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
 
-2. Commit and push the version change:
+The release assets are:
 
-   ```bash
-   git add package.json
-   git commit -m "Release v0.2.0"
-   git push origin main
-   ```
-
-3. Create and push the matching tag:
-
-   ```bash
-   git tag -a v0.2.0 -m "Cabinet WS Standalone v0.2.0"
-   git push origin v0.2.0
-   ```
-
-Pushing the tag starts the **Publish Windows Release** workflow. It builds the application from that tagged commit and creates a GitHub Release named:
-
-```text
-Cabinet WS Standalone v0.2.0
-```
-
-The release contains:
-
-- `Cabinet-WS-Standalone-0.3.0-Windows-x64.exe`
-- `Cabinet-WS-Standalone-0.2.0-Windows-x64.zip`
+- `Cabinet-WS-Standalone-0.4.0-Windows-x64.exe`
+- `Cabinet-WS-Standalone-0.4.0-Windows-x64.zip`
 - `SHA256SUMS.txt`
-- automatically generated GitHub release notes
-
-If the tag is `v0.2.0` but `package.json` contains a different version, the release workflow fails intentionally rather than publishing a mislabeled executable.
 
 ## Build verification
 
