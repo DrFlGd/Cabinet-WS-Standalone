@@ -1,5 +1,6 @@
-import { SlidersHorizontal } from 'lucide-react';
-import { PARAMETER_SECTIONS, UTILITY_PARAMETER_SCHEMA } from '../cad/parameterSchema';
+import { Columns3, SlidersHorizontal } from 'lucide-react';
+import { PARAMETER_SECTIONS, UTILITY_PARAMETER_SCHEMA, type ParameterDefinition } from '../cad/parameterSchema';
+import { partSettingsContext } from '../cad/partContext';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { CabinetParameters, CadPart } from '../cad/types';
 import DimensionInput from './DimensionInput';
@@ -14,89 +15,196 @@ type Props = {
   displayUnits: DisplayUnits;
   onChange: (key: keyof CabinetParameters, value: ParameterValue) => void;
   onApplyHardware: (profileId: string) => void;
+  onShowCabinetSettings: () => void;
+  onOpenSection: (sectionNodeId: number) => void;
 };
 
-export default function PropertiesPanel({ parameters, selected, displayUnits, onChange, onApplyHardware }: Props) {
+export default function PropertiesPanel({
+  parameters,
+  selected,
+  displayUnits,
+  onChange,
+  onApplyHardware,
+  onShowCabinetSettings,
+  onOpenSection,
+}: Props) {
+  const context = selected ? partSettingsContext(selected, parameters) : null;
+
   return (
     <aside className="panel properties-panel">
       <div className="panel-heading">
         <SlidersHorizontal size={17} />
         <div><strong>Properties</strong><span>{selected ? selected.name : 'Utility Cabinet parameters'}</span></div>
       </div>
-      {selected
-        ? <PartProperties part={selected} displayUnits={displayUnits} />
-        : (
-          <div className="properties-scroll">
-            <HardwarePicker parameters={parameters} onApply={onApplyHardware} />
-            {PARAMETER_SECTIONS.map(section => {
-              const fields = UTILITY_PARAMETER_SCHEMA.filter(
-                field => field.section === section && (!field.visibleWhen || field.visibleWhen(parameters)),
-              );
-              if (!fields.length) return null;
 
-              return (
-                <section className="property-section" key={section}>
-                  <h3>{section}</h3>
-                  {fields.map(field => (
-                    <div className="parameter-control" key={field.key} title={field.description}>
-                      <div className="parameter-label">
-                        <span>{field.label}</span>
-                        {field.advanced && <small>ADV</small>}
-                      </div>
-                      {field.kind === 'dimension' && (
-                        <DimensionInput
-                          value={parameters[field.key] as number}
-                          units={displayUnits}
-                          step={field.step}
-                          min={field.min}
-                          onChange={value => onChange(field.key, value)}
-                        />
-                      )}
-                      {field.kind === 'count' && (
-                        <div className="number-input count-input">
-                          <input
-                            type="number"
-                            value={parameters[field.key] as number}
-                            min={field.min}
-                            max={field.max}
-                            step={1}
-                            onChange={event => {
-                              const next = event.currentTarget.valueAsNumber;
-                              if (Number.isFinite(next)) onChange(field.key, next);
-                            }}
-                          />
-                        </div>
-                      )}
-                      {field.kind === 'select' && (
-                        <SelectControl
-                          className="parameter-select"
-                          ariaLabel={field.label}
-                          value={String(parameters[field.key])}
-                          options={field.options.map(option => ({
-                            value: String(option.value),
-                            label: option.label,
-                          }))}
-                          onChange={value => onChange(field.key, value as ParameterValue)}
-                        />
-                      )}
-                      {field.kind === 'boolean' && (
-                        <label className="toggle-control">
-                          <input
-                            type="checkbox"
-                            checked={Boolean(parameters[field.key])}
-                            onChange={event => onChange(field.key, event.target.checked)}
-                          />
-                          <span>{parameters[field.key] ? 'On' : 'Off'}</span>
-                        </label>
-                      )}
-                    </div>
-                  ))}
-                </section>
-              );
-            })}
+      {selected && context ? (
+        <div className="properties-scroll">
+          <div className="part-context-toolbar">
+            <button type="button" onClick={onShowCabinetSettings}>All cabinet settings</button>
           </div>
-        )}
+
+          {context.sectionNodeId !== null && (
+            <section className="part-section-link">
+              <div>
+                <span className="eyebrow">SECTION SOURCE</span>
+                <strong>Section {context.sectionNodeId + 1}</strong>
+                <p>Count, contents, sizing, and divider placement live in the Section Layout editor.</p>
+              </div>
+              <button type="button" onClick={() => onOpenSection(context.sectionNodeId!)}>
+                <Columns3 size={13} /> Edit this section
+              </button>
+            </section>
+          )}
+
+          <section className="property-section contextual-settings">
+            <h3>{context.title}</h3>
+            <p className="context-description">{context.description}</p>
+            {context.showHardwarePicker && (
+              <HardwarePicker parameters={parameters} onApply={onApplyHardware} />
+            )}
+            <GroupedParameterFields
+              fields={context.fields}
+              parameters={parameters}
+              displayUnits={displayUnits}
+              onChange={onChange}
+            />
+          </section>
+
+          <PartProperties part={selected} displayUnits={displayUnits} />
+        </div>
+      ) : (
+        <div className="properties-scroll">
+          <HardwarePicker parameters={parameters} onApply={onApplyHardware} />
+          {PARAMETER_SECTIONS.map(section => {
+            const fields = UTILITY_PARAMETER_SCHEMA.filter(
+              field => field.section === section && (!field.visibleWhen || field.visibleWhen(parameters)),
+            );
+            if (!fields.length) return null;
+
+            return (
+              <section className="property-section" key={section}>
+                <h3>{section}</h3>
+                <ParameterFields
+                  fields={fields}
+                  parameters={parameters}
+                  displayUnits={displayUnits}
+                  onChange={onChange}
+                />
+              </section>
+            );
+          })}
+        </div>
+      )}
     </aside>
+  );
+}
+
+function GroupedParameterFields({
+  fields,
+  parameters,
+  displayUnits,
+  onChange,
+}: {
+  fields: ParameterDefinition[];
+  parameters: CabinetParameters;
+  displayUnits: DisplayUnits;
+  onChange: Props['onChange'];
+}) {
+  const sections = [...new Set(fields.map(field => field.section))];
+
+  if (!fields.length) {
+    return <p className="muted">This part is currently driven by section geometry or fixed semantic construction rather than a dedicated cabinet parameter.</p>;
+  }
+
+  return (
+    <div className="context-groups">
+      {sections.map(section => (
+        <div className="context-group" key={section}>
+          <h4>{section}</h4>
+          <ParameterFields
+            fields={fields.filter(field => field.section === section)}
+            parameters={parameters}
+            displayUnits={displayUnits}
+            onChange={onChange}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ParameterFields({
+  fields,
+  parameters,
+  displayUnits,
+  onChange,
+}: {
+  fields: ParameterDefinition[];
+  parameters: CabinetParameters;
+  displayUnits: DisplayUnits;
+  onChange: Props['onChange'];
+}) {
+  return (
+    <>
+      {fields.map(field => (
+        <div className="parameter-control" key={field.key} title={field.description}>
+          <div className="parameter-label">
+            <span>{field.label}</span>
+            {field.advanced && <small>ADV</small>}
+          </div>
+
+          {field.kind === 'dimension' && (
+            <DimensionInput
+              value={parameters[field.key] as number}
+              units={displayUnits}
+              step={field.step}
+              min={field.min}
+              onChange={value => onChange(field.key, value)}
+            />
+          )}
+
+          {field.kind === 'count' && (
+            <div className="number-input count-input">
+              <input
+                type="number"
+                value={parameters[field.key] as number}
+                min={field.min}
+                max={field.max}
+                step={1}
+                onChange={event => {
+                  const next = event.currentTarget.valueAsNumber;
+                  if (Number.isFinite(next)) onChange(field.key, next);
+                }}
+              />
+            </div>
+          )}
+
+          {field.kind === 'select' && (
+            <SelectControl
+              className="parameter-select"
+              ariaLabel={field.label}
+              value={String(parameters[field.key])}
+              options={field.options.map(option => ({
+                value: String(option.value),
+                label: option.label,
+              }))}
+              onChange={value => onChange(field.key, value as ParameterValue)}
+            />
+          )}
+
+          {field.kind === 'boolean' && (
+            <label className="toggle-control">
+              <input
+                type="checkbox"
+                checked={Boolean(parameters[field.key])}
+                onChange={event => onChange(field.key, event.target.checked)}
+              />
+              <span>{parameters[field.key] ? 'On' : 'Off'}</span>
+            </label>
+          )}
+        </div>
+      ))}
+    </>
   );
 }
 
@@ -104,7 +212,8 @@ function PartProperties({ part, displayUnits }: { part: CadPart; displayUnits: D
   const units = unitLabel(displayUnits);
   const dimension = (value: number) => `${formatDimension(value, displayUnits)} ${units}`;
 
-  return <div className="properties-scroll"><section className="property-section part-card">
+  return <section className="property-section part-card">
+    <h3>Generated part</h3>
     <span className="part-id">{part.id}</span>
     <h2>{part.name}</h2>
     <dl>
@@ -125,8 +234,8 @@ function PartProperties({ part, displayUnits }: { part: CadPart; displayUnits: D
         </dl>
       </>
     )}
-    <p className="muted">These semantic part and construction attributes are preserved independently of the future B-Rep kernel.</p>
-  </section></div>;
+    <p className="muted">Generated dimensions are read-only here; edit the related settings above to rebuild this part.</p>
+  </section>;
 }
 
 function humanize(value: string) {
