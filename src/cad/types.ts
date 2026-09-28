@@ -1,6 +1,6 @@
 import type { DisplayUnits } from './units';
 
-export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware' | 'worktop';
+export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware' | 'worktop' | 'divider';
 
 export type Vec3 = { x: number; y: number; z: number };
 
@@ -36,6 +36,22 @@ export type BottomWidthStyle = 'joined' | 'full_width';
 export type JoineryStyle = 'butt' | 'screw' | 'dado' | 'tab_slot';
 export type FrontMountStyle = 'overlay' | 'inset_flush';
 export type ShelfStyle = 'fixed' | 'adjustable';
+export type LayoutMode = 'legacy' | 'sections';
+
+export type SectionNode = [
+  parent: number,
+  order: number,
+  kind: 'leaf' | 'x' | 'z',
+  sizeMode: 'weight' | 'mm',
+  sizeValue: number,
+  contents: 'drawers' | 'doors' | 'open',
+  count: number,
+  drawerHeightMode: 'equal' | 'graduated' | 'custom_weights',
+  graduatedStep: number,
+  customWeights: number[],
+  divider: 'panel' | 'rail' | 'none',
+  shelfCount: number,
+];
 
 export type CabinetParameters = {
   width: number;
@@ -51,6 +67,8 @@ export type CabinetParameters = {
   drawerFrontThickness: number;
   doorThickness: number;
 
+  layoutMode: LayoutMode;
+  sectionNodes: SectionNode[];
   cabinetContents: CabinetContents;
   drawerCount: number;
   doorCount: number;
