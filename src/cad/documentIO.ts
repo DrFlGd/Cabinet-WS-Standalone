@@ -110,7 +110,8 @@ function validateParameters(value: unknown): CabinetParameters {
 
   const source = value as Record<string, unknown>;
   for (const key of numericKeys) {
-    if (typeof source[key] !== 'number' || !Number.isFinite(source[key])) {
+    const candidate = source[key];
+    if (typeof candidate !== 'number' || !Number.isFinite(candidate)) {
       throw new Error(`Invalid cabinet parameter: ${key}`);
     }
   }
