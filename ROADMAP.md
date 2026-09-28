@@ -317,18 +317,20 @@ in the web application while preserving legacy section behavior.
 
 # Phase 5 — Hardware and cabinet intelligence
 
+**Status: implemented for the Utility Cabinet reference family in v0.5**
+
 Purpose: move the web hardware knowledge into first-class CAD objects.
 
 ## 5.1 Hardware catalog
 
 Port:
 
-- [ ] drawer-slide presets
-- [ ] hinge presets
-- [ ] manufacturer/model metadata
-- [ ] verification/source status
-- [ ] family compatibility
-- [ ] hardware search/filtering
+- [x] drawer-slide presets *(74 Utility-compatible profiles)*
+- [x] hinge presets *(10 Utility-compatible profiles)*
+- [x] manufacturer/model metadata
+- [x] verification/source status
+- [x] family compatibility
+- [x] hardware search/filtering
 
 **Reference:** web `lib/hardware.json`, `lib/equipment-hardware.json`,
 `app/HardwarePicker.tsx`
@@ -337,30 +339,30 @@ Port:
 
 Instead of only applying parameter patches:
 
-- [ ] HardwareDefinition
-- [ ] HardwareInstance
-- [ ] mounting references
-- [ ] drilling patterns
-- [ ] keepout volumes
-- [ ] required clearances
-- [ ] optional simplified 3D reference geometry
-- [ ] purchased-hardware BOM rows
+- [x] HardwareDefinition
+- [x] HardwareInstance
+- [x] mounting references
+- [x] drilling patterns
+- [x] keepout volumes
+- [x] required clearances
+- [x] optional simplified 3D reference geometry
+- [x] purchased-hardware BOM rows
 
 ## 5.3 Dependency-aware controls
 
 Port the useful rules from web `lib/settings.ts`:
 
-- [ ] joinery-dependent controls
-- [ ] drawer-mount-dependent controls
-- [ ] hinge-dependent controls
-- [ ] face-frame-dependent controls
-- [ ] front-style-dependent controls
-- [ ] hide controls that do not affect the current design
+- [x] joinery-dependent controls
+- [x] drawer-mount-dependent controls
+- [x] hinge-dependent controls
+- [ ] face-frame-dependent controls *(deferred until Phase 8 introduces face frames)*
+- [x] front-style-dependent controls
+- [x] hide controls that do not affect the current design
 
 ### Definition of done
 
 Selecting a supported hinge or slide updates actual cabinet geometry, drilling,
-clearances and BOM data—not merely UI values.
+clearances and BOM data—not merely UI values. **Met for Utility Cabinet in v0.5.**
 
 ---
 
@@ -826,4 +828,4 @@ being built.
 
 # Next task
 
-Start **v0.5 / Hardware**. Port slide and hinge catalog data into first-class standalone hardware definitions, then connect clearances, drilling metadata, and compatibility rules to semantic cabinet parts.
+Start **v0.6 / Real CAD kernel and feature history** with the Utility Cabinet proof of concept: introduce a worker-based GeometryKernel abstraction, exact panel B-Rep bodies, machining features, tessellation back to Three.js, and STEP export while preserving semantic part/feature identity.

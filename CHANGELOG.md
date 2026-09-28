@@ -4,6 +4,47 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.5.0] - 2026-09-28
+
+### Added
+
+- First-class `HardwareDefinition` and `HardwareInstance` domain objects for the Utility Cabinet reference family.
+- Generated standalone hardware catalog containing all 84 Utility-compatible profiles from the Cabinet Workshop hardware catalog: 74 drawer-slide profiles and 10 concealed-hinge profiles.
+- Manufacturer, family, model, source document, geometry-support, and verification-status metadata retained for each imported catalog profile.
+- Search/filter UI for hardware manufacturer, family, model, and verification status.
+- Hardware picker surfaces catalog verification notes and source-document links instead of presenting reference data as universally verified.
+- Semantic mounting references, keepout volumes, required clearances, drilling patterns, and simplified realtime reference geometry for selected hardware.
+- Metal drawer-slide instances on both sides of every modeled drawer box.
+- Concealed-hinge instances generated per door, with hinge count scaled for door height.
+- Slide drilling intent on drawer sides and cabinet mounting members when a selected profile safely encodes drilling.
+- Hinge cup and mounting-plate drilling intent for supported concealed-hinge profiles.
+- Purchased-hardware BOM grouping, separate from fabricated cabinet-part BOM rows.
+- Hardware compatibility feedback for impossible slide depth, hinge-cup breakthrough, missing applicable drawers/doors, family compatibility, and front-mount mismatch.
+- Legacy Cabinet Workshop Utility imports now preserve supported slide and hinge dimensions/drilling and attempt to identify the matching standalone catalog profile.
+- Regression coverage for catalog completeness, search, geometry changes, drilling, semantic instances, keepouts, purchased-hardware BOM rows, compatibility rules, and legacy hardware import.
+
+### Changed
+
+- Application/package version advanced to 0.5.0.
+- Metal slide clearance now directly controls drawer-box outside width.
+- Selected slide length now limits rendered drawer-box depth, making hardware selection affect cabinet geometry rather than only metadata.
+- Hardware presets are one-time parameter patches: after application, editable standalone hardware dimensions remain authoritative.
+- The Properties panel now exposes hardware controls only when the active layout contains relevant drawers or doors.
+- The model tree includes purchased hardware as inspectable semantic parts while modeled-body counts continue to exclude purchased hardware.
+- The viewport footer reports hardware-instance count separately from fabricated/modelled bodies.
+
+### Compatibility
+
+- Standalone project schema remains version 2; v0.3/v0.4/v0.4.1/v0.4.2 projects migrate through defaults without a file-format break.
+- Web projects with metal-slide or concealed-hinge settings are no longer reported as unsupported solely because hardware is present.
+- Imported hardware that does not exactly match a catalog profile remains usable as custom hardware with an explicit import warning.
+
+### Deferred
+
+- Face-frame-specific hinge/slide dependencies remain deferred until face-frame construction exists in the standalone model (Phase 8).
+- Manufacturer operations intentionally disabled in the source catalog remain disabled; v0.5 does not invent drilling patterns when manufacturer rails or hinge variants allow multiple valid mounting choices.
+- Exact B-Rep hardware pockets/bores and collision solids remain part of the geometry-kernel milestone; v0.5 uses semantic machining intent plus realtime reference geometry.
+
 ## [0.4.2] - 2026-09-28
 
 ### Fixed

@@ -9,7 +9,8 @@ export type ParameterSection =
   | 'Fronts'
   | 'Shelves'
   | 'Worktop'
-  | 'Joinery';
+  | 'Joinery'
+  | 'Hardware';
 
 type BaseDefinition<K extends keyof CabinetParameters> = {
   key: K;
@@ -62,6 +63,7 @@ export const PARAMETER_SECTIONS: ParameterSection[] = [
   'Shelves',
   'Worktop',
   'Joinery',
+  'Hardware',
 ];
 
 const stockOptions = [
@@ -167,7 +169,47 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   ] },
   { key: 'dadoDepth', kind: 'dimension', label: 'Dado depth', description: 'Blind dado depth into cabinet sides.', section: 'Joinery', min: 2, max: 18, step: 0.5, visibleWhen: p => p.joineryStyle === 'dado' },
   { key: 'dadoFitClearance', kind: 'dimension', label: 'Dado fit clearance', description: 'Added width clearance around the mating panel.', section: 'Joinery', min: 0, max: 2, step: 0.05, visibleWhen: p => p.joineryStyle === 'dado' },
+  { key: 'drawerMount', kind: 'select', label: 'Drawer mounting', description: 'Wood runners or selected metal drawer-slide hardware.', section: 'Hardware', visibleWhen: hasDrawers, options: [
+    { value: 'wood_rails', label: 'Wood runners' },
+    { value: 'metal_slides', label: 'Metal slides' },
+  ] },
+  { key: 'metalSlideClearancePerSide', kind: 'dimension', label: 'Slide side clearance', description: 'Required clearance on each drawer side. Selected hardware presets update this value.', section: 'Hardware', min: 3, max: 40, step: 0.1, visibleWhen: p => hasDrawers(p) && p.drawerMount === 'metal_slides' },
+  { key: 'metalSlideLength', kind: 'dimension', label: 'Slide length', description: 'Nominal slide length; also limits rendered drawer-box depth.', section: 'Hardware', min: 100, max: 1200, step: 1, visibleWhen: p => hasDrawers(p) && p.drawerMount === 'metal_slides' },
+  { key: 'metalSlideFrontSetback', kind: 'dimension', label: 'Slide front setback', description: 'Slide setback from the cabinet/drawer front reference.', section: 'Hardware', min: 0, max: 50, step: 0.1, advanced: true, visibleWhen: p => hasDrawers(p) && p.drawerMount === 'metal_slides' },
+  { key: 'metalSlideEnvelopeHeight', kind: 'dimension', label: 'Slide envelope height', description: 'Simplified slide envelope used for reference geometry and keepout.', section: 'Hardware', min: 10, max: 120, step: 0.1, advanced: true, visibleWhen: p => hasDrawers(p) && p.drawerMount === 'metal_slides' },
+  { key: 'includeMetalSlideHoles', kind: 'boolean', label: 'Slide drilling', description: 'Enable cabinet/drawer drilling only when the selected profile provides an encoded pattern.', section: 'Hardware', visibleWhen: p => hasDrawers(p) && p.drawerMount === 'metal_slides' },
+  { key: 'hardwareDrillingMode', kind: 'select', label: 'Hardware drilling mode', description: 'Recommended uses the encoded profile drilling; Off preserves hardware envelopes without drilling.', section: 'Hardware', advanced: true, visibleWhen: p => hasDrawers(p) && p.drawerMount === 'metal_slides' && p.includeMetalSlideHoles, options: [
+    { value: 'off', label: 'Off' },
+    { value: 'recommended', label: 'Recommended profile drilling' },
+  ] },
+
+  { key: 'hingeStyle', kind: 'select', label: 'Door hinges', description: 'Enable concealed 35 mm cup hinges or leave door hardware unassigned.', section: 'Hardware', visibleWhen: hasDoors, options: [
+    { value: 'none', label: 'No hinge assigned' },
+    { value: 'euro_35mm', label: '35 mm concealed hinge' },
+  ] },
+  { key: 'hingeCupDiameter', kind: 'dimension', label: 'Hinge cup diameter', description: 'Door cup diameter from the selected hinge profile.', section: 'Hardware', min: 20, max: 50, step: 0.1, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' },
+  { key: 'hingeCupDepth', kind: 'dimension', label: 'Hinge cup depth', description: 'Blind hinge-cup drilling depth. Compatibility warns before breakthrough.', section: 'Hardware', min: 4, max: 25, step: 0.1, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' },
+  { key: 'hingeCupCenterFromDoorEdge', kind: 'dimension', label: 'Cup center from edge', description: 'Distance from hinged door edge to cup center.', section: 'Hardware', min: 10, max: 40, step: 0.1, advanced: true, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' },
+  { key: 'hingeDoorFixingEnabled', kind: 'boolean', label: 'Door fixing drilling', description: 'Profile-controlled fixing-hole intent. Manufacturer-partial presets may disable this intentionally.', section: 'Hardware', advanced: true, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' },
+  { key: 'hingeDoorFixingHoleSpacing', kind: 'dimension', label: 'Door fixing spacing', description: 'Center-to-center spacing for encoded door fixing holes.', section: 'Hardware', min: 10, max: 80, step: 0.1, advanced: true, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' && p.hingeDoorFixingEnabled },
+  { key: 'hingePlateHolesEnabled', kind: 'boolean', label: 'Mounting plate drilling', description: 'Enable encoded cabinet mounting-plate drilling.', section: 'Hardware', advanced: true, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' },
+  { key: 'hingePlateCenterFromFront', kind: 'dimension', label: 'Plate line from front', description: 'Cabinet-side system line for mounting-plate drilling.', section: 'Hardware', min: 5, max: 150, step: 0.1, advanced: true, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' && p.hingePlateHolesEnabled },
+  { key: 'hingePlateHoleSpacing', kind: 'dimension', label: 'Plate hole spacing', description: 'Center-to-center mounting-plate hole spacing.', section: 'Hardware', min: 10, max: 80, step: 0.1, advanced: true, visibleWhen: p => hasDoors(p) && p.hingeStyle === 'euro_35mm' && p.hingePlateHolesEnabled },
 ];
+
+function hasDrawers(parameters: CabinetParameters) {
+  if (parameters.layoutMode === 'sections') {
+    return parameters.sectionNodes.some(node => node[2] === 'leaf' && node[5] === 'drawers' && node[6] > 0);
+  }
+  return parameters.cabinetContents !== 'doors' && parameters.drawerCount > 0;
+}
+
+function hasDoors(parameters: CabinetParameters) {
+  if (parameters.layoutMode === 'sections') {
+    return parameters.sectionNodes.some(node => node[2] === 'leaf' && node[5] === 'doors' && node[6] > 0);
+  }
+  return parameters.cabinetContents !== 'drawers' && parameters.doorCount > 0;
+}
 
 export function visibleParameters(parameters: CabinetParameters) {
   return UTILITY_PARAMETER_SCHEMA.filter(field => !field.visibleWhen || field.visibleWhen(parameters));

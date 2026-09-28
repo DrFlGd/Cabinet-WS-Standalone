@@ -2,6 +2,7 @@ import type { CabinetDocument, CabinetParameters, CadPart, CadProfileHole, Secti
 import type { DisplayUnits } from './units';
 import { makeUtilityDefaults, UTILITY_STARTERS } from './utilityStarters';
 import { cloneSectionNodes, sectionLayoutErrors, sectionPanels, sectionRects, sectionRoot, treeErrors } from './sections';
+import { applyHardwareDrilling, buildHardwareInstances, hardwareParts } from './hardware';
 
 export const DEFAULT_PARAMETERS: CabinetParameters = makeUtilityDefaults();
 
@@ -271,6 +272,9 @@ export function buildCabinetDocument(
   }
 
   applyJoineryRenderFeatures(parts, p, t, base);
+  const hardware = buildHardwareInstances(parts, p);
+  applyHardwareDrilling(parts, hardware, p);
+  parts.push(...hardwareParts(hardware));
 
   return {
     version: 2,
@@ -281,6 +285,7 @@ export function buildCabinetDocument(
     displayUnits,
     parameters: p,
     parts,
+    hardware,
   };
 }
 
@@ -549,10 +554,15 @@ function addDrawerBox(
     drawerIndex: number;
   },
 ) {
-  const sideClearance = Math.min(13, Math.max(6, area.width * 0.04));
+  const sideClearance = p.drawerMount === 'metal_slides'
+    ? Math.max(3, p.metalSlideClearancePerSide)
+    : Math.min(13, Math.max(6, area.width * 0.04));
   const wall = Math.min(p.drawerMaterialThickness, Math.max(6, area.width / 8));
   const width = Math.max(30, area.width - 2 * sideClearance);
-  const depth = Math.max(60, area.depth - 24);
+  const availableDepth = Math.max(60, area.depth - 24);
+  const depth = p.drawerMount === 'metal_slides'
+    ? Math.max(60, Math.min(availableDepth, p.metalSlideLength))
+    : availableDepth;
   const height = Math.max(4, Math.min(area.frontHeight - 8, 180));
   const bottom = Math.min(p.drawerBottomThickness, Math.max(2, height / 3));
   const x = area.x + sideClearance;
@@ -803,6 +813,34 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
     doorGap: clampNumber(source.doorGap, 0.5, 20, defaults.doorGap),
     drawerGap: clampNumber(source.drawerGap, 0.5, 20, defaults.drawerGap),
     shelfStyle: oneOf(source.shelfStyle, ['fixed', 'adjustable'] as const, defaults.shelfStyle),
+
+    drawerMount: oneOf(source.drawerMount, ['wood_rails', 'metal_slides'] as const, defaults.drawerMount),
+    drawerSlideId: safeString(source.drawerSlideId, defaults.drawerSlideId),
+    metalSlideClearancePerSide: clampNumber(source.metalSlideClearancePerSide, 3, 40, defaults.metalSlideClearancePerSide),
+    metalSlideLength: clampNumber(source.metalSlideLength, 100, 2000, defaults.metalSlideLength),
+    metalSlideFrontSetback: clampNumber(source.metalSlideFrontSetback, 0, 50, defaults.metalSlideFrontSetback),
+    metalSlideEnvelopeHeight: clampNumber(source.metalSlideEnvelopeHeight, 10, 120, defaults.metalSlideEnvelopeHeight),
+    includeMetalSlideHoles: Boolean(source.includeMetalSlideHoles),
+    hardwareDrillingMode: oneOf(source.hardwareDrillingMode, ['off', 'recommended'] as const, defaults.hardwareDrillingMode),
+    metalSlideCabinetHolesX: numberArray(source.metalSlideCabinetHolesX, defaults.metalSlideCabinetHolesX, 0, 2000),
+    metalSlideDrawerHolesX: numberArray(source.metalSlideDrawerHolesX, defaults.metalSlideDrawerHolesX, 0, 2000),
+    metalSlideCabinetHoleDiameter: clampNumber(source.metalSlideCabinetHoleDiameter, 1, 20, defaults.metalSlideCabinetHoleDiameter),
+    metalSlideDrawerHoleDiameter: clampNumber(source.metalSlideDrawerHoleDiameter, 1, 20, defaults.metalSlideDrawerHoleDiameter),
+    metalSlideCabinetHoleZFromDrawerBottom: clampNumber(source.metalSlideCabinetHoleZFromDrawerBottom, 0, 150, defaults.metalSlideCabinetHoleZFromDrawerBottom),
+    metalSlideDrawerHoleZFromDrawerBottom: clampNumber(source.metalSlideDrawerHoleZFromDrawerBottom, 0, 150, defaults.metalSlideDrawerHoleZFromDrawerBottom),
+
+    hingeStyle: oneOf(source.hingeStyle, ['none', 'euro_35mm'] as const, defaults.hingeStyle),
+    hingeId: safeString(source.hingeId, defaults.hingeId),
+    hingeCupDiameter: clampNumber(source.hingeCupDiameter, 20, 50, defaults.hingeCupDiameter),
+    hingeCupDepth: clampNumber(source.hingeCupDepth, 4, 25, defaults.hingeCupDepth),
+    hingeCupCenterFromDoorEdge: clampNumber(source.hingeCupCenterFromDoorEdge, 10, 40, defaults.hingeCupCenterFromDoorEdge),
+    hingeDoorFixingEnabled: Boolean(source.hingeDoorFixingEnabled),
+    hingeDoorFixingHoleDiameter: clampNumber(source.hingeDoorFixingHoleDiameter, 1, 10, defaults.hingeDoorFixingHoleDiameter),
+    hingeDoorFixingHoleSpacing: clampNumber(source.hingeDoorFixingHoleSpacing, 10, 80, defaults.hingeDoorFixingHoleSpacing),
+    hingePlateHolesEnabled: Boolean(source.hingePlateHolesEnabled),
+    hingePlateHoleDiameter: clampNumber(source.hingePlateHoleDiameter, 1, 10, defaults.hingePlateHoleDiameter),
+    hingePlateCenterFromFront: clampNumber(source.hingePlateCenterFromFront, 5, Math.max(5, depth - 5), defaults.hingePlateCenterFromFront),
+    hingePlateHoleSpacing: clampNumber(source.hingePlateHoleSpacing, 10, 80, defaults.hingePlateHoleSpacing),
   };
 }
 
@@ -830,6 +868,19 @@ function clampNumber(value: unknown, min: number, max: number, fallback: number)
 
 function clampInteger(value: unknown, min: number, max: number, fallback: number) {
   return Math.round(clampNumber(value, min, max, fallback));
+}
+
+function safeString(value: unknown, fallback: string) {
+  return typeof value === 'string' && value.length <= 160 ? value : fallback;
+}
+
+function numberArray(value: unknown, fallback: number[], min: number, max: number) {
+  if (!Array.isArray(value)) return [...fallback];
+  const numbers = value
+    .filter(item => typeof item === 'number' && Number.isFinite(item))
+    .map(item => Math.min(max, Math.max(min, item)))
+    .slice(0, 64);
+  return numbers.length ? numbers : [...fallback];
 }
 
 function round(value: number) {

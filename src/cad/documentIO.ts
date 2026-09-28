@@ -1,6 +1,7 @@
 import { buildCabinetDocument, sanitizeParameters } from './cabinetModel';
 import { makeUtilityDefaults } from './utilityStarters';
 import { cloneSectionNodes, sectionsFromWebValues, treeErrors } from './sections';
+import { bestHardwareMatch } from './hardwareCatalog';
 import type { CabinetDocument, CabinetParameters, StockChoice } from './types';
 import type { DisplayUnits } from './units';
 
@@ -137,6 +138,13 @@ function validateKnownStandaloneTypes(source: Record<string, unknown>) {
   if ('sectionNodes' in source && treeErrors(source.sectionNodes).length) {
     throw new Error(`Invalid cabinet parameter: sectionNodes (${treeErrors(source.sectionNodes)[0]})`);
   }
+  for (const key of ['metalSlideCabinetHolesX', 'metalSlideDrawerHolesX']) {
+    if (!(key in source)) continue;
+    const value = source[key];
+    if (!Array.isArray(value) || value.some(item => typeof item !== 'number' || !Number.isFinite(item))) {
+      throw new Error(`Invalid cabinet parameter: ${key}`);
+    }
+  }
 }
 
 function looksLikeCabinetWorkshopProject(raw: unknown): raw is Record<string, unknown> {
@@ -151,7 +159,7 @@ function looksLikeCabinetWorkshopProject(raw: unknown): raw is Record<string, un
 function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedProject {
   const family = record.family;
   if (family !== 1 && family !== 'utility' && family !== 'utility_cabinet') {
-    throw new Error('This Cabinet Workshop project is not a Utility Cabinet. v0.4 imports Utility Cabinet projects only.');
+    throw new Error('This Cabinet Workshop project is not a Utility Cabinet. v0.5 imports Utility Cabinet projects only.');
   }
 
   if (!record.values || typeof record.values !== 'object') {
@@ -208,12 +216,43 @@ function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedPr
     doorGap: numberOr(values.door_gap, defaults.doorGap),
     drawerGap: numberOr(values.drawer_gap, defaults.drawerGap),
     shelfStyle: enumOr(values.shelf_style, ['fixed', 'adjustable'] as const, defaults.shelfStyle),
+
+    drawerMount: enumOr(values.drawer_mount, ['wood_rails', 'metal_slides'] as const, defaults.drawerMount),
+    metalSlideClearancePerSide: numberOr(values.metal_slide_clearance_per_side, defaults.metalSlideClearancePerSide),
+    metalSlideLength: numberOr(values.metal_slide_length, defaults.metalSlideLength),
+    metalSlideFrontSetback: numberOr(values.metal_slide_front_setback, defaults.metalSlideFrontSetback),
+    metalSlideEnvelopeHeight: numberOr(values.metal_slide_envelope_height, defaults.metalSlideEnvelopeHeight),
+    includeMetalSlideHoles: booleanOr(values.include_metal_slide_holes, defaults.includeMetalSlideHoles),
+    hardwareDrillingMode: enumOr(values.hardware_drilling_mode, ['off', 'recommended'] as const, defaults.hardwareDrillingMode),
+    metalSlideCabinetHolesX: numberArrayOr(values.metal_slide_cabinet_holes_x, defaults.metalSlideCabinetHolesX),
+    metalSlideDrawerHolesX: numberArrayOr(values.metal_slide_drawer_holes_x, defaults.metalSlideDrawerHolesX),
+    metalSlideCabinetHoleDiameter: numberOr(values.metal_slide_cabinet_hole_diameter, defaults.metalSlideCabinetHoleDiameter),
+    metalSlideDrawerHoleDiameter: numberOr(values.metal_slide_drawer_hole_diameter, defaults.metalSlideDrawerHoleDiameter),
+    metalSlideCabinetHoleZFromDrawerBottom: numberOr(values.metal_slide_cabinet_hole_z_from_drawer_bottom, defaults.metalSlideCabinetHoleZFromDrawerBottom),
+    metalSlideDrawerHoleZFromDrawerBottom: numberOr(values.metal_slide_drawer_hole_z_from_drawer_bottom, defaults.metalSlideDrawerHoleZFromDrawerBottom),
+
+    hingeStyle: enumOr(values.hinge_style, ['none', 'euro_35mm'] as const, defaults.hingeStyle),
+    hingeCupDiameter: numberOr(values.hinge_cup_diameter, defaults.hingeCupDiameter),
+    hingeCupDepth: numberOr(values.hinge_cup_depth, defaults.hingeCupDepth),
+    hingeCupCenterFromDoorEdge: numberOr(values.hinge_cup_center_from_door_edge, defaults.hingeCupCenterFromDoorEdge),
+    hingeDoorFixingEnabled: booleanOr(values.hinge_door_fixing_enabled, defaults.hingeDoorFixingEnabled),
+    hingeDoorFixingHoleDiameter: numberOr(values.hinge_door_fixing_hole_diameter, defaults.hingeDoorFixingHoleDiameter),
+    hingeDoorFixingHoleSpacing: numberOr(values.hinge_door_fixing_hole_spacing, defaults.hingeDoorFixingHoleSpacing),
+    hingePlateHolesEnabled: booleanOr(values.hinge_plate_holes_enabled, defaults.hingePlateHolesEnabled),
+    hingePlateHoleDiameter: numberOr(values.hinge_plate_hole_diameter, defaults.hingePlateHoleDiameter),
+    hingePlateCenterFromFront: numberOr(values.hinge_plate_center_from_front, defaults.hingePlateCenterFromFront),
+    hingePlateHoleSpacing: numberOr(values.hinge_plate_hole_spacing, defaults.hingePlateHoleSpacing),
   };
 
   const rawLayoutMode = typeof values.cabinet_layout_mode === 'string' ? values.cabinet_layout_mode : 'legacy';
   const fallbackForSections = sanitizeParameters({ ...mapped, layoutMode: 'legacy' });
   mapped.layoutMode = rawLayoutMode === 'mixed_bays' || rawLayoutMode === 'sections' ? 'sections' : 'legacy';
   mapped.sectionNodes = sectionsFromWebValues(values, fallbackForSections);
+
+  const slideMatch = mapped.drawerMount === 'metal_slides' ? bestHardwareMatch('drawer_slide', mapped) : null;
+  const hingeMatch = mapped.hingeStyle === 'euro_35mm' ? bestHardwareMatch('hinge', mapped) : null;
+  mapped.drawerSlideId = slideMatch?.id ?? '';
+  mapped.hingeId = hingeMatch?.id ?? '';
 
   const warnings: string[] = [];
   if (rawLayoutMode === 'sections' && treeErrors(values.section_nodes).length) {
@@ -227,11 +266,11 @@ function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedPr
   if (values.ganging_style && values.ganging_style !== 'none') {
     warnings.push('Cabinet ganging settings are not yet supported.');
   }
-  if (values.hinge_style && values.hinge_style !== 'none') {
-    warnings.push('Hinge drilling/hardware is deferred to v0.5 and was not imported.');
+  if (mapped.drawerMount === 'metal_slides' && !slideMatch) {
+    warnings.push('Drawer-slide dimensions and drilling were imported as custom hardware because no catalog preset matched exactly.');
   }
-  if (values.drawer_mount && values.drawer_mount !== 'wood_rails') {
-    warnings.push('Drawer-slide hardware is deferred to v0.5 and was not imported.');
+  if (mapped.hingeStyle === 'euro_35mm' && !hingeMatch) {
+    warnings.push('Hinge dimensions and drilling were imported as custom hardware because no catalog preset matched exactly.');
   }
 
   const supportedLegacyKeys = new Set([
@@ -245,6 +284,13 @@ function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedPr
     'joinery_style', 'dado_depth', 'dado_fit_clearance',
     'front_mount_style', 'front_edge_reveal', 'door_gap', 'drawer_gap', 'shelf_style',
     'design_name', 'cabinet_layout_mode', 'section_nodes', 'drawer_height_mode', 'ganging_style', 'hinge_style', 'drawer_mount',
+    'metal_slide_clearance_per_side', 'metal_slide_length', 'metal_slide_front_setback', 'metal_slide_envelope_height',
+    'include_metal_slide_holes', 'hardware_drilling_mode', 'metal_slide_cabinet_holes_x', 'metal_slide_drawer_holes_x',
+    'metal_slide_cabinet_hole_diameter', 'metal_slide_drawer_hole_diameter',
+    'metal_slide_cabinet_hole_z_from_drawer_bottom', 'metal_slide_drawer_hole_z_from_drawer_bottom',
+    'hinge_cup_diameter', 'hinge_cup_depth', 'hinge_cup_center_from_door_edge',
+    'hinge_door_fixing_enabled', 'hinge_door_fixing_hole_diameter', 'hinge_door_fixing_hole_spacing',
+    'hinge_plate_holes_enabled', 'hinge_plate_hole_diameter', 'hinge_plate_center_from_front', 'hinge_plate_hole_spacing',
     'mixed_bay_count', 'mixed_bay_types', 'mixed_bay_width_weights', 'mixed_bay_drawer_counts', 'mixed_bay_shelf_counts', 'mixed_bay_door_counts',
     'mixed_bay_drawer_height_modes', 'mixed_bay_drawer_graduated_steps', 'mixed_bay_drawer_height_weights', 'include_mixed_bay_partitions',
   ]);
@@ -298,6 +344,12 @@ function numberOr(...values: unknown[]) {
 
 function booleanOr(value: unknown, fallback: boolean) {
   return typeof value === 'boolean' ? value : fallback;
+}
+
+function numberArrayOr(value: unknown, fallback: number[]) {
+  if (!Array.isArray(value)) return [...fallback];
+  const numbers = value.filter(item => typeof item === 'number' && Number.isFinite(item)) as number[];
+  return numbers.length ? numbers : [...fallback];
 }
 
 function enumOr<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
