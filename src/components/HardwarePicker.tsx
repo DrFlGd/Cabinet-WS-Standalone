@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ExternalLink, Search, Wrench } from 'lucide-react';
-import { hardwareDefinition, hardwareProfiles } from '../cad/hardwareCatalog';
+import { HARDWARE_CATALOG, hardwareDefinition, hardwareProfiles } from '../cad/hardwareCatalog';
 import { hasDoorContent, hasDrawerContent, hardwareCompatibility } from '../cad/hardware';
 import type { CabinetParameters, HardwareCategory } from '../cad/types';
 import SelectControl from './SelectControl';
@@ -18,7 +18,7 @@ export default function HardwarePicker({ parameters, onApply }: Props) {
     <section className="hardware-picker-card">
       <div className="hardware-picker-heading">
         <div><Wrench size={14} /><strong>Hardware catalog</strong></div>
-        <span>Utility · 84 profiles</span>
+        <span>Utility · {HARDWARE_CATALOG.length} profiles</span>
       </div>
       <label className="hardware-search">
         <Search size={13} />
