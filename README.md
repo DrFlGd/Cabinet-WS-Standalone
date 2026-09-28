@@ -32,6 +32,8 @@ CabinetDocument
 
 The editor talks in terms of persistent cabinet parts rather than Three.js mesh UUIDs, so the solid generator can be replaced without rewriting selection, the model tree, saved documents, or property editing. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
+The staged migration plan for bringing Cabinet Workshop web features into this standalone CAD application is tracked in [ROADMAP.md](ROADMAP.md).
+
 ## Prerequisites
 
 - Node.js 22+ (Node 24 recommended)
