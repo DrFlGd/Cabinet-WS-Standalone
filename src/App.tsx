@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
-import { buildCabinetDocument, DEFAULT_PARAMETERS, PRESETS, sanitizeParameters } from './cad/cabinetModel';
+import { buildCabinetDocument, DEFAULT_PARAMETERS, sanitizeParameters } from './cad/cabinetModel';
 import CadViewport, { type CadViewportHandle } from './cad/CadViewport';
-import { downloadDocument, parseDocument, serializeDocument, suggestedFileName } from './cad/documentIO';
+import {
+  downloadDocument,
+  parseDocument,
+  parseDocumentWithReport,
+  serializeDocument,
+  suggestedFileName,
+  type ImportReport,
+} from './cad/documentIO';
 import { formatDimension, unitLabel, type DisplayUnits } from './cad/units';
+import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
 import type { CabinetDocument, CabinetParameters, CadPart } from './cad/types';
 import PropertiesPanel from './components/PropertiesPanel';
 import Toolbar from './components/Toolbar';
@@ -13,10 +21,13 @@ import { clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
 import type { EditorDocument } from './editor/history';
 import { useDocumentHistory } from './editor/useDocumentHistory';
 
+type ParameterValue = CabinetParameters[keyof CabinetParameters];
+
+const defaultStarter = utilityStarter('default');
 const INITIAL_EDITOR: EditorDocument = {
-  name: 'Base Cabinet Prototype',
+  name: defaultStarter.name,
   displayUnits: 'mm',
-  parameters: { ...DEFAULT_PARAMETERS },
+  parameters: { ...defaultStarter.parameters },
 };
 
 function toCadDocument(editor: EditorDocument) {
@@ -48,16 +59,13 @@ export default function App() {
   const fileInput = useRef<HTMLInputElement>(null);
   const viewport = useRef<CadViewportHandle>(null);
 
-  const cadDocument = useMemo(
-    () => toCadDocument(editor),
-    [editor],
-  );
+  const cadDocument = useMemo(() => toCadDocument(editor), [editor]);
   const serialized = useMemo(() => serializeDocument(cadDocument), [cadDocument]);
   const dirty = serialized !== savedContent;
   const selected = selectedId
     ? cadDocument.parts.find(part => part.id === selectedId) ?? null
     : null;
-  const panelCount = cadDocument.parts.filter(part => part.category !== 'front').length;
+  const bodyCount = cadDocument.parts.filter(part => part.category !== 'hardware').length;
 
   async function refreshRecent() {
     const desktop = desktopApi();
@@ -173,12 +181,12 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   });
 
-  function updateParameter(key: keyof CabinetParameters, value: number) {
+  function updateParameter(key: keyof CabinetParameters, value: ParameterValue) {
     history.edit(current => ({
       ...current,
       parameters: sanitizeParameters({ ...current.parameters, [key]: value }),
     }), `parameter:${key}`);
-    setNotice(`Updated ${humanize(key)}`);
+    setNotice(`Updated ${humanize(String(key))}`);
   }
 
   function updateDisplayUnits(units: DisplayUnits) {
@@ -190,20 +198,18 @@ export default function App() {
     history.edit(current => ({ ...current, name: name.slice(0, 120) }), 'document-name');
   }
 
-  function applyPreset(presetName: string) {
-    const preset = PRESETS[presetName];
-    if (!preset) return;
-
+  function applyStarter(starterId: string) {
+    const starter = utilityStarter(starterId);
     history.edit(current => ({
-      name: `${presetName} Cabinet`,
+      name: starter.name,
       displayUnits: current.displayUnits,
-      parameters: { ...preset },
+      parameters: { ...starter.parameters },
     }));
 
     setSelectedId(null);
     setHiddenIds(new Set());
     setExplode(0);
-    setNotice(`Loaded ${presetName} preset`);
+    setNotice(`Loaded ${starter.name}`);
     requestAnimationFrame(() => viewport.current?.fit());
   }
 
@@ -229,7 +235,7 @@ export default function App() {
     if (!allowDestructiveAction('create a new cabinet')) return;
 
     const next: EditorDocument = {
-      name: 'Base Cabinet Prototype',
+      name: defaultStarter.name,
       displayUnits: editor.displayUnits,
       parameters: { ...DEFAULT_PARAMETERS },
     };
@@ -240,11 +246,16 @@ export default function App() {
     setHiddenIds(new Set());
     setExplode(0);
     await clearRecovery();
-    setNotice('New cabinet');
+    setNotice('New Utility Cabinet');
     requestAnimationFrame(() => viewport.current?.fit());
   }
 
-  async function loadDocument(document: CabinetDocument, sourcePath: string | null, label: string) {
+  async function loadDocument(
+    document: CabinetDocument,
+    sourcePath: string | null,
+    label: string,
+    report?: ImportReport,
+  ) {
     history.reset(fromCadDocument(document));
     setSavedContent(serializeDocument(document));
     setCurrentPath(sourcePath);
@@ -253,7 +264,18 @@ export default function App() {
     setExplode(0);
     await clearRecovery();
     await refreshRecent();
-    setNotice(label);
+
+    if (report?.source === 'cabinet-workshop') {
+      const warningText = report.warnings.length
+        ? ` · ${report.warnings.join(' ')}`
+        : '';
+      setNotice(`Imported web Utility Cabinet · ${report.ignoredFieldCount} unsupported fields retained only in source file${warningText}`);
+    } else if (report?.warnings.length) {
+      setNotice(`${label} · ${report.warnings.join(' ')}`);
+    } else {
+      setNotice(label);
+    }
+
     requestAnimationFrame(() => viewport.current?.fit());
   }
 
@@ -269,7 +291,8 @@ export default function App() {
     try {
       const result = await desktop.openDocument();
       if (!result) return;
-      await loadDocument(parseDocument(result.content), result.path, `Opened ${result.name}`);
+      const parsed = parseDocumentWithReport(result.content);
+      await loadDocument(parsed.document, result.path, `Opened ${result.name}`, parsed.report);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not open document');
     }
@@ -283,7 +306,8 @@ export default function App() {
     try {
       const result = await desktop.openRecent(path);
       if (!result) return;
-      await loadDocument(parseDocument(result.content), result.path, `Opened ${result.name}`);
+      const parsed = parseDocumentWithReport(result.content);
+      await loadDocument(parsed.document, result.path, `Opened ${result.name}`, parsed.report);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not open recent document');
       await refreshRecent();
@@ -294,7 +318,8 @@ export default function App() {
     if (!file) return;
     try {
       if (file.size > 2_000_000) throw new Error('Cabinet document is too large.');
-      await loadDocument(parseDocument(await file.text()), null, `Opened ${file.name}`);
+      const parsed = parseDocumentWithReport(await file.text());
+      await loadDocument(parsed.document, null, `Opened ${file.name}`, parsed.report);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not open document');
     } finally {
@@ -334,7 +359,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Standalone CAD Prototype</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.3</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -360,33 +385,33 @@ export default function App() {
       onRedo={() => { history.redo(); setNotice('Redo'); }}
       onUnits={updateDisplayUnits}
     />
-    <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
+    <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
     <div className="workspace">
       <div className="left-stack">
         <section className="panel preset-panel">
-          <span className="eyebrow">STARTING DESIGN</span>
-          <select aria-label="Cabinet preset" value="" onChange={event => applyPreset(event.target.value)}>
-            <option value="" disabled>Choose a preset…</option>
-            {Object.keys(PRESETS).map(preset => <option key={preset}>{preset}</option>)}
+          <span className="eyebrow">UTILITY CABINET STARTERS</span>
+          <select aria-label="Utility Cabinet starter" value="" onChange={event => applyStarter(event.target.value)}>
+            <option value="" disabled>Choose a starter…</option>
+            {UTILITY_STARTERS.map(starter => <option key={starter.id} value={starter.id}>{starter.name}</option>)}
           </select>
-          <p>Start from a cabinet archetype, then edit dimensions in real time. Presets are undoable.</p>
+          <p>Ported from the web Utility Cabinet engine. Wide mixed-bay starters are intentionally deferred to the Sections milestone.</p>
         </section>
         <TreePanel document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} onSelect={select} onToggleVisibility={toggleVisibility} />
       </div>
 
       <section className="viewport-panel">
         <div className="viewport-badges">
-          <span><Cpu size={14} /> Realtime solid viewport</span>
-          <span><MousePointer2 size={14} /> Click parts to select</span>
+          <span><Cpu size={14} /> Realtime Utility Cabinet model</span>
+          <span><MousePointer2 size={14} /> Click parts to inspect semantics</span>
         </div>
         <CadViewport ref={viewport} document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} explode={explode} onSelect={select} />
         <div className="viewport-footer">
           <DimensionBadge label="W" value={editor.parameters.width} units={editor.displayUnits} />
           <DimensionBadge label="H" value={editor.parameters.height} units={editor.displayUnits} />
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
-          <div><Database size={14} /><strong>{panelCount}</strong><small>physical bodies</small></div>
-          <p>Project schema v2 · geometry stored in millimeters · display units are non-destructive.</p>
+          <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
+          <p>Utility v0.3 · typed settings · web-project import · semantic construction model.</p>
         </div>
       </section>
 
