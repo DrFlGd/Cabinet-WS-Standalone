@@ -4,6 +4,7 @@ import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { CabinetParameters, CadPart } from '../cad/types';
 import DimensionInput from './DimensionInput';
 import SelectControl from './SelectControl';
+import HardwarePicker from './HardwarePicker';
 
 type ParameterValue = CabinetParameters[keyof CabinetParameters];
 
@@ -12,9 +13,10 @@ type Props = {
   selected: CadPart | null;
   displayUnits: DisplayUnits;
   onChange: (key: keyof CabinetParameters, value: ParameterValue) => void;
+  onApplyHardware: (profileId: string) => void;
 };
 
-export default function PropertiesPanel({ parameters, selected, displayUnits, onChange }: Props) {
+export default function PropertiesPanel({ parameters, selected, displayUnits, onChange, onApplyHardware }: Props) {
   return (
     <aside className="panel properties-panel">
       <div className="panel-heading">
@@ -25,6 +27,7 @@ export default function PropertiesPanel({ parameters, selected, displayUnits, on
         ? <PartProperties part={selected} displayUnits={displayUnits} />
         : (
           <div className="properties-scroll">
+            <HardwarePicker parameters={parameters} onApply={onApplyHardware} />
             {PARAMETER_SECTIONS.map(section => {
               const fields = UTILITY_PARAMETER_SCHEMA.filter(
                 field => field.section === section && (!field.visibleWhen || field.visibleWhen(parameters)),
