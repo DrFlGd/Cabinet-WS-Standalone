@@ -16,6 +16,7 @@ import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
 import type { CabinetDocument, CabinetParameters, CadPart, SectionNode } from './cad/types';
 import PropertiesPanel from './components/PropertiesPanel';
 import SectionLayoutPanel from './components/SectionLayoutPanel';
+import SelectControl from './components/SelectControl';
 import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
 import { desktopApi, type RecentProject } from './desktop';
@@ -411,10 +412,13 @@ export default function App() {
       <div className={`left-stack ${editor.parameters.layoutMode === 'sections' ? 'sections-enabled' : ''}`}>
         <section className="panel preset-panel">
           <span className="eyebrow">UTILITY CABINET STARTERS</span>
-          <select aria-label="Utility Cabinet starter" value="" onChange={event => applyStarter(event.target.value)}>
-            <option value="" disabled>Choose a starter…</option>
-            {UTILITY_STARTERS.map(starter => <option key={starter.id} value={starter.id}>{starter.name}</option>)}
-          </select>
+          <SelectControl
+            ariaLabel="Utility Cabinet starter"
+            value=""
+            placeholder="Choose a starter…"
+            options={UTILITY_STARTERS.map(starter => ({ value: starter.id, label: starter.name }))}
+            onChange={applyStarter}
+          />
           <p>Ported from the web Utility Cabinet engine. Wide mixed-bay starters now use the standalone v0.4 section tree.</p>
         </section>
         {editor.parameters.layoutMode === 'sections' && (
