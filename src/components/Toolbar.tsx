@@ -14,7 +14,7 @@ import {
   Upload,
   View,
 } from 'lucide-react';
-import type { DisplayUnits } from '../cad/units';
+import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { ViewPreset } from '../cad/types';
 import type { RecentProject } from '../desktop';
 
@@ -85,7 +85,7 @@ export default function Toolbar({
     </div>
     <span className="toolbar-spacer" />
     <label className="units-control"><Ruler size={15} /><span>Units</span><select value={units} onChange={event => onUnits(event.target.value as DisplayUnits)}><option value="mm">mm</option><option value="in">inches</option></select></label>
-    <label className="explode-control"><Move3D size={16} /><span>Explode</span><input type="range" min="0" max="180" value={explode} onChange={event => onExplode(Number(event.target.value))} /><output>{explode} mm</output></label>
+    <label className="explode-control"><Move3D size={16} /><span>Explode</span><input type="range" min="0" max="180" value={explode} onChange={event => onExplode(Number(event.target.value))} /><output>{formatDimension(explode, units)} {unitLabel(units)}</output></label>
     <button className="icon-button" onClick={onFit} title="Fit model"><Maximize2 size={16} /></button>
   </div>;
 }
