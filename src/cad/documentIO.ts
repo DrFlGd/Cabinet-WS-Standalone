@@ -1,7 +1,7 @@
 import { buildCabinetDocument, sanitizeParameters } from './cabinetModel';
 import { makeUtilityDefaults } from './utilityStarters';
 import { cloneSectionNodes, sectionsFromWebValues, treeErrors } from './sections';
-import type { CabinetDocument, CabinetParameters, SectionNode, StockChoice } from './types';
+import type { CabinetDocument, CabinetParameters, StockChoice } from './types';
 import type { DisplayUnits } from './units';
 
 type StoredDocumentV2 = {
