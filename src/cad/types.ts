@@ -1,3 +1,5 @@
+import type { DisplayUnits } from './units';
+
 export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware';
 
 export type Vec3 = { x: number; y: number; z: number };
@@ -29,10 +31,11 @@ export type CabinetParameters = {
 };
 
 export type CabinetDocument = {
-  version: 1;
+  version: 2;
   id: string;
   name: string;
   units: 'mm';
+  displayUnits: DisplayUnits;
   parameters: CabinetParameters;
   parts: CadPart[];
 };
