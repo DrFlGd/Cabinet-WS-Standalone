@@ -119,6 +119,7 @@ export type HardwareDefinition = {
     plateHoleSpacing?: number;
   };
   frontMountStyle?: FrontMountStyle;
+  parameterPatch: Partial<CabinetParameters>;
 };
 
 export type HardwareInstance = {
