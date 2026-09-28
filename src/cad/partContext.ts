@@ -1,11 +1,11 @@
 import { UTILITY_PARAMETER_SCHEMA, type ParameterDefinition } from './parameterSchema';
-import type { CabinetParameters, CadPart } from './types';
+import type { CabinetParameters, CadPart, HardwareCategory } from './types';
 
 export type PartSettingsContext = {
   title: string;
   description: string;
   fields: ParameterDefinition[];
-  showHardwarePicker: boolean;
+  hardwareCategory: HardwareCategory | null;
   sectionNodeId: number | null;
 };
 
@@ -38,12 +38,12 @@ export function partSettingsContext(
   const keys = new Set<keyof CabinetParameters>();
   let title = 'Related settings';
   let description = 'These cabinet parameters directly affect the selected part.';
-  let showHardwarePicker = false;
+  let hardwareCategory: HardwareCategory | null = null;
 
   const add = (...items: (keyof CabinetParameters)[]) => items.forEach(key => keys.add(key));
 
   if (part.category === 'hardware') {
-    showHardwarePicker = true;
+    hardwareCategory = part.id.startsWith('hardware:slide:') ? 'drawer_slide' : 'hinge';
     if (part.id.startsWith('hardware:slide:')) {
       title = 'Drawer-slide settings';
       description = 'Slide selection, clearance, envelope, and drilling settings for this hardware instance.';
@@ -56,7 +56,7 @@ export function partSettingsContext(
   } else if (part.category === 'drawer') {
     title = 'Drawer-box settings';
     description = 'Stock and mounting settings that generate this drawer box.';
-    showHardwarePicker = true;
+    hardwareCategory = 'drawer_slide';
     add('drawerMaterialThickness', 'drawerBottomThickness', 'depth', ...slideKeys);
   } else if (part.category === 'front') {
     const isDoor = typeof part.metadata?.door === 'number' || part.id.includes(':door:') || part.id.startsWith('door:');
@@ -65,12 +65,12 @@ export function partSettingsContext(
     if (isDoor) {
       title = 'Door settings';
       description = 'Door stock, reveal/gap, mounting style, and hinge settings for this selected door.';
-      showHardwarePicker = true;
+      hardwareCategory = 'hinge';
       add('width', 'height', 'doorThickness', 'frontMountStyle', 'frontEdgeReveal', 'doorGap', 'doorCount', ...hingeKeys);
     } else if (isDrawer) {
       title = 'Drawer-front settings';
       description = 'Front stock, reveal/gap, and drawer-slide settings that affect this drawer.';
-      showHardwarePicker = true;
+      hardwareCategory = 'drawer_slide';
       add('width', 'height', 'drawerFrontThickness', 'frontMountStyle', 'frontEdgeReveal', 'drawerGap', 'drawerCount', ...slideKeys);
     } else {
       add('width', 'height', 'frontMountStyle', 'frontEdgeReveal', 'doorGap', 'drawerGap');
@@ -118,7 +118,7 @@ export function partSettingsContext(
     title,
     description,
     fields,
-    showHardwarePicker,
+    hardwareCategory,
     sectionNodeId,
   };
 }
