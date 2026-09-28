@@ -79,7 +79,7 @@ Purpose: make the standalone repository a reliable place to iterate.
 
 - [ ] add a dependency lockfile and switch CI to deterministic installs
 - [ ] add smoke tests for the Electron packaged app
-- [ ] add a project-schema migration framework before the file format grows
+- [x] add a project-schema migration framework before the file format grows
 - [ ] add application version/about information to the desktop UI
 - [ ] add crash/error boundary UI around the modeling workspace
 
@@ -100,28 +100,28 @@ Purpose: bring across foundational behavior before adding more cabinet geometry.
 
 Port the mature unit behavior from Cabinet Workshop.
 
-- [ ] millimeter / inch display preference
-- [ ] internal storage remains millimeters
-- [ ] precision-preserving unit conversion
+- [x] millimeter / inch display preference
+- [x] internal storage remains millimeters
+- [x] precision-preserving unit conversion
 - [ ] dimensional-field metadata instead of guessing field type
-- [ ] unit preference persisted in project/UI settings
-- [ ] dimensional formatting helpers
-- [ ] unit conversion regression tests
+- [x] unit preference persisted in project/UI settings
+- [x] dimensional formatting helpers
+- [x] unit conversion regression tests
 
 **Reference:** web `lib/units.ts`, `app/DimensionInput.tsx`
 
 ## 1.2 Project files
 
-- [ ] define standalone project schema v2
-- [ ] schema-version migrations
-- [ ] robust runtime validation
-- [ ] recent-project list
-- [ ] autosave / recovery file
-- [ ] dirty-document tracking
-- [ ] confirm destructive New/Open actions when dirty
-- [ ] native desktop Open / Save / Save As dialogs
+- [x] define standalone project schema v2
+- [x] schema-version migrations
+- [x] robust runtime validation
+- [x] recent-project list
+- [x] autosave / recovery file
+- [x] dirty-document tracking
+- [x] confirm destructive New/Open actions when dirty
+- [x] native desktop Open / Save / Save As dialogs
 - [ ] drag-and-drop project opening
-- [ ] maintain portable JSON format
+- [x] maintain portable JSON format
 
 ## 1.3 Import legacy Cabinet Workshop projects
 
@@ -138,11 +138,11 @@ semantic topology, visibility and future assemblies.
 
 ## 1.4 Undo / redo
 
-- [ ] command/history model for parameter edits
-- [ ] undo/redo keyboard shortcuts
-- [ ] coalesce continuous dimension edits into one history operation
-- [ ] preserve selection when possible
-- [ ] test New/Open/history boundaries
+- [x] command/history model for parameter edits
+- [x] undo/redo keyboard shortcuts
+- [x] coalesce continuous dimension edits into one history operation
+- [x] preserve selection when possible
+- [x] test New/Open/history boundaries
 
 ### Definition of done
 
@@ -721,12 +721,14 @@ attempting whole phases at once:
 
 ## v0.2 — Editor foundation
 
-1. units
-2. native Open/Save/Save As
-3. autosave/recovery
-4. dirty state
-5. undo/redo
-6. versioned project migrations
+**Status: implemented**
+
+1. [x] units
+2. [x] native Open/Save/Save As
+3. [x] autosave/recovery
+4. [x] dirty state
+5. [x] undo/redo
+6. [x] versioned project migrations
 
 ## v0.3 — Utility cabinet parity
 
@@ -820,8 +822,7 @@ being built.
 
 # Next task
 
-Start with **v0.2 / Phase 1: units + desktop project lifecycle + undo/redo**.
-
-These are low-risk migrations that immediately improve the standalone editor and
-create the infrastructure required for every later feature. After that, use
-**Utility Cabinet parity** as the first end-to-end migration target.
+Start **v0.3 / Utility Cabinet parity** as the first end-to-end migration from the
+web application. The first slice should introduce the typed parameter schema, port
+the Utility Cabinet defaults and construction controls, and add comparison fixtures
+against the current web/OpenSCAD implementation.
