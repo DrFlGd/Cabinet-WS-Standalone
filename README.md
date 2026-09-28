@@ -7,7 +7,7 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with model tree, realtime 3D viewport, properties panel, and toolbar.
-- Utility Cabinet v0.3 parity layer with typed settings for envelope, stock, layout, carcass, base, fronts, shelves, worktops, and joinery.
+- Utility Cabinet v0.4 model with typed settings plus bounded nested section/bay layouts, direct front-elevation divider editing, and section-driven semantic 3D parts.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct click selection in the Three.js viewport.
 - Hide/show parts, exploded view, fit-to-model, and iso/front/right/top views.
@@ -17,15 +17,15 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Browser development mode plus an Electron desktop wrapper.
 
-## v0.3 Utility Cabinet scope
+## v0.4 Sections scope
 
-The Utility Cabinet is the first end-to-end family migrated from Cabinet Workshop. The standalone app now ports the web engine's core defaults and supported starter configurations, including drawer bases, door bases, combination cabinets, tall storage, and the two-door wall cabinet.
+v0.4 keeps the Utility Cabinet as the reference family and adds the bounded section/bay model from Cabinet Workshop. Section trees support nested left/right and top/bottom splits, proportional or fixed clear-opening sizes, drawers, doors, open/shelf regions, panel/rail/no-divider construction, and equal/graduated/custom drawer-front sizing.
 
-Construction controls currently represented by the semantic model include measured/nominal carcass and back stock, full top vs top stretchers, applied/structural/stretcher/open backs, floor vs wall mounting, toe-kick/flat/leveling-foot/caster bases, joined vs full-width bottoms, separate worktops, overlay/inset fronts, fixed/adjustable shelves, and butt/screw/dado/tab-slot joinery intent.
+The standalone editor exposes a dedicated front-elevation manipulation surface beside the 3D viewport. Users can select openings/subtrees, drag dividers, enter fixed clear dimensions, split openings horizontally or vertically, create three-column layouts, edit section contents, and collapse subtrees. Section edits are undoable and drive semantic 3D divider, shelf, door, and drawer-front bodies.
 
-Wide mixed-bay Utility starters are intentionally deferred to the v0.4 Sections milestone. Hardware-specific machining such as hinges and drawer-slide drilling is imported with a warning and remains planned for v0.5. The current Three.js solids express cabinet construction and stable semantic identity; exact joinery booleans remain the v0.6 B-Rep milestone.
+The three previously deferred wide Utility starters now use this section model. Cabinet Workshop Utility imports preserve valid `section_nodes` directly and convert legacy `mixed_bays` data—including drawer sizing recipes—into the standalone tree. Invalid section data is reported and safely falls back to the simple Utility layout.
 
-Legacy web Utility projects are accepted when their family is Utility Cabinet. Supported values are mapped into Standalone; unsupported layout/hardware behavior is reported rather than silently treated as equivalent.
+The current Three.js solids still express semantic construction rather than exact machining geometry. Divider joinery booleans remain part of the future B-Rep kernel milestone; hinge and slide intelligence is the v0.5 target.
 
 ## Geometry status
 
@@ -45,7 +45,7 @@ CabinetDocument
 
 The editor talks in terms of persistent cabinet parts rather than Three.js mesh UUIDs, so the solid generator can be replaced without rewriting selection, the model tree, saved documents, or property editing. See [ARCHITECTURE.md](ARCHITECTURE.md).
 
-The staged migration plan for bringing Cabinet Workshop web features into this standalone CAD application is tracked in [ROADMAP.md](ROADMAP.md).
+The staged migration plan for bringing Cabinet Workshop web features into this standalone CAD application is tracked in [ROADMAP.md](ROADMAP.md). Every milestone and notable compatibility/build change is recorded in [CHANGELOG.md](CHANGELOG.md); update it as part of every release-sized change.
 
 ## Prerequisites
 
@@ -112,7 +112,7 @@ npm run desktop:dist
 The packaged application is written to `release/` with a name similar to:
 
 ```text
-Cabinet-WS-Standalone-0.3.0-Windows-x64.exe
+Cabinet-WS-Standalone-0.4.0-Windows-x64.exe
 ```
 
 The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
