@@ -16,6 +16,7 @@ import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
 import type { CabinetDocument, CabinetParameters, CadPart, SectionNode } from './cad/types';
 import PropertiesPanel from './components/PropertiesPanel';
 import SectionLayoutPanel from './components/SectionLayoutPanel';
+import SelectControl from './components/SelectControl';
 import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
 import { desktopApi, type RecentProject } from './desktop';
@@ -379,7 +380,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.4.1</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.4.2</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -411,10 +412,13 @@ export default function App() {
       <div className={`left-stack ${editor.parameters.layoutMode === 'sections' ? 'sections-enabled' : ''}`}>
         <section className="panel preset-panel">
           <span className="eyebrow">UTILITY CABINET STARTERS</span>
-          <select aria-label="Utility Cabinet starter" value="" onChange={event => applyStarter(event.target.value)}>
-            <option value="" disabled>Choose a starter…</option>
-            {UTILITY_STARTERS.map(starter => <option key={starter.id} value={starter.id}>{starter.name}</option>)}
-          </select>
+          <SelectControl
+            ariaLabel="Utility Cabinet starter"
+            value=""
+            placeholder="Choose a starter…"
+            options={UTILITY_STARTERS.map(starter => ({ value: starter.id, label: starter.name }))}
+            onChange={applyStarter}
+          />
           <p>Ported from the web Utility Cabinet engine. Wide mixed-bay starters now use the standalone v0.4 section tree.</p>
         </section>
         {editor.parameters.layoutMode === 'sections' && (
@@ -439,7 +443,7 @@ export default function App() {
           <DimensionBadge label="H" value={editor.parameters.height} units={editor.displayUnits} />
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
-          <p>Utility v0.4.1 · cutouts · drilling · joinery preview · drawer boxes.</p>
+          <p>Utility v0.4.2 · stable desktop dropdowns · cutouts · drawer boxes.</p>
         </div>
       </section>
 

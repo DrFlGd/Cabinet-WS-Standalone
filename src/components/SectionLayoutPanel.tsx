@@ -12,6 +12,7 @@ import {
 import type { CabinetParameters, SectionNode } from '../cad/types';
 import { formatDimension, type DisplayUnits } from '../cad/units';
 import DimensionInput from './DimensionInput';
+import SelectControl from './SelectControl';
 
 type Props = {
   parameters: CabinetParameters;
@@ -238,13 +239,15 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
         <div className="section-layout-controls">
           <label>
             Selected
-            <select value={selectedId} onChange={event => setSelected(Number(event.target.value))}>
-              {nodes.map((candidate, index) => (
-                <option key={index} value={index}>
-                  Section {index + 1} · {candidate[2] === 'leaf' ? candidate[5] : candidate[2] === 'x' ? 'left/right split' : 'top/bottom split'}
-                </option>
-              ))}
-            </select>
+            <SelectControl
+              ariaLabel="Selected section"
+              value={String(selectedId)}
+              options={nodes.map((candidate, index) => ({
+                value: String(index),
+                label: `Section ${index + 1} · ${candidate[2] === 'leaf' ? candidate[5] : candidate[2] === 'x' ? 'left/right split' : 'top/bottom split'}`,
+              }))}
+              onChange={value => setSelected(Number(value))}
+            />
           </label>
 
           {rect && <p className="section-current-size">{format(rect.w)} wide × {format(rect.h)} high</p>}
@@ -253,21 +256,23 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
             <div className="section-control-grid">
               <label>
                 Size mode
-                <select
+                <SelectControl
+                  ariaLabel="Section size mode"
                   value={node[3]}
-                  onChange={event => {
+                  options={[
+                    { value: 'weight', label: 'Proportional' },
+                    { value: 'mm', label: 'Fixed opening' },
+                  ]}
+                  onChange={value => {
                     const next = cloneSectionNodes(nodes);
                     const parent = next[node[0]];
                     const axis = parent[2];
                     const currentSize = axis === 'x' ? rect?.w : rect?.h;
-                    next[selectedId][3] = event.target.value as SectionNode[3];
+                    next[selectedId][3] = value as SectionNode[3];
                     next[selectedId][4] = currentSize ?? node[4];
                     commit(next);
                   }}
-                >
-                  <option value="weight">Proportional</option>
-                  <option value="mm">Fixed opening</option>
-                </select>
+                />
               </label>
 
               {node[3] === 'mm' ? (
@@ -301,21 +306,23 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
               <div className="section-control-grid">
                 <label>
                   Contents
-                  <select
+                  <SelectControl
+                    ariaLabel="Section contents"
                     value={node[5]}
-                    onChange={event => {
+                    options={[
+                      { value: 'drawers', label: 'Drawers' },
+                      { value: 'doors', label: 'Doors' },
+                      { value: 'open', label: 'Open / shelves' },
+                    ]}
+                    onChange={value => {
                       const next = cloneSectionNodes(nodes);
-                      const nextType = event.target.value as SectionNode[5];
+                      const nextType = value as SectionNode[5];
                       next[selectedId][5] = nextType;
                       next[selectedId][6] = nextType === 'open' ? 0 : nextType === 'doors' ? 2 : 3;
                       next[selectedId][9] = Array(Math.max(1, next[selectedId][6])).fill(1);
                       commit(next);
                     }}
-                  >
-                    <option value="drawers">Drawers</option>
-                    <option value="doors">Doors</option>
-                    <option value="open">Open / shelves</option>
-                  </select>
+                  />
                 </label>
 
                 <label>
@@ -354,11 +361,16 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
                 <div className="section-control-grid">
                   <label>
                     Drawer heights
-                    <select value={node[7]} onChange={event => editField(7, event.target.value as SectionNode[7])}>
-                      <option value="equal">Equal</option>
-                      <option value="graduated">Graduated</option>
-                      <option value="custom_weights">Custom weights</option>
-                    </select>
+                    <SelectControl
+                      ariaLabel="Drawer height mode"
+                      value={node[7]}
+                      options={[
+                        { value: 'equal', label: 'Equal' },
+                        { value: 'graduated', label: 'Graduated' },
+                        { value: 'custom_weights', label: 'Custom weights' },
+                      ]}
+                      onChange={value => editField(7, value as SectionNode[7])}
+                    />
                   </label>
                   {node[7] === 'graduated' && (
                     <label>
@@ -400,14 +412,16 @@ export default function SectionLayoutPanel({ parameters, thickness, units, onCha
             <>
               <label>
                 Divider construction
-                <select
+                <SelectControl
+                  ariaLabel="Divider construction"
                   value={node[10]}
-                  onChange={event => editField(10, event.target.value as SectionNode[10])}
-                >
-                  <option value="panel">Full-depth panel</option>
-                  {node[2] === 'z' && <option value="rail">Front support rail</option>}
-                  <option value="none">Layout boundary only</option>
-                </select>
+                  options={[
+                    { value: 'panel', label: 'Full-depth panel' },
+                    ...(node[2] === 'z' ? [{ value: 'rail', label: 'Front support rail' }] : []),
+                    { value: 'none', label: 'Layout boundary only' },
+                  ]}
+                  onChange={value => editField(10, value as SectionNode[10])}
+                />
               </label>
               <button
                 type="button"

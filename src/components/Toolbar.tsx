@@ -17,6 +17,7 @@ import {
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { ViewPreset } from '../cad/types';
 import type { RecentProject } from '../desktop';
+import SelectControl from './SelectControl';
 
 type Props = {
   explode: number;
@@ -60,12 +61,16 @@ export default function Toolbar({
       <button onClick={onNew}><FilePlus2 size={15} /> New</button>
       <button onClick={onOpen}><Upload size={15} /> Open</button>
       {recentProjects.length > 0 && (
-        <select className="recent-select" aria-label="Open recent project" value="" onChange={event => {
-          if (event.target.value) onOpenRecent(event.target.value);
-        }}>
-          <option value="">Recent…</option>
-          {recentProjects.map(project => <option key={project.path} value={project.path}>{project.name}</option>)}
-        </select>
+        <SelectControl
+          className="recent-select"
+          ariaLabel="Open recent project"
+          value=""
+          placeholder="Recent…"
+          options={recentProjects.map(project => ({ value: project.path, label: project.name }))}
+          onChange={value => {
+            if (value) onOpenRecent(value);
+          }}
+        />
       )}
       <button onClick={onSave}><Save size={15} /> Save</button>
       <button onClick={onSaveAs}><SaveAll size={15} /> Save As</button>
@@ -84,7 +89,7 @@ export default function Toolbar({
       <button onClick={onFit} title="Fit model"><Focus size={16} /> Fit</button>
     </div>
     <span className="toolbar-spacer" />
-    <label className="units-control"><Ruler size={15} /><span>Units</span><select value={units} onChange={event => onUnits(event.target.value as DisplayUnits)}><option value="mm">mm</option><option value="in">inches</option></select></label>
+    <div className="units-control"><Ruler size={15} /><span>Units</span><SelectControl ariaLabel="Display units" value={units} options={[{ value: 'mm', label: 'mm' }, { value: 'in', label: 'inches' }]} onChange={value => onUnits(value as DisplayUnits)} /></div>
     <label className="explode-control"><Move3D size={16} /><span>Explode</span><input type="range" min="0" max="180" value={explode} onChange={event => onExplode(Number(event.target.value))} /><output>{formatDimension(explode, units)} {unitLabel(units)}</output></label>
     <button className="icon-button" onClick={onFit} title="Fit model"><Maximize2 size={16} /></button>
   </div>;

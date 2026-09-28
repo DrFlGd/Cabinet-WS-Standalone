@@ -3,6 +3,7 @@ import { PARAMETER_SECTIONS, UTILITY_PARAMETER_SCHEMA } from '../cad/parameterSc
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { CabinetParameters, CadPart } from '../cad/types';
 import DimensionInput from './DimensionInput';
+import SelectControl from './SelectControl';
 
 type ParameterValue = CabinetParameters[keyof CabinetParameters];
 
@@ -64,15 +65,16 @@ export default function PropertiesPanel({ parameters, selected, displayUnits, on
                         </div>
                       )}
                       {field.kind === 'select' && (
-                        <select
+                        <SelectControl
                           className="parameter-select"
+                          ariaLabel={field.label}
                           value={String(parameters[field.key])}
-                          onChange={event => onChange(field.key, event.target.value as ParameterValue)}
-                        >
-                          {field.options.map(option => (
-                            <option key={String(option.value)} value={String(option.value)}>{option.label}</option>
-                          ))}
-                        </select>
+                          options={field.options.map(option => ({
+                            value: String(option.value),
+                            label: option.label,
+                          }))}
+                          onChange={value => onChange(field.key, value as ParameterValue)}
+                        />
                       )}
                       {field.kind === 'boolean' && (
                         <label className="toggle-control">
