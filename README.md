@@ -57,6 +57,8 @@ This starts Vite and launches Electron against the development server.
 
 ## Production build
 
+Build the renderer:
+
 ```bash
 npm install
 npm run build
@@ -72,9 +74,86 @@ npm run desktop
 
 Electron loads `dist/index.html` locally, so no web server is required for the production desktop run.
 
-## Verification note
+## Build a Windows executable locally
 
-The domain/document TypeScript was compiler-checked while creating this prototype. A full dependency install/build could not be completed in the creation environment because package download timed out. Run `npm install && npm run build` on a normal networked development machine as the first verification step.
+The project uses Electron Builder to create a portable Windows x64 executable.
+
+From Windows:
+
+```powershell
+npm install
+npm run desktop:dist
+```
+
+The packaged application is written to `release/` with a name similar to:
+
+```text
+Cabinet-WS-Standalone-0.1.0-Windows-x64.exe
+```
+
+The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
+
+## Automated Windows builds
+
+`.github/workflows/windows-package.yml` builds the current project on a GitHub-hosted Windows runner.
+
+On pushes to `main` and pull requests it:
+
+1. installs Node.js 24,
+2. installs npm dependencies,
+3. runs the TypeScript/Vite production build,
+4. packages the Electron application as a portable Windows executable, and
+5. uploads the executable as the `cabinet-ws-standalone-windows` workflow artifact.
+
+This is useful for testing development builds without setting up a local Windows build environment.
+
+## Publish a named GitHub release
+
+Tagged versions are published automatically by `.github/workflows/release.yml`.
+
+The release tag **must exactly match the version in `package.json`**. For example, to publish version `0.2.0`:
+
+1. Update `package.json`:
+
+   ```json
+   "version": "0.2.0"
+   ```
+
+2. Commit and push the version change:
+
+   ```bash
+   git add package.json
+   git commit -m "Release v0.2.0"
+   git push origin main
+   ```
+
+3. Create and push the matching tag:
+
+   ```bash
+   git tag -a v0.2.0 -m "Cabinet WS Standalone v0.2.0"
+   git push origin v0.2.0
+   ```
+
+Pushing the tag starts the **Publish Windows Release** workflow. It builds the application from that tagged commit and creates a GitHub Release named:
+
+```text
+Cabinet WS Standalone v0.2.0
+```
+
+The release contains:
+
+- `Cabinet-WS-Standalone-0.2.0-Windows-x64.exe`
+- `Cabinet-WS-Standalone-0.2.0-Windows-x64.zip`
+- `SHA256SUMS.txt`
+- automatically generated GitHub release notes
+
+If the tag is `v0.2.0` but `package.json` contains a different version, the release workflow fails intentionally rather than publishing a mislabeled executable.
+
+## Build verification
+
+The prototype has been compiled successfully on a GitHub-hosted Windows runner with Node.js 24. The TypeScript/Vite production build and Electron portable packaging both completed successfully.
+
+The normal build workflow and Windows packaging workflow remain in the repository so later changes can be compiler-checked automatically.
 
 ## Recommended next milestones
 
