@@ -255,6 +255,7 @@ export function sectionsFromWebValues(values: Record<string, unknown>, fallback:
     const doorCounts = arrayValue(values.mixed_bay_door_counts);
     const drawerModes = arrayValue(values.mixed_bay_drawer_height_modes);
     const graduatedSteps = arrayValue(values.mixed_bay_drawer_graduated_steps);
+    const customWeightSets = arrayValue(values.mixed_bay_drawer_height_weights);
     const root = sectionLeaf();
     root[2] = 'x';
     root[10] = values.include_mixed_bay_partitions === false ? 'none' : 'panel';
@@ -276,6 +277,14 @@ export function sectionsFromWebValues(values: Record<string, unknown>, fallback:
         ? drawerModes[i] as SectionNode[7]
         : 'equal';
       node[8] = nonNegativeNumber(graduatedSteps[i], 0.35);
+      const customWeights = arrayValue(customWeightSets[i])
+        .slice(0, countValue)
+        .map(weight => positiveNumber(weight, 1));
+      if (node[7] === 'custom_weights' && customWeights.length === countValue) {
+        node[9] = customWeights;
+      } else {
+        node[9] = Array(Math.max(1, countValue)).fill(1);
+      }
       node[11] = clampInt(shelfCounts[i], 0, 8, 0);
       nodes.push(node);
     }
