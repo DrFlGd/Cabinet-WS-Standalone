@@ -1,4 +1,5 @@
 import type { CabinetDocument, CabinetParameters, CadPart } from './types';
+import type { DisplayUnits } from './units';
 
 export const DEFAULT_PARAMETERS: CabinetParameters = {
   width: 762,
@@ -35,6 +36,7 @@ function part(
 export function buildCabinetDocument(
   parameters: CabinetParameters,
   name = 'Base Cabinet Prototype',
+  displayUnits: DisplayUnits = 'mm',
 ): CabinetDocument {
   const p = sanitizeParameters(parameters);
   const { width: W, height: H, depth: D, materialThickness: t, backThickness: bt } = p;
@@ -116,28 +118,30 @@ export function buildCabinetDocument(
   }
 
   return {
-    version: 1,
+    version: 2,
     id: 'cabinet-root',
     name,
     units: 'mm',
+    displayUnits,
     parameters: p,
     parts,
   };
 }
 
-export function sanitizeParameters(input: CabinetParameters): CabinetParameters {
+export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetParameters {
+  const source = { ...DEFAULT_PARAMETERS, ...input };
   return {
-    width: clamp(input.width, 300, 2400),
-    height: clamp(input.height, 300, 3000),
-    depth: clamp(input.depth, 200, 1200),
-    materialThickness: clamp(input.materialThickness, 6, 50),
-    backThickness: clamp(input.backThickness, 2, 25),
-    shelfCount: Math.round(clamp(input.shelfCount, 0, 12)),
-    doorCount: Math.round(clamp(input.doorCount, 0, 4)),
-    drawerCount: Math.round(clamp(input.drawerCount, 0, 8)),
-    toeKickHeight: clamp(input.toeKickHeight, 0, Math.max(0, input.height * 0.35)),
-    toeKickDepth: clamp(input.toeKickDepth, 0, Math.max(0, input.depth - 40)),
-    faceGap: clamp(input.faceGap, 1, 12),
+    width: clamp(source.width, 300, 2400),
+    height: clamp(source.height, 300, 3000),
+    depth: clamp(source.depth, 200, 1200),
+    materialThickness: clamp(source.materialThickness, 6, 50),
+    backThickness: clamp(source.backThickness, 2, 25),
+    shelfCount: Math.round(clamp(source.shelfCount, 0, 12)),
+    doorCount: Math.round(clamp(source.doorCount, 0, 4)),
+    drawerCount: Math.round(clamp(source.drawerCount, 0, 8)),
+    toeKickHeight: clamp(source.toeKickHeight, 0, Math.max(0, source.height * 0.35)),
+    toeKickDepth: clamp(source.toeKickDepth, 0, Math.max(0, source.depth - 40)),
+    faceGap: clamp(source.faceGap, 1, 12),
   };
 }
 
