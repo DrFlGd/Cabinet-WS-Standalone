@@ -7,7 +7,7 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with model tree, realtime 3D viewport, properties panel, and toolbar.
-- Parametric cabinet regeneration for dimensions, stock, shelves, drawers, doors, toe kick, and front gaps.
+- Utility Cabinet v0.3 parity layer with typed settings for envelope, stock, layout, carcass, base, fronts, shelves, worktops, and joinery.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct click selection in the Three.js viewport.
 - Hide/show parts, exploded view, fit-to-model, and iso/front/right/top views.
@@ -16,6 +16,16 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Browser development mode plus an Electron desktop wrapper.
+
+## v0.3 Utility Cabinet scope
+
+The Utility Cabinet is the first end-to-end family migrated from Cabinet Workshop. The standalone app now ports the web engine's core defaults and supported starter configurations, including drawer bases, door bases, combination cabinets, tall storage, and the two-door wall cabinet.
+
+Construction controls currently represented by the semantic model include measured/nominal carcass and back stock, full top vs top stretchers, applied/structural/stretcher/open backs, floor vs wall mounting, toe-kick/flat/leveling-foot/caster bases, joined vs full-width bottoms, separate worktops, overlay/inset fronts, fixed/adjustable shelves, and butt/screw/dado/tab-slot joinery intent.
+
+Wide mixed-bay Utility starters are intentionally deferred to the v0.4 Sections milestone. Hardware-specific machining such as hinges and drawer-slide drilling is imported with a warning and remains planned for v0.5. The current Three.js solids express cabinet construction and stable semantic identity; exact joinery booleans remain the v0.6 B-Rep milestone.
+
+Legacy web Utility projects are accepted when their family is Utility Cabinet. Supported values are mapped into Standalone; unsupported layout/hardware behavior is reported rather than silently treated as equivalent.
 
 ## Geometry status
 
@@ -102,7 +112,7 @@ npm run desktop:dist
 The packaged application is written to `release/` with a name similar to:
 
 ```text
-Cabinet-WS-Standalone-0.2.0-Windows-x64.exe
+Cabinet-WS-Standalone-0.3.0-Windows-x64.exe
 ```
 
 The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
@@ -157,7 +167,7 @@ Cabinet WS Standalone v0.2.0
 
 The release contains:
 
-- `Cabinet-WS-Standalone-0.2.0-Windows-x64.exe`
+- `Cabinet-WS-Standalone-0.3.0-Windows-x64.exe`
 - `Cabinet-WS-Standalone-0.2.0-Windows-x64.zip`
 - `SHA256SUMS.txt`
 - automatically generated GitHub release notes
