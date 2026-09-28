@@ -4,6 +4,26 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.4.2] - 2026-09-28
+
+### Fixed
+
+- Replaced native Chromium/Electron `<select>` controls across the primary editor with a shared React dropdown/listbox implementation.
+- Starter and Recent-project menus no longer depend on a controlled `value=""` native-select reset pattern.
+- Property dropdowns for layout, materials, carcass, base, fronts, shelves, and joinery now use the same desktop-safe interaction path.
+- Section-editor dropdowns for selected section, sizing mode, contents, drawer-height mode, and divider construction now use the shared control.
+- Dropdown menus render in a document-level portal with a high stacking layer so scroll panels and the WebGL viewport cannot clip or cover them.
+- Dropdowns close predictably on outside click, scrolling, resize, or Escape and support keyboard opening/selection with arrow keys.
+
+### Testing
+
+- Added a regression guard that prevents native `<select>` controls from being reintroduced into the primary desktop editor surfaces.
+- Added a source-level accessibility/portal guard for the shared dropdown component.
+
+### Notes
+
+- No project-file schema changes are required. Existing v0.3/v0.4/v0.4.1 project files remain compatible.
+
 ## [0.4.1] - 2026-09-28
 
 ### Fixed
