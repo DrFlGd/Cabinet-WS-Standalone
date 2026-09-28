@@ -135,3 +135,56 @@ button { color: inherit; }
 .count-input input {
   padding-right: 8px;
 }
+
+
+.parameter-control {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 118px;
+  gap: 9px;
+  align-items: center;
+  min-height: 36px;
+}
+.parameter-label {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #bdc6cb;
+  font-size: 11px;
+}
+.parameter-label small {
+  color: #e5bd67;
+  border: 1px solid #6e5c33;
+  border-radius: 3px;
+  padding: 1px 3px;
+  font-size: 7px;
+  letter-spacing: .08em;
+}
+.parameter-select {
+  width: 100%;
+  min-width: 0;
+  background: #191e22;
+  color: #e8edf0;
+  border: 1px solid #374149;
+  border-radius: 5px;
+  padding: 6px 7px;
+  font-size: 10px;
+}
+.parameter-select:focus {
+  outline: 0;
+  border-color: var(--accent-2);
+}
+.toggle-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  color: #aebac0;
+  font-size: 10px;
+}
+.toggle-control input {
+  accent-color: var(--accent);
+}
+.metadata-heading {
+  margin-top: 16px !important;
+}
