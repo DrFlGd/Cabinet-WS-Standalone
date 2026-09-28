@@ -55,7 +55,7 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [sectionEditorExpanded, setSectionEditorExpanded] = useState(false);
+  const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
   const [sectionSelectedId, setSectionSelectedId] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [explode, setExplode] = useState(0);
@@ -200,10 +200,8 @@ export default function App() {
       };
     }, `parameter:${String(key)}`);
 
-    if (key === 'layoutMode') {
-      const sections = value === 'sections';
-      setSectionEditorExpanded(sections);
-      if (sections) setSectionSelectedId(0);
+    if (key === 'layoutMode' && value === 'sections') {
+      setSectionSelectedId(0);
     }
     setNotice(`Updated ${humanize(String(key))}`);
   }
@@ -252,7 +250,6 @@ export default function App() {
 
     setSelectedId(null);
     setSectionSelectedId(0);
-    setSectionEditorExpanded(starter.parameters.layoutMode === 'sections');
     setHiddenIds(new Set());
     setExplode(0);
     setNotice(`Loaded ${starter.name}`);
@@ -266,8 +263,7 @@ export default function App() {
 
   function openSection(sectionNodeId: number) {
     setSectionSelectedId(sectionNodeId);
-    setSectionEditorExpanded(true);
-    setNotice(`Editing Section ${sectionNodeId + 1}`);
+    setNotice(`Editing Section ${sectionNodeId + 1} in Manual Layout Editor`);
   }
 
   function toggleVisibility(id: string) {
@@ -296,7 +292,6 @@ export default function App() {
     setCurrentPath(null);
     setSelectedId(null);
     setSectionSelectedId(0);
-    setSectionEditorExpanded(false);
     setHiddenIds(new Set());
     setExplode(0);
     await clearRecovery();
@@ -315,7 +310,6 @@ export default function App() {
     setCurrentPath(sourcePath);
     setSelectedId(null);
     setSectionSelectedId(0);
-    setSectionEditorExpanded(false);
     setHiddenIds(new Set());
     setExplode(0);
     await clearRecovery();
@@ -415,7 +409,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.1</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.2</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -443,8 +437,8 @@ export default function App() {
     />
     <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
-    <div className={`workspace ${editor.parameters.layoutMode === 'sections' && sectionEditorExpanded ? 'section-editor-expanded' : ''}`}>
-      <div className={`left-stack ${editor.parameters.layoutMode === 'sections' ? 'sections-enabled' : ''} ${sectionEditorExpanded ? 'section-editor-expanded' : ''}`}>
+    <div className={`workspace ${partBrowserExpanded ? 'parts-browser-expanded' : ''}`}>
+      <div className="left-stack">
         <section className="panel preset-panel">
           <span className="eyebrow">UTILITY CABINET STARTERS</span>
           <SelectControl
@@ -454,21 +448,28 @@ export default function App() {
             options={UTILITY_STARTERS.map(starter => ({ value: starter.id, label: starter.name }))}
             onChange={applyStarter}
           />
-          <p>Ported from the web Utility Cabinet engine. Wide mixed-bay starters now use the standalone v0.4 section tree.</p>
+          <p>Starter recipes set cabinet construction and can seed either simple or manual section layouts.</p>
         </section>
-        {editor.parameters.layoutMode === 'sections' && (
+        <div className={`layout-navigation-row ${partBrowserExpanded ? 'parts-open' : 'parts-collapsed'}`}>
           <SectionLayoutPanel
             parameters={editor.parameters}
             thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
             units={editor.displayUnits}
-            expanded={sectionEditorExpanded}
             selectedSectionId={sectionSelectedId}
-            onToggle={() => setSectionEditorExpanded(current => !current)}
+            onLayoutModeChange={mode => updateParameter('layoutMode', mode)}
             onSelectedSectionChange={setSectionSelectedId}
             onChange={updateSections}
           />
-        )}
-        <TreePanel document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} onSelect={select} onToggleVisibility={toggleVisibility} />
+          <TreePanel
+            document={cadDocument}
+            selectedId={selectedId}
+            hiddenIds={hiddenIds}
+            expanded={partBrowserExpanded}
+            onToggle={() => setPartBrowserExpanded(current => !current)}
+            onSelect={select}
+            onToggleVisibility={toggleVisibility}
+          />
+        </div>
       </div>
 
       <section className="viewport-panel">
@@ -483,7 +484,7 @@ export default function App() {
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
           <div><strong>{hardwareCount}</strong><small>hardware instances</small></div>
-          <p>Utility v0.5.1 · contextual editing · collapsible sections · hardware intelligence.</p>
+          <p>Utility v0.5.2 · Manual Layout Editor · contextual parts · hardware intelligence.</p>
         </div>
       </section>
 
