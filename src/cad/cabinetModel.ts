@@ -1,6 +1,7 @@
-import type { CabinetDocument, CabinetParameters, CadPart, StockChoice } from './types';
+import type { CabinetDocument, CabinetParameters, CadPart, SectionNode, StockChoice } from './types';
 import type { DisplayUnits } from './units';
 import { makeUtilityDefaults, UTILITY_STARTERS } from './utilityStarters';
+import { cloneSectionNodes, sectionLayoutErrors, sectionPanels, sectionRects, sectionRoot, treeErrors } from './sections';
 
 export const DEFAULT_PARAMETERS: CabinetParameters = makeUtilityDefaults();
 
@@ -10,6 +11,7 @@ const darkWood = '#957047';
 const backWood = '#a9825c';
 const hardwareColor = '#46545a';
 const worktopColor = '#d8b079';
+const dividerColor = '#ad8252';
 
 const nominalStock: Record<Exclude<StockChoice, 'custom_mm'>, number> = {
   '1/8_nominal': 3.175,
@@ -231,92 +233,10 @@ export function buildCabinetDocument(
     }
   }
 
-  const interiorBottom = base + t;
-  const interiorTop = H - t;
-  const interiorHeight = Math.max(0, interiorTop - interiorBottom);
-  const hasDrawers = p.cabinetContents === 'drawers' || p.cabinetContents === 'combo';
-  const hasDoors = p.cabinetContents === 'doors' || p.cabinetContents === 'combo';
-  const drawerZoneHeight = hasDrawers
-    ? p.cabinetContents === 'drawers'
-      ? interiorHeight
-      : Math.min(interiorHeight * 0.42, 330)
-    : 0;
-  const doorZoneTop = interiorTop - (hasDrawers && hasDoors ? drawerZoneHeight + p.frontEdgeReveal : 0);
-  const doorZoneHeight = hasDoors ? Math.max(0, doorZoneTop - interiorBottom) : 0;
-
-  if (hasDoors && p.shelfCount > 0 && doorZoneHeight > t) {
-    const backDepth = p.backStyle === 'structural_panel'
-      ? t
-      : p.backStyle === 'panel'
-        ? appliedBackThickness + p.backInset
-        : 0;
-    const shelfDepth = Math.max(20, D - backDepth - 16);
-    for (let i = 1; i <= p.shelfCount; i += 1) {
-      const z = interiorBottom + (doorZoneHeight * i) / (p.shelfCount + 1) - t / 2;
-      parts.push(
-        part(
-          `shelf:${i}`,
-          `${p.shelfStyle === 'adjustable' ? 'Adjustable' : 'Fixed'} Shelf ${i}`,
-          'shelf',
-          { x: t + 2, y: 8, z },
-          { x: W - 2 * t - 4, y: shelfDepth, z: t },
-          lightWood,
-          carcassMaterial,
-          { shelfStyle: p.shelfStyle, adjustable: p.shelfStyle === 'adjustable', ...carcassMeta },
-        ),
-      );
-    }
-  }
-
-  const openingWidth = Math.max(1, W - 2 * t);
-  if (hasDrawers && p.drawerCount > 0 && drawerZoneHeight > 0) {
-    const availableHeight = Math.max(1, drawerZoneHeight - p.frontEdgeReveal * 2 - p.drawerGap * (p.drawerCount - 1));
-    const rowHeight = availableHeight / p.drawerCount;
-    const frontDepth = p.drawerFrontThickness;
-    const frontY = p.frontMountStyle === 'overlay' ? -frontDepth : 0;
-
-    for (let i = 0; i < p.drawerCount; i += 1) {
-      const z = interiorTop - p.frontEdgeReveal - (i + 1) * rowHeight - i * p.drawerGap;
-      parts.push(
-        part(
-          `drawer:${i + 1}:front`,
-          `Drawer Front ${i + 1}`,
-          'front',
-          { x: t + p.frontEdgeReveal, y: frontY, z },
-          { x: openingWidth - 2 * p.frontEdgeReveal, y: frontDepth, z: rowHeight },
-          lightWood,
-          `Drawer front stock (${round(frontDepth)} mm)`,
-          { drawer: i + 1, frontMountStyle: p.frontMountStyle },
-        ),
-      );
-    }
-  }
-
-  if (hasDoors && p.doorCount > 0 && doorZoneHeight > 0) {
-    const gap = p.doorGap;
-    const availableWidth = openingWidth - 2 * p.frontEdgeReveal - gap * (p.doorCount - 1);
-    const doorWidth = Math.max(1, availableWidth / p.doorCount);
-    const doorHeight = Math.max(1, doorZoneHeight - 2 * p.frontEdgeReveal);
-    const frontY = p.frontMountStyle === 'overlay' ? -p.doorThickness : 0;
-
-    for (let i = 0; i < p.doorCount; i += 1) {
-      parts.push(
-        part(
-          `door:${i + 1}`,
-          `Door ${i + 1}`,
-          'front',
-          {
-            x: t + p.frontEdgeReveal + i * (doorWidth + gap),
-            y: frontY,
-            z: interiorBottom + p.frontEdgeReveal,
-          },
-          { x: doorWidth, y: p.doorThickness, z: doorHeight },
-          lightWood,
-          `Door stock (${round(p.doorThickness)} mm)`,
-          { door: i + 1, frontMountStyle: p.frontMountStyle },
-        ),
-      );
-    }
+  if (p.layoutMode === 'sections') {
+    addSectionLayoutParts(parts, p, t, appliedBackThickness, carcassMaterial, carcassMeta);
+  } else {
+    addLegacyLayoutParts(parts, p, t, appliedBackThickness, carcassMaterial, carcassMeta);
   }
 
   if (p.includeWorktop) {
@@ -354,6 +274,233 @@ export function buildCabinetDocument(
   };
 }
 
+function addLegacyLayoutParts(
+  parts: CadPart[],
+  p: CabinetParameters,
+  t: number,
+  appliedBackThickness: number,
+  carcassMaterial: string,
+  carcassMeta: CadPart['metadata'],
+) {
+  const base = p.mountStyle === 'floor' && p.baseStyle === 'toe_kick' ? p.toeKickHeight : 0;
+  const interiorBottom = base + t;
+  const interiorTop = p.height - t;
+  const interiorHeight = Math.max(0, interiorTop - interiorBottom);
+  const hasDrawers = p.cabinetContents === 'drawers' || p.cabinetContents === 'combo';
+  const hasDoors = p.cabinetContents === 'doors' || p.cabinetContents === 'combo';
+  const drawerZoneHeight = hasDrawers
+    ? p.cabinetContents === 'drawers'
+      ? interiorHeight
+      : Math.min(interiorHeight * 0.42, 330)
+    : 0;
+  const doorZoneTop = interiorTop - (hasDrawers && hasDoors ? drawerZoneHeight + p.frontEdgeReveal : 0);
+  const doorZoneHeight = hasDoors ? Math.max(0, doorZoneTop - interiorBottom) : 0;
+
+  if (hasDoors && p.shelfCount > 0 && doorZoneHeight > t) {
+    const backDepth = p.backStyle === 'structural_panel'
+      ? t
+      : p.backStyle === 'panel'
+        ? appliedBackThickness + p.backInset
+        : 0;
+    const shelfDepth = Math.max(20, p.depth - backDepth - 16);
+    for (let i = 1; i <= p.shelfCount; i += 1) {
+      const z = interiorBottom + (doorZoneHeight * i) / (p.shelfCount + 1) - t / 2;
+      parts.push(
+        part(
+          `shelf:${i}`,
+          `${p.shelfStyle === 'adjustable' ? 'Adjustable' : 'Fixed'} Shelf ${i}`,
+          'shelf',
+          { x: t + 2, y: 8, z },
+          { x: p.width - 2 * t - 4, y: shelfDepth, z: t },
+          lightWood,
+          carcassMaterial,
+          { shelfStyle: p.shelfStyle, adjustable: p.shelfStyle === 'adjustable', ...carcassMeta },
+        ),
+      );
+    }
+  }
+
+  const openingWidth = Math.max(1, p.width - 2 * t);
+  if (hasDrawers && p.drawerCount > 0 && drawerZoneHeight > 0) {
+    const availableHeight = Math.max(1, drawerZoneHeight - p.frontEdgeReveal * 2 - p.drawerGap * (p.drawerCount - 1));
+    const rowHeight = availableHeight / p.drawerCount;
+    const frontDepth = p.drawerFrontThickness;
+    const frontY = p.frontMountStyle === 'overlay' ? -frontDepth : 0;
+
+    for (let i = 0; i < p.drawerCount; i += 1) {
+      const z = interiorTop - p.frontEdgeReveal - (i + 1) * rowHeight - i * p.drawerGap;
+      parts.push(
+        part(
+          `drawer:${i + 1}:front`,
+          `Drawer Front ${i + 1}`,
+          'front',
+          { x: t + p.frontEdgeReveal, y: frontY, z },
+          { x: openingWidth - 2 * p.frontEdgeReveal, y: frontDepth, z: rowHeight },
+          lightWood,
+          `Drawer front stock (${round(frontDepth)} mm)`,
+          { drawer: i + 1, frontMountStyle: p.frontMountStyle },
+        ),
+      );
+    }
+  }
+
+  if (hasDoors && p.doorCount > 0 && doorZoneHeight > 0) {
+    addDoorFronts(parts, p, {
+      idPrefix: 'door',
+      x: t,
+      z: interiorBottom,
+      width: openingWidth,
+      height: doorZoneHeight,
+      count: p.doorCount,
+      sectionId: 0,
+    });
+  }
+}
+
+function addSectionLayoutParts(
+  parts: CadPart[],
+  p: CabinetParameters,
+  t: number,
+  appliedBackThickness: number,
+  carcassMaterial: string,
+  carcassMeta: CadPart['metadata'],
+) {
+  if (sectionLayoutErrors(p, t).length) return;
+
+  const root = sectionRoot(p, t);
+  const rects = sectionRects(p.sectionNodes, root, t);
+  const backDepth = p.backStyle === 'structural_panel'
+    ? t
+    : p.backStyle === 'panel'
+      ? appliedBackThickness + p.backInset
+      : 0;
+  const interiorDepth = Math.max(20, p.depth - backDepth);
+
+  for (const panel of sectionPanels(p.sectionNodes, rects, t, interiorDepth)) {
+    const shelf = panel.id.includes('-SH-');
+    parts.push(
+      part(
+        `section:${panel.id}`,
+        shelf ? 'Section Shelf' : panel.divider === 'rail' ? 'Section Support Rail' : 'Section Divider',
+        shelf ? 'shelf' : 'divider',
+        { x: panel.x, y: 0, z: panel.z },
+        { x: panel.w, y: panel.d, z: panel.h },
+        shelf ? lightWood : dividerColor,
+        carcassMaterial,
+        {
+          sectionFeature: true,
+          divider: panel.divider,
+          shelfStyle: p.shelfStyle,
+          ...carcassMeta,
+        },
+      ),
+    );
+  }
+
+  for (const rect of rects) {
+    const node = p.sectionNodes[rect.id];
+    if (node[2] !== 'leaf') continue;
+
+    if (node[5] === 'drawers' && node[6] > 0) {
+      const weights = Array.from({ length: node[6] }, (_, index) =>
+        node[7] === 'graduated'
+          ? 1 + index * node[8]
+          : node[7] === 'custom_weights'
+            ? node[9][index] ?? 1
+            : 1,
+      );
+      const total = weights.reduce((sum, weight) => sum + weight, 0);
+      const available = Math.max(
+        1,
+        rect.h - 2 * p.frontEdgeReveal - p.drawerGap * Math.max(0, node[6] - 1),
+      );
+      const frontY = p.frontMountStyle === 'overlay' ? -p.drawerFrontThickness : 0;
+      let top = rect.z + rect.h - p.frontEdgeReveal;
+
+      weights.forEach((weight, index) => {
+        const height = available * weight / total;
+        top -= height;
+        parts.push(
+          part(
+            `section:${rect.id + 1}:drawer:${index + 1}:front`,
+            `Section ${rect.id + 1} Drawer Front ${index + 1}`,
+            'front',
+            { x: rect.x + p.frontEdgeReveal, y: frontY, z: top },
+            { x: Math.max(1, rect.w - 2 * p.frontEdgeReveal), y: p.drawerFrontThickness, z: height },
+            lightWood,
+            `Drawer front stock (${round(p.drawerFrontThickness)} mm)`,
+            {
+              sectionId: rect.id + 1,
+              drawer: index + 1,
+              drawerHeightMode: node[7],
+              frontMountStyle: p.frontMountStyle,
+            },
+          ),
+        );
+        top -= p.drawerGap;
+      });
+    }
+
+    if (node[5] === 'doors' && node[6] > 0) {
+      addDoorFronts(parts, p, {
+        idPrefix: `section:${rect.id + 1}:door`,
+        x: rect.x,
+        z: rect.z,
+        width: rect.w,
+        height: rect.h,
+        count: node[6],
+        sectionId: rect.id + 1,
+      });
+    }
+  }
+}
+
+function addDoorFronts(
+  parts: CadPart[],
+  p: CabinetParameters,
+  area: {
+    idPrefix: string;
+    x: number;
+    z: number;
+    width: number;
+    height: number;
+    count: number;
+    sectionId: number;
+  },
+) {
+  const count = Math.max(1, Math.min(2, area.count));
+  const availableWidth = Math.max(
+    1,
+    area.width - 2 * p.frontEdgeReveal - p.doorGap * (count - 1),
+  );
+  const doorWidth = availableWidth / count;
+  const doorHeight = Math.max(1, area.height - 2 * p.frontEdgeReveal);
+  const frontY = p.frontMountStyle === 'overlay' ? -p.doorThickness : 0;
+
+  for (let index = 0; index < count; index += 1) {
+    parts.push(
+      part(
+        `${area.idPrefix}:${index + 1}`,
+        `Section ${area.sectionId || 1} Door ${index + 1}`,
+        'front',
+        {
+          x: area.x + p.frontEdgeReveal + index * (doorWidth + p.doorGap),
+          y: frontY,
+          z: area.z + p.frontEdgeReveal,
+        },
+        { x: doorWidth, y: p.doorThickness, z: doorHeight },
+        lightWood,
+        `Door stock (${round(p.doorThickness)} mm)`,
+        {
+          sectionId: area.sectionId,
+          door: index + 1,
+          frontMountStyle: p.frontMountStyle,
+        },
+      ),
+    );
+  }
+}
+
 export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetParameters {
   const defaults = makeUtilityDefaults();
   const source = { ...defaults, ...input };
@@ -363,6 +510,10 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
   const width = clampNumber(source.width, 300, 2400, defaults.width);
   const height = clampNumber(source.height, 300, 3000, defaults.height);
   const depth = clampNumber(source.depth, 200, 1200, defaults.depth);
+  const layoutMode = oneOf(source.layoutMode, ['legacy', 'sections'] as const, defaults.layoutMode);
+  const sectionNodes = Array.isArray(source.sectionNodes) && !treeErrors(source.sectionNodes).length
+    ? cloneSectionNodes(source.sectionNodes as SectionNode[])
+    : cloneSectionNodes(defaults.sectionNodes);
 
   return {
     width,
@@ -378,6 +529,8 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
     drawerFrontThickness: clampNumber(source.drawerFrontThickness, 6, 40, defaults.drawerFrontThickness),
     doorThickness: clampNumber(source.doorThickness, 6, 40, defaults.doorThickness),
 
+    layoutMode,
+    sectionNodes,
     cabinetContents: oneOf(source.cabinetContents, ['drawers', 'doors', 'combo'] as const, defaults.cabinetContents),
     drawerCount: clampInteger(source.drawerCount, 0, 8, defaults.drawerCount),
     doorCount: clampInteger(source.doorCount, 0, 4, defaults.doorCount),
