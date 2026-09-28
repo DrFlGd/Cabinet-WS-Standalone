@@ -11,7 +11,10 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct click selection in the Three.js viewport.
 - Hide/show parts, exploded view, fit-to-model, and iso/front/right/top views.
-- JSON save/open for prototype cabinet documents.
+- Versioned schema-v2 cabinet projects with automatic v1 migration and runtime validation.
+- Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
+- Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
+- Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Browser development mode plus an Electron desktop wrapper.
 
 ## Geometry status
@@ -57,6 +60,15 @@ npm run desktop:dev
 
 This starts Vite and launches Electron against the development server.
 
+## Editor shortcuts
+
+- `Ctrl+S` — Save
+- `Ctrl+Shift+S` — Save As
+- `Ctrl+Z` — Undo
+- `Ctrl+Y` or `Ctrl+Shift+Z` — Redo
+
+Standalone project geometry is always stored in millimeters. Switching the UI to inches changes only presentation and input conversion; it does not round-trip or rewrite the underlying geometry values.
+
 ## Production build
 
 Build the renderer:
@@ -90,7 +102,7 @@ npm run desktop:dist
 The packaged application is written to `release/` with a name similar to:
 
 ```text
-Cabinet-WS-Standalone-0.1.0-Windows-x64.exe
+Cabinet-WS-Standalone-0.2.0-Windows-x64.exe
 ```
 
 The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
@@ -103,9 +115,10 @@ On pushes to `main` and pull requests it:
 
 1. installs Node.js 24,
 2. installs npm dependencies,
-3. runs the TypeScript/Vite production build,
-4. packages the Electron application as a portable Windows executable, and
-5. uploads the executable as the `cabinet-ws-standalone-windows` workflow artifact.
+3. runs the regression test suite,
+4. runs the TypeScript/Vite production build,
+5. packages the Electron application as a portable Windows executable, and
+6. uploads the executable as the `cabinet-ws-standalone-windows` workflow artifact.
 
 This is useful for testing development builds without setting up a local Windows build environment.
 
