@@ -12,6 +12,7 @@ import {
 } from './cad/documentIO';
 import { formatDimension, unitLabel, type DisplayUnits } from './cad/units';
 import { simpleLayoutToSections } from './cad/sections';
+import { hardwareDefinition } from './cad/hardwareCatalog';
 import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
 import type { CabinetDocument, CabinetParameters, CadPart, SectionNode } from './cad/types';
 import PropertiesPanel from './components/PropertiesPanel';
@@ -198,6 +199,19 @@ export default function App() {
     setNotice(`Updated ${humanize(String(key))}`);
   }
 
+  function applyHardware(profileId: string) {
+    const profile = hardwareDefinition(profileId);
+    if (!profile) return;
+    history.edit(current => ({
+      ...current,
+      parameters: sanitizeParameters({
+        ...current.parameters,
+        ...profile.parameterPatch,
+      }),
+    }), `hardware:${profile.category}`);
+    setNotice(`Applied ${profile.label}`);
+  }
+
   function updateSections(nodes: SectionNode[]) {
     history.edit(current => ({
       ...current,
@@ -380,7 +394,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.4.2</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -443,7 +457,7 @@ export default function App() {
           <DimensionBadge label="H" value={editor.parameters.height} units={editor.displayUnits} />
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
-          <p>Utility v0.4.2 · stable desktop dropdowns · cutouts · drawer boxes.</p>
+          <p>Utility v0.5 · hardware intelligence · drilling · clearances · BOM.</p>
         </div>
       </section>
 
@@ -452,6 +466,7 @@ export default function App() {
         selected={selected}
         displayUnits={editor.displayUnits}
         onChange={updateParameter}
+        onApplyHardware={applyHardware}
       />
     </div>
   </main>;
