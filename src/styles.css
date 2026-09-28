@@ -356,3 +356,131 @@ button { color: inherit; }
   line-height: 1.35;
   margin-top: 8px;
 }
+
+
+/* Electron-stable dropdowns: rendered in React instead of Chromium's native select popup. */
+.select-control {
+  width: 100%;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #374149;
+  border-radius: 5px;
+  background: #191e22;
+  color: #e8edf0;
+  padding: 6px 7px;
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+.select-control:hover {
+  border-color: #4a5862;
+  background: #1d2429;
+}
+.select-control:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent-2);
+}
+.select-control:disabled {
+  opacity: .45;
+  cursor: default;
+}
+.select-control-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-control-value.placeholder {
+  color: #89969e;
+}
+.select-control-chevron {
+  flex: 0 0 auto;
+  color: #829099;
+  transition: transform .12s ease;
+}
+.select-control-chevron.open {
+  transform: rotate(180deg);
+}
+.select-control-menu {
+  position: fixed;
+  z-index: 10000;
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid #47545d;
+  border-radius: 6px;
+  background: #181d21;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .48);
+}
+.select-control-option {
+  width: 100%;
+  min-height: 29px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #dce4e8;
+  padding: 6px 8px;
+  font-size: 10px;
+  text-align: left;
+  cursor: pointer;
+}
+.select-control-option:hover,
+.select-control-option:focus-visible {
+  outline: 0;
+  background: #293239;
+}
+.select-control-option.selected {
+  color: #effffc;
+  background: #24433f;
+}
+.select-control-option:disabled {
+  opacity: .38;
+  cursor: default;
+}
+
+.preset-panel .select-control {
+  padding: 7px;
+  background: #171b1f;
+  color: #dce4e8;
+  border-color: #384149;
+}
+.toolbar .select-control {
+  width: auto;
+  min-width: 72px;
+  padding: 5px 7px;
+  background: #171b1f;
+  color: #dce4e8;
+  border: 1px solid #384149;
+  font-size: 11px;
+}
+.toolbar .recent-select {
+  width: 145px;
+  max-width: 145px;
+}
+.units-control .select-control {
+  min-width: 72px;
+}
+.parameter-select.select-control {
+  width: 100%;
+  padding: 6px 7px;
+  background: #191e22;
+  color: #e8edf0;
+  border-color: #374149;
+  font-size: 10px;
+}
+.section-layout-controls .select-control {
+  width: 100%;
+  padding: 5px 6px;
+  background: #191e22;
+  color: #e8edf0;
+  border-color: #374149;
+  font-size: 10px;
+}
