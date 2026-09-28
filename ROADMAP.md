@@ -185,7 +185,7 @@ Before implementing all seven frontends:
 
 Recommended order:
 
-- [ ] **Utility cabinet** — reference implementation
+- [x] **Utility cabinet** — reference implementation
 - [ ] **Kitchen cabinet** — richest conventional cabinet behavior
 - [ ] **Shop cart**
 - [ ] **Benchtop cabinet**
@@ -195,14 +195,14 @@ Recommended order:
 
 For every family:
 
-- [ ] parameter defaults
-- [ ] parameter dependencies/visibility
-- [ ] starter configurations
-- [ ] part generation
-- [ ] semantic part IDs
-- [ ] basic BOM parity
-- [ ] legacy project import
-- [ ] regression fixtures against the web/OpenSCAD implementation
+- [x] parameter defaults *(Utility)*
+- [x] parameter dependencies/visibility *(Utility)*
+- [x] starter configurations *(supported Utility starters; mixed-bay starters deferred to v0.4)*
+- [x] part generation *(Utility semantic prototype geometry)*
+- [x] semantic part IDs *(Utility)*
+- [x] basic BOM parity *(Utility regression fixtures)*
+- [x] legacy project import *(Utility web projects)*
+- [x] regression fixtures against the web/OpenSCAD implementation *(Utility schema/geometry contract fixtures)*
 
 ### Definition of done
 
@@ -234,12 +234,12 @@ Each parameter should describe:
 - dependency/visibility rule
 - affected model nodes
 
-- [ ] strongly typed parameter definitions
+- [x] strongly typed parameter definitions *(Utility)*
 - [ ] runtime project validation from the same schema
-- [ ] generated property controls
+- [x] generated property controls *(Utility)*
 - [ ] validation messages
-- [ ] dependency-aware visibility
-- [ ] advanced-setting presentation
+- [x] dependency-aware visibility *(Utility)*
+- [x] advanced-setting presentation *(Utility baseline)*
 
 **Reference:** web `lib/schema.json`, `lib/settings.ts`
 
@@ -732,12 +732,14 @@ attempting whole phases at once:
 
 ## v0.3 — Utility cabinet parity
 
-1. typed setting schema
-2. utility-cabinet web defaults/controls
-3. construction options
-4. starter presets
-5. legacy utility project import
-6. BOM comparison tests
+**Status: implemented**
+
+1. [x] typed setting schema
+2. [x] utility-cabinet web defaults/controls
+3. [x] construction options
+4. [x] supported starter presets
+5. [x] legacy Utility project import
+6. [x] BOM / semantic geometry comparison tests
 
 ## v0.4 — Sections
 
@@ -822,7 +824,7 @@ being built.
 
 # Next task
 
-Start **v0.3 / Utility Cabinet parity** as the first end-to-end migration from the
-web application. The first slice should introduce the typed parameter schema, port
-the Utility Cabinet defaults and construction controls, and add comparison fixtures
-against the current web/OpenSCAD implementation.
+Start **v0.4 / Sections**. Port the bounded section tree and validation behavior,
+then make it drive the semantic cabinet model. The desktop editor should improve on
+the web SVG workflow with front-view/direct divider manipulation rather than simply
+copying the old interaction model.
