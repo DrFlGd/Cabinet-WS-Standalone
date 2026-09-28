@@ -7,10 +7,11 @@ import SelectControl from './SelectControl';
 
 type Props = {
   parameters: CabinetParameters;
+  category?: HardwareCategory;
   onApply: (profileId: string) => void;
 };
 
-export default function HardwarePicker({ parameters, onApply }: Props) {
+export default function HardwarePicker({ parameters, category, onApply }: Props) {
   const [query, setQuery] = useState('');
   const issues = hardwareCompatibility(parameters);
 
@@ -30,7 +31,7 @@ export default function HardwarePicker({ parameters, onApply }: Props) {
         />
       </label>
 
-      {hasDrawerContent(parameters) && (
+      {category !== 'hinge' && hasDrawerContent(parameters) && (
         <HardwareCategory
           category="drawer_slide"
           query={query}
@@ -38,7 +39,7 @@ export default function HardwarePicker({ parameters, onApply }: Props) {
           onApply={onApply}
         />
       )}
-      {hasDoorContent(parameters) && (
+      {category !== 'drawer_slide' && hasDoorContent(parameters) && (
         <HardwareCategory
           category="hinge"
           query={query}
