@@ -101,7 +101,8 @@ describe('v0.5 hardware catalog and semantic hardware', () => {
 
     expect(hinges).toHaveLength(4);
     expect(hinges.every(item => item.definitionId === 'generic_euro_35_110_overlay')).toBe(true);
-    expect(document.parts.find(part => part.id === 'door:1')?.renderFeatures?.some(feature => feature.kind === 'drill')).toBe(true);
+    const doorFeatures = document.parts.find(part => part.id === 'door:1')?.renderFeatures?.filter(feature => feature.kind === 'drill') ?? [];
+    expect(doorFeatures.length).toBeGreaterThanOrEqual(3);
     expect(document.parts.find(part => part.id === 'carcass:left')?.geometry?.holes?.length).toBeGreaterThan(0);
   });
 
