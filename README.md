@@ -7,7 +7,7 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with model tree, realtime 3D viewport, properties panel, and toolbar.
-- Utility Cabinet v0.4 model with typed settings plus bounded nested section/bay layouts, direct front-elevation divider editing, and section-driven semantic 3D parts.
+- Utility Cabinet v0.5 model with bounded sections, realtime semantic 3D parts, and first-class drawer-slide/hinge hardware intelligence.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct click selection in the Three.js viewport.
 - Hide/show parts, exploded view, fit-to-model, and iso/front/right/top views.
@@ -17,15 +17,17 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Browser development mode plus an Electron desktop wrapper.
 
-## v0.4 Sections scope
+## v0.5 Hardware scope
 
-v0.4 keeps the Utility Cabinet as the reference family and adds the bounded section/bay model from Cabinet Workshop. Section trees support nested left/right and top/bottom splits, proportional or fixed clear-opening sizes, drawers, doors, open/shelf regions, panel/rail/no-divider construction, and equal/graduated/custom drawer-front sizing.
+v0.5 turns the web application's hardware knowledge into first-class standalone CAD data for the Utility Cabinet reference family. The generated standalone catalog currently carries all 84 Utility-compatible profiles from Cabinet Workshop: 74 drawer-slide profiles and 10 concealed-hinge profiles, with manufacturer/model/source and verification status preserved.
 
-The standalone editor exposes a dedicated front-elevation manipulation surface beside the 3D viewport. Users can select openings/subtrees, drag dividers, enter fixed clear dimensions, split openings horizontally or vertically, create three-column layouts, edit section contents, and collapse subtrees. Section edits are undoable and drive semantic 3D divider, shelf, door, and drawer-front bodies.
+The Properties panel includes a searchable hardware catalog. Applying a preset is one undoable parameter operation, after which the copied dimensions remain editable. Profiles marked as manufacturer-partial intentionally keep unsupported drilling disabled; Standalone does not invent a hole choice when a manufacturer product exposes multiple valid mounting options.
 
-The three previously deferred wide Utility starters now use this section model. Cabinet Workshop Utility imports preserve valid `section_nodes` directly and convert legacy `mixed_bays` data—including drawer sizing recipes—into the standalone tree. Invalid section data is reported and safely falls back to the simple Utility layout.
+Hardware is now represented as semantic `HardwareDefinition` and `HardwareInstance` objects with mounting references, keepout envelopes, required clearances, drilling data, and simplified realtime reference bodies. Metal-slide side clearance changes drawer-box width, slide length limits drawer-box depth, encoded slide drilling reaches drawer/cabinet mounting members, and concealed hinges add cup/plate drilling intent. Purchased hardware is grouped separately from fabricated cabinet-part BOM rows.
 
-The current Three.js solids still express semantic construction rather than exact machining geometry. Divider joinery booleans remain part of the future B-Rep kernel milestone; hinge and slide intelligence is the v0.5 target.
+Compatibility checks currently catch slide-depth conflicts, hinge-cup breakthrough, hardware assigned to layouts without relevant drawers/doors, catalog-family incompatibility, and hinge/front-application mismatches. Legacy Cabinet Workshop Utility files preserve supported slide/hinge values and are matched back to a catalog profile when possible.
+
+Face-frame-specific hardware rules remain deferred until face frames exist in the standalone construction model. Exact B-Rep bores/pockets and collision solids remain part of v0.6; v0.5 records manufacturing intent and realtime reference geometry without pretending those preview solids are final machining geometry.
 
 ## Geometry status
 
