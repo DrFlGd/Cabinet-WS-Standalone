@@ -81,7 +81,7 @@ export function buildHardwareInstances(parts: CadPart[], parameters: CabinetPara
       const usable = Math.max(0, door.size.z - 2 * topMargin);
 
       for (let index = 0; index < hingeCount; index += 1) {
-        const zCenter = door.position.z + topMargin + (hingeCount === 1 ? usable / 2 : usable * index / (hingeCount - 1));
+        const zCenter = door.position.z + topMargin + usable * index / (hingeCount - 1);
         const size = {
           x: Math.max(40, parameters.hingeCupDiameter + 10),
           y: Math.max(12, parameters.hingeCupDepth + 4),
