@@ -101,7 +101,7 @@ function registerIpc() {
         title: 'Save Cabinet WS project',
         defaultPath: String(options?.suggestedName || 'cabinet.cabinetws.json'),
         filters: [
-          { name: 'Cabinet WS projects', extensions: ['cabinetws.json', 'json'] },
+          { name: 'Cabinet WS projects', extensions: ['json'] },
         ],
       });
       if (result.canceled || !result.filePath) return { canceled: true };
