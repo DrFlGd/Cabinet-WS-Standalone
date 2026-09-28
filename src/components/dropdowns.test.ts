@@ -24,4 +24,17 @@ describe('desktop dropdown controls', () => {
     expect(source).toContain('role="listbox"');
     expect(source).toContain('aria-expanded={open}');
   });
+
+  it('keeps the section editor collapsible and routes selected parts to contextual settings', () => {
+    const sectionSource = readFileSync('src/components/SectionLayoutPanel.tsx', 'utf8');
+    const appSource = readFileSync('src/App.tsx', 'utf8');
+    const propertiesSource = readFileSync('src/components/PropertiesPanel.tsx', 'utf8');
+
+    expect(sectionSource).toContain('aria-expanded={expanded}');
+    expect(sectionSource).toContain("expanded ? 'expanded' : 'collapsed'");
+    expect(appSource).toContain('section-editor-expanded');
+    expect(appSource).toContain('onOpenSection={openSection}');
+    expect(propertiesSource).toContain('partSettingsContext');
+    expect(propertiesSource).toContain('Edit this section');
+  });
 });

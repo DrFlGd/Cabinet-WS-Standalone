@@ -55,6 +55,8 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [sectionEditorExpanded, setSectionEditorExpanded] = useState(false);
+  const [sectionSelectedId, setSectionSelectedId] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [explode, setExplode] = useState(0);
   const [notice, setNotice] = useState('Ready');
@@ -197,6 +199,12 @@ export default function App() {
         parameters: sanitizeParameters(next),
       };
     }, `parameter:${String(key)}`);
+
+    if (key === 'layoutMode') {
+      const sections = value === 'sections';
+      setSectionEditorExpanded(sections);
+      if (sections) setSectionSelectedId(0);
+    }
     setNotice(`Updated ${humanize(String(key))}`);
   }
 
@@ -243,6 +251,8 @@ export default function App() {
     }));
 
     setSelectedId(null);
+    setSectionSelectedId(0);
+    setSectionEditorExpanded(starter.parameters.layoutMode === 'sections');
     setHiddenIds(new Set());
     setExplode(0);
     setNotice(`Loaded ${starter.name}`);
@@ -251,7 +261,13 @@ export default function App() {
 
   function select(part: CadPart | null) {
     setSelectedId(part?.id ?? null);
-    setNotice(part ? `Selected ${part.name}` : 'Cabinet selected');
+    setNotice(part ? `Selected ${part.name} · related settings shown at right` : 'Cabinet selected');
+  }
+
+  function openSection(sectionNodeId: number) {
+    setSectionSelectedId(sectionNodeId);
+    setSectionEditorExpanded(true);
+    setNotice(`Editing Section ${sectionNodeId + 1}`);
   }
 
   function toggleVisibility(id: string) {
@@ -279,6 +295,8 @@ export default function App() {
     setSavedContent(serializeDocument(toCadDocument(next)));
     setCurrentPath(null);
     setSelectedId(null);
+    setSectionSelectedId(0);
+    setSectionEditorExpanded(false);
     setHiddenIds(new Set());
     setExplode(0);
     await clearRecovery();
@@ -296,6 +314,8 @@ export default function App() {
     setSavedContent(serializeDocument(document));
     setCurrentPath(sourcePath);
     setSelectedId(null);
+    setSectionSelectedId(0);
+    setSectionEditorExpanded(false);
     setHiddenIds(new Set());
     setExplode(0);
     await clearRecovery();
@@ -395,7 +415,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.1</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -423,8 +443,8 @@ export default function App() {
     />
     <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
-    <div className="workspace">
-      <div className={`left-stack ${editor.parameters.layoutMode === 'sections' ? 'sections-enabled' : ''}`}>
+    <div className={`workspace ${editor.parameters.layoutMode === 'sections' && sectionEditorExpanded ? 'section-editor-expanded' : ''}`}>
+      <div className={`left-stack ${editor.parameters.layoutMode === 'sections' ? 'sections-enabled' : ''} ${sectionEditorExpanded ? 'section-editor-expanded' : ''}`}>
         <section className="panel preset-panel">
           <span className="eyebrow">UTILITY CABINET STARTERS</span>
           <SelectControl
@@ -441,6 +461,10 @@ export default function App() {
             parameters={editor.parameters}
             thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
             units={editor.displayUnits}
+            expanded={sectionEditorExpanded}
+            selectedSectionId={sectionSelectedId}
+            onToggle={() => setSectionEditorExpanded(current => !current)}
+            onSelectedSectionChange={setSectionSelectedId}
             onChange={updateSections}
           />
         )}
@@ -450,7 +474,7 @@ export default function App() {
       <section className="viewport-panel">
         <div className="viewport-badges">
           <span><Cpu size={14} /> Realtime Utility Cabinet model</span>
-          <span><MousePointer2 size={14} /> Click parts to inspect semantics</span>
+          <span><MousePointer2 size={14} /> Click parts to edit related settings</span>
         </div>
         <CadViewport ref={viewport} document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} explode={explode} onSelect={select} />
         <div className="viewport-footer">
@@ -459,7 +483,7 @@ export default function App() {
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
           <div><strong>{hardwareCount}</strong><small>hardware instances</small></div>
-          <p>Utility v0.5 · hardware intelligence · drilling · clearances · BOM.</p>
+          <p>Utility v0.5.1 · contextual editing · collapsible sections · hardware intelligence.</p>
         </div>
       </section>
 
@@ -469,6 +493,8 @@ export default function App() {
         displayUnits={editor.displayUnits}
         onChange={updateParameter}
         onApplyHardware={applyHardware}
+        onShowCabinetSettings={() => select(null)}
+        onOpenSection={openSection}
       />
     </div>
   </main>;

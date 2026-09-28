@@ -9,13 +9,19 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - React desktop-style workspace with model tree, realtime 3D viewport, properties panel, and toolbar.
 - Utility Cabinet v0.5 model with bounded sections, realtime semantic 3D parts, and first-class drawer-slide/hinge hardware intelligence.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
-- Direct click selection in the Three.js viewport.
+- Direct click selection in the Three.js viewport with contextual editable settings for the selected part.
 - Hide/show parts, exploded view, fit-to-model, and iso/front/right/top views.
 - Versioned schema-v2 cabinet projects with automatic v1 migration and runtime validation.
 - Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Browser development mode plus an Electron desktop wrapper.
+
+## v0.5.1 Editing usability
+
+The Section Layout editor is collapsible. When closed, the left rail returns to a compact model-navigation layout. When opened, the left workspace widens and the front-elevation editor receives most of the column so nested bays and divider handles are easier to work with.
+
+Part selection is now an editing action as well as an inspection action. Clicking a drawer, door, shelf, carcass panel, worktop, divider, or hardware component in the 3D viewport/model tree populates the right Properties panel with the cabinet parameters that generate that part. Section-generated parts link directly back to their source node in Section Layout. Read-only generated dimensions and semantic metadata remain available below those controls.
 
 ## v0.5 Hardware scope
 
