@@ -415,7 +415,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.1</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -483,7 +483,7 @@ export default function App() {
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
           <div><strong>{hardwareCount}</strong><small>hardware instances</small></div>
-          <p>Utility v0.5 · hardware intelligence · drilling · clearances · BOM.</p>
+          <p>Utility v0.5.1 · contextual editing · collapsible sections · hardware intelligence.</p>
         </div>
       </section>
 
