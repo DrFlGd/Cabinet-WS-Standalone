@@ -817,7 +817,7 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
     drawerMount: oneOf(source.drawerMount, ['wood_rails', 'metal_slides'] as const, defaults.drawerMount),
     drawerSlideId: safeString(source.drawerSlideId, defaults.drawerSlideId),
     metalSlideClearancePerSide: clampNumber(source.metalSlideClearancePerSide, 3, 40, defaults.metalSlideClearancePerSide),
-    metalSlideLength: clampNumber(source.metalSlideLength, 100, Math.max(100, depth), defaults.metalSlideLength),
+    metalSlideLength: clampNumber(source.metalSlideLength, 100, 2000, defaults.metalSlideLength),
     metalSlideFrontSetback: clampNumber(source.metalSlideFrontSetback, 0, 50, defaults.metalSlideFrontSetback),
     metalSlideEnvelopeHeight: clampNumber(source.metalSlideEnvelopeHeight, 10, 120, defaults.metalSlideEnvelopeHeight),
     includeMetalSlideHoles: Boolean(source.includeMetalSlideHoles),
