@@ -290,10 +290,10 @@ function applyHingeDrilling(parts: CadPart[], instance: HardwareInstance, parame
   const localX = instance.position.x + instance.size.x / 2 - door.position.x;
   const localZ = instance.position.z + instance.size.z / 2 - door.position.z;
 
-  door.renderFeatures = [
+  const doorFeatures = [
     ...(door.renderFeatures ?? []),
     {
-      kind: 'drill',
+      kind: 'drill' as const,
       position: {
         x: Math.max(0, localX - cupDiameter / 2),
         y: Math.max(0, door.size.y - cupDepth),
@@ -308,6 +308,32 @@ function applyHingeDrilling(parts: CadPart[], instance: HardwareInstance, parame
       opacity: 0.88,
     },
   ];
+
+  if (parameters.hingeDoorFixingEnabled) {
+    const diameter = Math.min(parameters.hingeDoorFixingHoleDiameter, Math.max(1, door.size.x / 8));
+    const halfSpacing = parameters.hingeDoorFixingHoleSpacing / 2;
+    for (const zOffset of [-halfSpacing, halfSpacing]) {
+      const z = localZ + zOffset;
+      if (z <= diameter / 2 || z >= door.size.z - diameter / 2) continue;
+      doorFeatures.push({
+        kind: 'drill' as const,
+        position: {
+          x: Math.max(0, localX - diameter / 2),
+          y: Math.max(0, door.size.y - Math.min(5, door.size.y)),
+          z: Math.max(0, z - diameter / 2),
+        },
+        size: {
+          x: diameter,
+          y: Math.min(5.6, door.size.y + 0.6),
+          z: diameter,
+        },
+        color: '#26343a',
+        opacity: 0.9,
+      });
+    }
+  }
+
+  door.renderFeatures = doorFeatures;
 
   const cabinetMount = parts.find(part => part.id === instance.mountingReference.partId);
   if (cabinetMount && parameters.hingePlateHolesEnabled) {
