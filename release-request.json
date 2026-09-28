@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
-  "milestone": "Rendering fixes: cutouts, drilling, joinery preview, drawer boxes",
+  "version": "0.4.2",
+  "milestone": "Desktop dropdown reliability fix",
   "requestedFrom": "main"
 }
