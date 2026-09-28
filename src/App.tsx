@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
-import { buildCabinetDocument, DEFAULT_PARAMETERS, sanitizeParameters } from './cad/cabinetModel';
+import { buildCabinetDocument, DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
 import CadViewport, { type CadViewportHandle } from './cad/CadViewport';
 import {
   downloadDocument,
@@ -11,9 +11,11 @@ import {
   type ImportReport,
 } from './cad/documentIO';
 import { formatDimension, unitLabel, type DisplayUnits } from './cad/units';
+import { simpleLayoutToSections } from './cad/sections';
 import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
-import type { CabinetDocument, CabinetParameters, CadPart } from './cad/types';
+import type { CabinetDocument, CabinetParameters, CadPart, SectionNode } from './cad/types';
 import PropertiesPanel from './components/PropertiesPanel';
+import SectionLayoutPanel from './components/SectionLayoutPanel';
 import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
 import { desktopApi, type RecentProject } from './desktop';
@@ -182,11 +184,29 @@ export default function App() {
   });
 
   function updateParameter(key: keyof CabinetParameters, value: ParameterValue) {
+    history.edit(current => {
+      const next = { ...current.parameters, [key]: value } as Partial<CabinetParameters>;
+      if (key === 'layoutMode' && value === 'sections' && current.parameters.layoutMode !== 'sections') {
+        next.sectionNodes = simpleLayoutToSections(current.parameters);
+      }
+      return {
+        ...current,
+        parameters: sanitizeParameters(next),
+      };
+    }, `parameter:${String(key)}`);
+    setNotice(`Updated ${humanize(String(key))}`);
+  }
+
+  function updateSections(nodes: SectionNode[]) {
     history.edit(current => ({
       ...current,
-      parameters: sanitizeParameters({ ...current.parameters, [key]: value }),
-    }), `parameter:${key}`);
-    setNotice(`Updated ${humanize(String(key))}`);
+      parameters: sanitizeParameters({
+        ...current.parameters,
+        layoutMode: 'sections',
+        sectionNodes: nodes,
+      }),
+    }), 'sections');
+    setNotice('Updated section layout');
   }
 
   function updateDisplayUnits(units: DisplayUnits) {
@@ -359,7 +379,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.3</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.4</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -388,15 +408,23 @@ export default function App() {
     <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
     <div className="workspace">
-      <div className="left-stack">
+      <div className={`left-stack ${editor.parameters.layoutMode === 'sections' ? 'sections-enabled' : ''}`}>
         <section className="panel preset-panel">
           <span className="eyebrow">UTILITY CABINET STARTERS</span>
           <select aria-label="Utility Cabinet starter" value="" onChange={event => applyStarter(event.target.value)}>
             <option value="" disabled>Choose a starter…</option>
             {UTILITY_STARTERS.map(starter => <option key={starter.id} value={starter.id}>{starter.name}</option>)}
           </select>
-          <p>Ported from the web Utility Cabinet engine. Wide mixed-bay starters are intentionally deferred to the Sections milestone.</p>
+          <p>Ported from the web Utility Cabinet engine. Wide mixed-bay starters now use the standalone v0.4 section tree.</p>
         </section>
+        {editor.parameters.layoutMode === 'sections' && (
+          <SectionLayoutPanel
+            parameters={editor.parameters}
+            thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
+            units={editor.displayUnits}
+            onChange={updateSections}
+          />
+        )}
         <TreePanel document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} onSelect={select} onToggleVisibility={toggleVisibility} />
       </div>
 
@@ -411,7 +439,7 @@ export default function App() {
           <DimensionBadge label="H" value={editor.parameters.height} units={editor.displayUnits} />
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
-          <p>Utility v0.3 · typed settings · web-project import · semantic construction model.</p>
+          <p>Utility v0.4 · nested sections · direct divider editing · mixed-bay import.</p>
         </div>
       </section>
 
