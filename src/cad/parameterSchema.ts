@@ -91,10 +91,6 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   { key: 'drawerFrontThickness', kind: 'dimension', label: 'Drawer front stock', description: 'Decorative drawer-front thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
   { key: 'doorThickness', kind: 'dimension', label: 'Door stock', description: 'Decorative door thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
 
-  { key: 'layoutMode', kind: 'select', label: 'Layout model', description: 'Simple uses the v0.3 single opening recipe. Sections enables the bounded nested bay tree and direct divider editor.', section: 'Layout', options: [
-    { value: 'legacy', label: 'Simple cabinet' },
-    { value: 'sections', label: 'Sections / bays' },
-  ] },
   { key: 'cabinetContents', kind: 'select', label: 'Contents', description: 'Primary Utility Cabinet front layout.', section: 'Layout', visibleWhen: p => p.layoutMode === 'legacy', options: [
     { value: 'drawers', label: 'Drawers' },
     { value: 'doors', label: 'Doors' },

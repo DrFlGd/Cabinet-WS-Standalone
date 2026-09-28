@@ -17,6 +17,12 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Browser development mode plus an Electron desktop wrapper.
 
+## v0.5.2 Manual Layout workspace
+
+Manual Layout Editor is now the default left-side workspace. The Layout mode selector lives at the top of that editor: **Simple cabinet** keeps a concise recipe summary visible, while **Sections / bays** activates the manual opening/divider canvas in the same place.
+
+The generated Parts browser is a secondary drawer immediately to the right of Manual Layout. It starts collapsed for maximum layout/viewport space and can be expanded when individual generated parts need to be selected, hidden, or inspected. Opening Parts expands the left workspace horizontally rather than shrinking the Manual Layout editor vertically.
+
 ## v0.5.1 Editing usability
 
 The Section Layout editor is collapsible. When closed, the left rail returns to a compact model-navigation layout. When opened, the left workspace widens and the front-elevation editor receives most of the column so nested bays and divider handles are easier to work with.
