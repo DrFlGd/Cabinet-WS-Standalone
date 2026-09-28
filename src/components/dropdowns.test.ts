@@ -25,14 +25,20 @@ describe('desktop dropdown controls', () => {
     expect(source).toContain('aria-expanded={open}');
   });
 
-  it('keeps the section editor collapsible and routes selected parts to contextual settings', () => {
+  it('keeps Manual Layout primary and the Parts browser secondary/collapsible', () => {
     const sectionSource = readFileSync('src/components/SectionLayoutPanel.tsx', 'utf8');
+    const treeSource = readFileSync('src/components/TreePanel.tsx', 'utf8');
     const appSource = readFileSync('src/App.tsx', 'utf8');
+    const schemaSource = readFileSync('src/cad/parameterSchema.ts', 'utf8');
     const propertiesSource = readFileSync('src/components/PropertiesPanel.tsx', 'utf8');
 
-    expect(sectionSource).toContain('aria-expanded={expanded}');
-    expect(sectionSource).toContain("expanded ? 'expanded' : 'collapsed'");
-    expect(appSource).toContain('section-editor-expanded');
+    expect(sectionSource).toContain('Manual Layout Editor');
+    expect(sectionSource).toContain('ariaLabel="Layout mode"');
+    expect(appSource).toContain('parts-browser-expanded');
+    expect(appSource).toContain('onLayoutModeChange');
+    expect(treeSource).toContain('Open parts browser');
+    expect(treeSource).toContain('Collapse parts browser');
+    expect(schemaSource).not.toContain("key: 'layoutMode'");
     expect(appSource).toContain('onOpenSection={openSection}');
     expect(propertiesSource).toContain('partSettingsContext');
     expect(propertiesSource).toContain('Edit this section');
