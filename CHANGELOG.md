@@ -4,6 +4,34 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.5.1] - 2026-09-28
+
+### Changed
+
+- Section Layout is now a true collapsible workspace instead of a permanently fixed-height panel in the narrow left rail.
+- Collapsed Section Layout returns space to the model tree and realtime viewport.
+- Expanded Section Layout widens the left workspace and gives the front-elevation editor substantially more vertical and horizontal room for nested sections and divider dragging.
+- Switching into Sections mode opens the layout workspace automatically; it can then be collapsed independently without changing the cabinet layout.
+- Selecting a part in the 3D viewport or model tree now keeps the right Properties panel editable instead of replacing it with read-only part metadata.
+- The right panel now prioritizes parameter controls related to the selected part:
+  - drawer boxes/fronts expose drawer stock, front, and slide controls;
+  - doors expose front and hinge controls;
+  - hardware instances expose only the matching slide or hinge catalog/settings;
+  - carcass, back, shelf, divider, and worktop parts expose their corresponding construction parameters.
+- Section-generated drawer/door parts show their source section and provide a direct **Edit this section** action that opens the Section Layout on that node.
+- Generated part dimensions and semantic metadata remain visible below the contextual controls for inspection.
+- Added an **All cabinet settings** action to return from part-specific editing to the complete Utility parameter view.
+
+### Testing
+
+- Added regression coverage for drawer, door, worktop, and section-generated part-to-setting mappings.
+- Added source-level guards for the collapsible Section Layout state and contextual Properties wiring.
+- Production TypeScript/Vite build remains part of the release gate.
+
+### Compatibility
+
+- No project-file schema change. Existing v0.5.0 and earlier schema-v2 projects remain compatible.
+
 ## [0.5.0] - 2026-09-28
 
 ### Added
