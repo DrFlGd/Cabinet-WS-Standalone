@@ -17,6 +17,7 @@ const labels: Record<PartCategory, string> = {
   drawer: 'Drawers',
   hardware: 'Hardware',
   worktop: 'Worktops',
+  divider: 'Section Dividers',
 };
 
 export default function TreePanel({ document, selectedId, hiddenIds, onSelect, onToggleVisibility }: Props) {
