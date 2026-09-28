@@ -130,28 +130,28 @@ function makeInstance(args: {
   parameters: CabinetParameters;
 }): HardwareInstance {
   const definition = args.definition;
-  const drilling = definition?.drilling ?? (
-    args.category === 'drawer_slide'
-      ? {
-          enabled: args.parameters.includeMetalSlideHoles && args.parameters.hardwareDrillingMode !== 'off',
-          cabinetHolesX: [...args.parameters.metalSlideCabinetHolesX],
-          drawerHolesX: [...args.parameters.metalSlideDrawerHolesX],
-          cabinetHoleDiameter: args.parameters.metalSlideCabinetHoleDiameter,
-          drawerHoleDiameter: args.parameters.metalSlideDrawerHoleDiameter,
-          cabinetHoleZFromDrawerBottom: args.parameters.metalSlideCabinetHoleZFromDrawerBottom,
-          drawerHoleZFromDrawerBottom: args.parameters.metalSlideDrawerHoleZFromDrawerBottom,
-        }
-      : {
-          enabled: true,
-          doorFixingEnabled: args.parameters.hingeDoorFixingEnabled,
-          doorFixingHoleDiameter: args.parameters.hingeDoorFixingHoleDiameter,
-          doorFixingHoleSpacing: args.parameters.hingeDoorFixingHoleSpacing,
-          plateHolesEnabled: args.parameters.hingePlateHolesEnabled,
-          plateHoleDiameter: args.parameters.hingePlateHoleDiameter,
-          plateCenterFromFront: args.parameters.hingePlateCenterFromFront,
-          plateHoleSpacing: args.parameters.hingePlateHoleSpacing,
-        }
-  );
+  // Hardware presets are one-time patches. After application, the editable cabinet
+  // parameters remain authoritative so users can tune a verified/reference preset.
+  const drilling = args.category === 'drawer_slide'
+    ? {
+        enabled: args.parameters.includeMetalSlideHoles && args.parameters.hardwareDrillingMode !== 'off',
+        cabinetHolesX: [...args.parameters.metalSlideCabinetHolesX],
+        drawerHolesX: [...args.parameters.metalSlideDrawerHolesX],
+        cabinetHoleDiameter: args.parameters.metalSlideCabinetHoleDiameter,
+        drawerHoleDiameter: args.parameters.metalSlideDrawerHoleDiameter,
+        cabinetHoleZFromDrawerBottom: args.parameters.metalSlideCabinetHoleZFromDrawerBottom,
+        drawerHoleZFromDrawerBottom: args.parameters.metalSlideDrawerHoleZFromDrawerBottom,
+      }
+    : {
+        enabled: true,
+        doorFixingEnabled: args.parameters.hingeDoorFixingEnabled,
+        doorFixingHoleDiameter: args.parameters.hingeDoorFixingHoleDiameter,
+        doorFixingHoleSpacing: args.parameters.hingeDoorFixingHoleSpacing,
+        plateHolesEnabled: args.parameters.hingePlateHolesEnabled,
+        plateHoleDiameter: args.parameters.hingePlateHoleDiameter,
+        plateCenterFromFront: args.parameters.hingePlateCenterFromFront,
+        plateHoleSpacing: args.parameters.hingePlateHoleSpacing,
+      };
 
   return {
     id: args.id,
