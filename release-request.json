@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
-  "milestone": "Utility Cabinet parity",
+  "version": "0.4.1",
+  "milestone": "Rendering fixes: cutouts, drilling, joinery preview, drawer boxes",
   "requestedFrom": "main"
 }
