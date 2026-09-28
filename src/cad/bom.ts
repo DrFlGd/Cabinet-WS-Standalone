@@ -1,4 +1,4 @@
-import type { CadPart } from './types';
+import type { CadPart, HardwareInstance } from './types';
 
 export type BomRow = {
   material: string;
@@ -32,6 +32,48 @@ export function buildBom(parts: CadPart[]): BomRow[] {
         quantity: 1,
         partIds: [part.id],
         names: [part.name],
+      });
+    }
+  }
+
+  return [...rows.values()];
+}
+
+
+export type PurchasedHardwareBomRow = {
+  definitionId: string;
+  label: string;
+  manufacturer: string;
+  model: string;
+  quantity: number;
+  instanceIds: string[];
+  verificationStatus: string;
+};
+
+export function buildPurchasedHardwareBom(hardware: HardwareInstance[]): PurchasedHardwareBomRow[] {
+  const rows = new Map<string, PurchasedHardwareBomRow>();
+
+  for (const instance of hardware) {
+    const key = [
+      instance.definitionId,
+      instance.manufacturer,
+      instance.model,
+      instance.label,
+      instance.verificationStatus,
+    ].join('|');
+    const existing = rows.get(key);
+    if (existing) {
+      existing.quantity += 1;
+      existing.instanceIds.push(instance.id);
+    } else {
+      rows.set(key, {
+        definitionId: instance.definitionId,
+        label: instance.label,
+        manufacturer: instance.manufacturer,
+        model: instance.model,
+        quantity: 1,
+        instanceIds: [instance.id],
+        verificationStatus: instance.verificationStatus,
       });
     }
   }
