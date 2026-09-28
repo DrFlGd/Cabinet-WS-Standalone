@@ -1,37 +1,205 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
-import { buildCabinetDocument, DEFAULT_PARAMETERS, PRESETS } from './cad/cabinetModel';
+import { buildCabinetDocument, DEFAULT_PARAMETERS, PRESETS, sanitizeParameters } from './cad/cabinetModel';
 import CadViewport, { type CadViewportHandle } from './cad/CadViewport';
-import { downloadDocument, parseDocument } from './cad/documentIO';
-import type { CabinetParameters, CadPart } from './cad/types';
+import { downloadDocument, parseDocument, serializeDocument, suggestedFileName } from './cad/documentIO';
+import { formatDimension, unitLabel, type DisplayUnits } from './cad/units';
+import type { CabinetDocument, CabinetParameters, CadPart } from './cad/types';
 import PropertiesPanel from './components/PropertiesPanel';
 import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
+import { desktopApi, type RecentProject } from './desktop';
+import { clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
+import type { EditorDocument } from './editor/history';
+import { useDocumentHistory } from './editor/useDocumentHistory';
+
+const INITIAL_EDITOR: EditorDocument = {
+  name: 'Base Cabinet Prototype',
+  displayUnits: 'mm',
+  parameters: { ...DEFAULT_PARAMETERS },
+};
+
+function toCadDocument(editor: EditorDocument) {
+  return buildCabinetDocument(editor.parameters, editor.name, editor.displayUnits);
+}
+
+function fromCadDocument(document: CabinetDocument): EditorDocument {
+  return {
+    name: document.name,
+    displayUnits: document.displayUnits,
+    parameters: { ...document.parameters },
+  };
+}
+
+const INITIAL_SAVED_CONTENT = serializeDocument(toCadDocument(INITIAL_EDITOR));
 
 export default function App() {
-  const [parameters, setParameters] = useState<CabinetParameters>(DEFAULT_PARAMETERS);
-  const [name, setName] = useState('Base Cabinet Prototype');
+  const history = useDocumentHistory(INITIAL_EDITOR);
+  const editor = history.document;
+  const [savedContent, setSavedContent] = useState(INITIAL_SAVED_CONTENT);
+  const [currentPath, setCurrentPath] = useState<string | null>(null);
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [explode, setExplode] = useState(0);
   const [notice, setNotice] = useState('Ready');
+  const [recoveryReady, setRecoveryReady] = useState(false);
+  const recoveryAttempted = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const viewport = useRef<CadViewportHandle>(null);
 
-  const cadDocument = useMemo(() => buildCabinetDocument(parameters, name), [parameters, name]);
-  const selected = selectedId ? cadDocument.parts.find(part => part.id === selectedId) ?? null : null;
+  const cadDocument = useMemo(
+    () => toCadDocument(editor),
+    [editor],
+  );
+  const serialized = useMemo(() => serializeDocument(cadDocument), [cadDocument]);
+  const dirty = serialized !== savedContent;
+  const selected = selectedId
+    ? cadDocument.parts.find(part => part.id === selectedId) ?? null
+    : null;
   const panelCount = cadDocument.parts.filter(part => part.category !== 'front').length;
 
+  async function refreshRecent() {
+    const desktop = desktopApi();
+    if (!desktop) return;
+    try {
+      setRecentProjects(await desktop.listRecent());
+    } catch {
+      setRecentProjects([]);
+    }
+  }
+
+  useEffect(() => {
+    void refreshRecent();
+  }, []);
+
+  useEffect(() => {
+    if (selectedId && !cadDocument.parts.some(part => part.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [cadDocument.parts, selectedId]);
+
+  useEffect(() => {
+    document.title = `${dirty ? '* ' : ''}${editor.name || 'Untitled'} — Cabinet WS Standalone`;
+  }, [dirty, editor.name]);
+
+  useEffect(() => {
+    if (recoveryAttempted.current) return;
+    recoveryAttempted.current = true;
+
+    void (async () => {
+      try {
+        const recovery = await readRecovery();
+        if (recovery) {
+          const recovered = parseDocument(recovery.content);
+          const recoveredContent = serializeDocument(recovered);
+          if (recoveredContent !== INITIAL_SAVED_CONTENT) {
+            const timestamp = new Date(recovery.updatedAt).toLocaleString();
+            if (window.confirm(`A recovery copy from ${timestamp} is available. Restore it?`)) {
+              history.reset(fromCadDocument(recovered));
+              setSavedContent('');
+              setCurrentPath(null);
+              setNotice('Recovered unsaved cabinet changes');
+            } else {
+              await clearRecovery();
+            }
+          } else {
+            await clearRecovery();
+          }
+        }
+      } catch {
+        await clearRecovery();
+      } finally {
+        setRecoveryReady(true);
+      }
+    })();
+  }, [history.reset]);
+
+  useEffect(() => {
+    if (!recoveryReady) return;
+    const timer = window.setTimeout(() => {
+      if (dirty) {
+        void writeRecovery(serialized).catch(() => setNotice('Recovery autosave failed'));
+      } else {
+        void clearRecovery();
+      }
+    }, 650);
+    return () => window.clearTimeout(timer);
+  }, [dirty, recoveryReady, serialized]);
+
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [dirty]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const modifier = event.ctrlKey || event.metaKey;
+      if (!modifier) return;
+
+      if (event.key.toLowerCase() === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) {
+          if (history.canRedo) {
+            history.redo();
+            setNotice('Redo');
+          }
+        } else if (history.canUndo) {
+          history.undo();
+          setNotice('Undo');
+        }
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'y' && history.canRedo) {
+        event.preventDefault();
+        history.redo();
+        setNotice('Redo');
+        return;
+      }
+
+      if (event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        void saveDocument(event.shiftKey);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
+
   function updateParameter(key: keyof CabinetParameters, value: number) {
-    setParameters(current => ({ ...current, [key]: value }));
+    history.edit(current => ({
+      ...current,
+      parameters: sanitizeParameters({ ...current.parameters, [key]: value }),
+    }), `parameter:${key}`);
     setNotice(`Updated ${humanize(key)}`);
+  }
+
+  function updateDisplayUnits(units: DisplayUnits) {
+    history.edit(current => ({ ...current, displayUnits: units }), 'display-units');
+    setNotice(`Display units: ${units === 'in' ? 'inches' : 'millimeters'}`);
+  }
+
+  function updateName(name: string) {
+    history.edit(current => ({ ...current, name: name.slice(0, 120) }), 'document-name');
   }
 
   function applyPreset(presetName: string) {
     const preset = PRESETS[presetName];
     if (!preset) return;
-    setParameters({ ...preset });
-    setName(`${presetName} Cabinet`);
+
+    history.edit(current => ({
+      name: `${presetName} Cabinet`,
+      displayUnits: current.displayUnits,
+      parameters: { ...preset },
+    }));
+
     setSelectedId(null);
     setHiddenIds(new Set());
     setExplode(0);
@@ -53,17 +221,80 @@ export default function App() {
     });
   }
 
-  async function openFile(file?: File) {
+  function allowDestructiveAction(action: string) {
+    return !dirty || window.confirm(`This cabinet has unsaved changes. Discard them and ${action}?`);
+  }
+
+  async function newDocument() {
+    if (!allowDestructiveAction('create a new cabinet')) return;
+
+    const next: EditorDocument = {
+      name: 'Base Cabinet Prototype',
+      displayUnits: editor.displayUnits,
+      parameters: { ...DEFAULT_PARAMETERS },
+    };
+    history.reset(next);
+    setSavedContent(serializeDocument(toCadDocument(next)));
+    setCurrentPath(null);
+    setSelectedId(null);
+    setHiddenIds(new Set());
+    setExplode(0);
+    await clearRecovery();
+    setNotice('New cabinet');
+    requestAnimationFrame(() => viewport.current?.fit());
+  }
+
+  async function loadDocument(document: CabinetDocument, sourcePath: string | null, label: string) {
+    history.reset(fromCadDocument(document));
+    setSavedContent(serializeDocument(document));
+    setCurrentPath(sourcePath);
+    setSelectedId(null);
+    setHiddenIds(new Set());
+    setExplode(0);
+    await clearRecovery();
+    await refreshRecent();
+    setNotice(label);
+    requestAnimationFrame(() => viewport.current?.fit());
+  }
+
+  async function openDocument() {
+    if (!allowDestructiveAction('open another project')) return;
+
+    const desktop = desktopApi();
+    if (!desktop) {
+      fileInput.current?.click();
+      return;
+    }
+
+    try {
+      const result = await desktop.openDocument();
+      if (!result) return;
+      await loadDocument(parseDocument(result.content), result.path, `Opened ${result.name}`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Could not open document');
+    }
+  }
+
+  async function openRecent(path: string) {
+    if (!allowDestructiveAction('open another project')) return;
+    const desktop = desktopApi();
+    if (!desktop) return;
+
+    try {
+      const result = await desktop.openRecent(path);
+      if (!result) return;
+      await loadDocument(parseDocument(result.content), result.path, `Opened ${result.name}`);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Could not open recent document');
+      await refreshRecent();
+    }
+  }
+
+  async function openBrowserFile(file?: File) {
     if (!file) return;
     try {
-      const loaded = parseDocument(await file.text());
-      setParameters(loaded.parameters);
-      setName(loaded.name);
-      setSelectedId(null);
-      setHiddenIds(new Set());
-      setExplode(0);
-      setNotice(`Opened ${file.name}`);
-      requestAnimationFrame(() => viewport.current?.fit());
+      if (file.size > 2_000_000) throw new Error('Cabinet document is too large.');
+      await loadDocument(parseDocument(await file.text()), null, `Opened ${file.name}`);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not open document');
     } finally {
@@ -71,31 +302,75 @@ export default function App() {
     }
   }
 
+  async function saveDocument(saveAs = false) {
+    const desktop = desktopApi();
+
+    try {
+      if (desktop) {
+        const result = await desktop.saveDocument({
+          content: serialized,
+          path: currentPath,
+          suggestedName: suggestedFileName(editor.name),
+          saveAs,
+        });
+        if (result.canceled) return;
+
+        setCurrentPath(result.path ?? currentPath);
+        setSavedContent(serialized);
+        await clearRecovery();
+        await refreshRecent();
+        setNotice(`Saved ${result.name ?? editor.name}`);
+        return;
+      }
+
+      downloadDocument(cadDocument);
+      setSavedContent(serialized);
+      await clearRecovery();
+      setNotice('Downloaded cabinet document');
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : 'Could not save document');
+    }
+  }
+
   return <main className="app-shell">
     <header className="app-header">
       <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Standalone CAD Prototype</small></div></div>
-      <div className="document-name"><input aria-label="Document name" value={name} onChange={event => setName(event.target.value)} /><span>● Parametric cabinet document</span></div>
+      <div className="document-name">
+        <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
+        <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
+      </div>
       <div className="header-status"><CheckCircle2 size={15} /><span>{notice}</span></div>
     </header>
 
     <Toolbar
       explode={explode}
+      units={editor.displayUnits}
+      canUndo={history.canUndo}
+      canRedo={history.canRedo}
+      recentProjects={recentProjects}
       onExplode={setExplode}
       onView={preset => viewport.current?.setView(preset)}
       onFit={() => viewport.current?.fit()}
-      onSave={() => { downloadDocument(cadDocument); setNotice('Saved cabinet document'); }}
-      onOpen={() => fileInput.current?.click()}
+      onNew={() => { void newDocument(); }}
+      onSave={() => { void saveDocument(false); }}
+      onSaveAs={() => { void saveDocument(true); }}
+      onOpen={() => { void openDocument(); }}
+      onOpenRecent={path => { void openRecent(path); }}
+      onUndo={() => { history.undo(); setNotice('Undo'); }}
+      onRedo={() => { history.redo(); setNotice('Redo'); }}
+      onUnits={updateDisplayUnits}
     />
-    <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json" onChange={event => openFile(event.target.files?.[0])} />
+    <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
     <div className="workspace">
       <div className="left-stack">
         <section className="panel preset-panel">
           <span className="eyebrow">STARTING DESIGN</span>
-          <select aria-label="Cabinet preset" defaultValue="Base 30" onChange={event => applyPreset(event.target.value)}>
+          <select aria-label="Cabinet preset" value="" onChange={event => applyPreset(event.target.value)}>
+            <option value="" disabled>Choose a preset…</option>
             {Object.keys(PRESETS).map(preset => <option key={preset}>{preset}</option>)}
           </select>
-          <p>Start from a cabinet archetype, then edit dimensions in real time.</p>
+          <p>Start from a cabinet archetype, then edit dimensions in real time. Presets are undoable.</p>
         </section>
         <TreePanel document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} onSelect={select} onToggleVisibility={toggleVisibility} />
       </div>
@@ -107,20 +382,32 @@ export default function App() {
         </div>
         <CadViewport ref={viewport} document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} explode={explode} onSelect={select} />
         <div className="viewport-footer">
-          <div><span>W</span><strong>{round(parameters.width)}</strong><small>mm</small></div>
-          <div><span>H</span><strong>{round(parameters.height)}</strong><small>mm</small></div>
-          <div><span>D</span><strong>{round(parameters.depth)}</strong><small>mm</small></div>
+          <DimensionBadge label="W" value={editor.parameters.width} units={editor.displayUnits} />
+          <DimensionBadge label="H" value={editor.parameters.height} units={editor.displayUnits} />
+          <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{panelCount}</strong><small>physical bodies</small></div>
-          <p>Prototype kernel: semantic parametric panel solids. OpenCascade/B-Rep is the next geometry layer.</p>
+          <p>Project schema v2 · geometry stored in millimeters · display units are non-destructive.</p>
         </div>
       </section>
 
-      <PropertiesPanel parameters={parameters} selected={selected} onChange={updateParameter} />
+      <PropertiesPanel
+        parameters={editor.parameters}
+        selected={selected}
+        displayUnits={editor.displayUnits}
+        onChange={updateParameter}
+      />
     </div>
   </main>;
+}
+
+function DimensionBadge({ label, value, units }: { label: string; value: number; units: DisplayUnits }) {
+  return <div><span>{label}</span><strong>{formatDimension(value, units)}</strong><small>{unitLabel(units)}</small></div>;
 }
 
 function humanize(value: string) {
   return value.replace(/([A-Z])/g, ' $1').replace(/^./, char => char.toUpperCase());
 }
-const round = (value: number) => Math.round(value * 100) / 100;
+
+function fileName(filePath: string) {
+  return filePath.split(/[\\/]/).at(-1) ?? filePath;
+}
