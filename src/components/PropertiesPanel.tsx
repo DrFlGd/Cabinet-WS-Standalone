@@ -59,8 +59,12 @@ export default function PropertiesPanel({
           <section className="property-section contextual-settings">
             <h3>{context.title}</h3>
             <p className="context-description">{context.description}</p>
-            {context.showHardwarePicker && (
-              <HardwarePicker parameters={parameters} onApply={onApplyHardware} />
+            {context.hardwareCategory && (
+              <HardwarePicker
+                parameters={parameters}
+                category={context.hardwareCategory}
+                onApply={onApplyHardware}
+              />
             )}
             <GroupedParameterFields
               fields={context.fields}
