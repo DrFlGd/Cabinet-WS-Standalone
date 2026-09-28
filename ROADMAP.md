@@ -274,15 +274,15 @@ it with direct CAD interaction.
 
 Port the bounded section tree concept:
 
-- [ ] leaf / horizontal split / vertical split
-- [ ] proportional sizing
-- [ ] fixed clear-opening sizing
-- [ ] drawers / doors / open sections
-- [ ] shelves
-- [ ] panel / rail / no-divider construction
-- [ ] nested layouts
-- [ ] validation constraints
-- [ ] legacy mixed-bay conversion
+- [x] leaf / horizontal split / vertical split
+- [x] proportional sizing
+- [x] fixed clear-opening sizing
+- [x] drawers / doors / open sections
+- [x] shelves
+- [x] panel / rail / no-divider construction
+- [x] nested layouts
+- [x] validation constraints
+- [x] legacy mixed-bay conversion
 
 **Reference:** web `lib/sections.ts`
 
@@ -290,23 +290,23 @@ Port the bounded section tree concept:
 
 Do not simply reproduce the SVG editor.
 
-- [ ] tree/property editing
-- [ ] direct divider handles in 3D/front orthographic view
-- [ ] numeric clear-opening dimensions
-- [ ] split selected opening left/right
-- [ ] split selected opening top/bottom
-- [ ] collapse subtree
-- [ ] selected subtree highlighting
-- [ ] live dimension annotations
-- [ ] undoable drag operations
+- [x] tree/property editing
+- [x] direct divider handles in a dedicated front-elevation view
+- [x] numeric clear-opening dimensions
+- [x] split selected opening left/right
+- [x] split selected opening top/bottom
+- [x] collapse subtree
+- [x] selected subtree highlighting
+- [x] live dimension annotations
+- [x] undoable drag operations
 
 ## 4.3 Cross-engine regression
 
 Until the standalone kernel becomes authoritative:
 
-- [ ] compare section rectangle resolution against web TypeScript
-- [ ] compare selected legacy designs against OpenSCAD dimensions/BOM
-- [ ] preserve old section-layout imports
+- [x] compare section rectangle resolution against web TypeScript
+- [x] compare selected legacy designs against web/OpenSCAD-derived starter dimensions and semantic part counts
+- [x] preserve old section-layout imports
 
 ### Definition of done
 
@@ -743,11 +743,13 @@ attempting whole phases at once:
 
 ## v0.4 — Sections
 
-1. section tree
-2. section validation
-3. section-driven model
-4. front-view direct manipulation
-5. legacy mixed-bay import
+**Status: implemented**
+
+1. [x] section tree
+2. [x] section validation
+3. [x] section-driven model
+4. [x] front-view direct manipulation
+5. [x] legacy mixed-bay import
 
 ## v0.5 — Hardware
 
@@ -824,7 +826,4 @@ being built.
 
 # Next task
 
-Start **v0.4 / Sections**. Port the bounded section tree and validation behavior,
-then make it drive the semantic cabinet model. The desktop editor should improve on
-the web SVG workflow with front-view/direct divider manipulation rather than simply
-copying the old interaction model.
+Start **v0.5 / Hardware**. Port slide and hinge catalog data into first-class standalone hardware definitions, then connect clearances, drilling metadata, and compatibility rules to semantic cabinet parts.
