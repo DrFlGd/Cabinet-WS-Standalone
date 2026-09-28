@@ -70,6 +70,7 @@ export default function App() {
     ? cadDocument.parts.find(part => part.id === selectedId) ?? null
     : null;
   const bodyCount = cadDocument.parts.filter(part => part.category !== 'hardware').length;
+  const hardwareCount = cadDocument.hardware.length;
 
   async function refreshRecent() {
     const desktop = desktopApi();
@@ -457,6 +458,7 @@ export default function App() {
           <DimensionBadge label="H" value={editor.parameters.height} units={editor.displayUnits} />
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
+          <div><strong>{hardwareCount}</strong><small>hardware instances</small></div>
           <p>Utility v0.5 · hardware intelligence · drilling · clearances · BOM.</p>
         </div>
       </section>
