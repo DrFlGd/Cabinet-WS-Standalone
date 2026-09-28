@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - "v*"
+    branches:
+      - main
+    paths:
+      - "release-request.json"
 
 permissions:
   contents: write
@@ -20,14 +24,25 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Verify tag matches package version
+      - name: Resolve and verify release version
         shell: pwsh
         run: |
           $version = node -p "require('./package.json').version"
-          $expected = "v$version"
-          if ("$env:GITHUB_REF_NAME" -ne $expected) {
-            throw "Release tag $env:GITHUB_REF_NAME does not match package.json version $expected"
+          $tag = "v$version"
+
+          if ("$env:GITHUB_REF_TYPE" -eq "tag") {
+            if ("$env:GITHUB_REF_NAME" -ne $tag) {
+              throw "Release tag $env:GITHUB_REF_NAME does not match package.json version $tag"
+            }
+          } else {
+            $request = Get-Content release-request.json -Raw | ConvertFrom-Json
+            if ("$($request.version)" -ne $version) {
+              throw "release-request.json version $($request.version) does not match package.json version $version"
+            }
           }
+
+          "RELEASE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install dependencies
         run: npm install
@@ -44,11 +59,10 @@ jobs:
       - name: Create release ZIP and checksums
         shell: pwsh
         run: |
-          $version = node -p "require('./package.json').version"
           $exe = Get-ChildItem release -Filter "*.exe" | Select-Object -First 1
           if (-not $exe) { throw "No packaged executable was produced." }
 
-          $zip = "release/Cabinet-WS-Standalone-$version-Windows-x64.zip"
+          $zip = "release/Cabinet-WS-Standalone-$env:RELEASE_VERSION-Windows-x64.zip"
           Compress-Archive -Path $exe.FullName -DestinationPath $zip -Force
 
           $exeHash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
@@ -63,4 +77,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$env:GITHUB_REF_NAME" release/*.exe release/*.zip release/SHA256SUMS.txt --verify-tag --title "Cabinet WS Standalone $env:GITHUB_REF_NAME" --generate-notes
+          gh release view "$env:RELEASE_TAG" *> $null
+          if ($LASTEXITCODE -eq 0) {
+            throw "GitHub Release $env:RELEASE_TAG already exists."
+          }
+
+          if ("$env:GITHUB_REF_TYPE" -eq "tag") {
+            gh release create "$env:RELEASE_TAG" release/*.exe release/*.zip release/SHA256SUMS.txt --verify-tag --title "Cabinet WS Standalone $env:RELEASE_TAG" --generate-notes
+          } else {
+            gh release create "$env:RELEASE_TAG" release/*.exe release/*.zip release/SHA256SUMS.txt --target "$env:GITHUB_SHA" --title "Cabinet WS Standalone $env:RELEASE_TAG" --generate-notes
+          }
