@@ -4,6 +4,35 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.4.1] - 2026-09-28
+
+### Fixed
+
+- Replaced the viewport's box-only part renderer with support for extruded cabinet profiles and through-cutout paths.
+- Side toe-kick notches now alter the rendered side-panel profile when enabled.
+- Adjustable shelf-pin drilling now renders as true through-holes in cabinet side panels.
+- Screw joinery now renders through-drilling on supported side-panel joints.
+- Tab-and-slot joinery now renders through-slots on cabinet side panels.
+- Dado joinery now renders visible recessed joint regions on supported bottom, shelf, and horizontal-divider joints.
+- Utility drawers now include rendered box sides, box front/back, and drawer bottom instead of only decorative drawer fronts.
+- Section-layout drawers now generate the same complete drawer-box visualization.
+- Drawer components pull forward with the explode control so their construction can be inspected.
+
+### Changed
+
+- Added reusable profile geometry and machining-feature data to semantic `CadPart` objects without changing saved-project schema v2.
+- Updated joinery, drawer-stock, and toe-kick control descriptions to match the geometry that is now visible in the realtime viewport.
+- Application/package version advanced to 0.4.1 for the rendering-fix test build.
+
+### Testing
+
+- Added regression coverage for toe-kick side profiles, adjustable shelf holes, screw drilling, tab/slot cutouts, dado visualization, legacy drawer boxes, and section-layout drawer boxes.
+
+### Notes
+
+- Dado recesses in v0.4.1 are a realtime visualization layer rather than final B-Rep subtraction. Exact machining solids remain part of the planned geometry-kernel milestone.
+- Hinge cups and manufacturer-specific slide drilling remain part of the hardware milestone because the standalone app does not yet carry those hardware definitions.
+
 ## [0.4.0] - 2026-09-28
 
 ### Added

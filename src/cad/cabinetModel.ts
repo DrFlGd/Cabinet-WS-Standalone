@@ -1,4 +1,4 @@
-import type { CabinetDocument, CabinetParameters, CadPart, SectionNode, StockChoice } from './types';
+import type { CabinetDocument, CabinetParameters, CadPart, CadProfileHole, SectionNode, StockChoice } from './types';
 import type { DisplayUnits } from './units';
 import { makeUtilityDefaults, UTILITY_STARTERS } from './utilityStarters';
 import { cloneSectionNodes, sectionLayoutErrors, sectionPanels, sectionRects, sectionRoot, treeErrors } from './sections';
@@ -32,8 +32,10 @@ function part(
   color = wood,
   material = 'Sheet stock',
   metadata?: CadPart['metadata'],
+  geometry?: CadPart['geometry'],
+  renderFeatures?: CadPart['renderFeatures'],
 ): CadPart {
-  return { id, name, category, position, size, color, material, visible: true, metadata };
+  return { id, name, category, position, size, color, material, visible: true, metadata, geometry, renderFeatures };
 }
 
 export function stockThickness(choice: StockChoice, measured: number) {
@@ -62,6 +64,8 @@ export function buildCabinetDocument(
     dadoFitClearance: p.dadoFitClearance,
   };
 
+  const leftNotch = p.sideToeKickCutout === 'left' || p.sideToeKickCutout === 'both';
+  const rightNotch = p.sideToeKickCutout === 'right' || p.sideToeKickCutout === 'both';
   parts.push(
     part(
       'carcass:left',
@@ -73,8 +77,10 @@ export function buildCabinetDocument(
       carcassMaterial,
       {
         ...carcassMeta,
-        toeKickNotch: p.sideToeKickCutout === 'left' || p.sideToeKickCutout === 'both',
+        toeKickNotch: leftNotch,
+        profileCutouts: sidePanelHoles(p, base, D, H).length,
       },
+      sidePanelGeometry(p, base, D, H, leftNotch),
     ),
     part(
       'carcass:right',
@@ -86,8 +92,10 @@ export function buildCabinetDocument(
       carcassMaterial,
       {
         ...carcassMeta,
-        toeKickNotch: p.sideToeKickCutout === 'right' || p.sideToeKickCutout === 'both',
+        toeKickNotch: rightNotch,
+        profileCutouts: sidePanelHoles(p, base, D, H).length,
       },
+      sidePanelGeometry(p, base, D, H, rightNotch),
     ),
   );
 
@@ -262,6 +270,8 @@ export function buildCabinetDocument(
     );
   }
 
+  applyJoineryRenderFeatures(parts, p, t, base);
+
   return {
     version: 2,
     id: 'cabinet-root',
@@ -295,13 +305,14 @@ function addLegacyLayoutParts(
     : 0;
   const doorZoneTop = interiorTop - (hasDrawers && hasDoors ? drawerZoneHeight + p.frontEdgeReveal : 0);
   const doorZoneHeight = hasDoors ? Math.max(0, doorZoneTop - interiorBottom) : 0;
+  const backDepth = p.backStyle === 'structural_panel'
+    ? t
+    : p.backStyle === 'panel'
+      ? appliedBackThickness + p.backInset
+      : 0;
+  const interiorDepth = Math.max(80, p.depth - backDepth - 20);
 
   if (hasDoors && p.shelfCount > 0 && doorZoneHeight > t) {
-    const backDepth = p.backStyle === 'structural_panel'
-      ? t
-      : p.backStyle === 'panel'
-        ? appliedBackThickness + p.backInset
-        : 0;
     const shelfDepth = Math.max(20, p.depth - backDepth - 16);
     for (let i = 1; i <= p.shelfCount; i += 1) {
       const z = interiorBottom + (doorZoneHeight * i) / (p.shelfCount + 1) - t / 2;
@@ -341,6 +352,17 @@ function addLegacyLayoutParts(
           { drawer: i + 1, frontMountStyle: p.frontMountStyle },
         ),
       );
+      addDrawerBox(parts, p, {
+        idPrefix: `drawer:${i + 1}`,
+        namePrefix: `Drawer ${i + 1}`,
+        x: t,
+        z,
+        width: openingWidth,
+        frontHeight: rowHeight,
+        depth: interiorDepth,
+        sectionId: 0,
+        drawerIndex: i + 1,
+      });
     }
   }
 
@@ -437,6 +459,17 @@ function addSectionLayoutParts(
             },
           ),
         );
+        addDrawerBox(parts, p, {
+          idPrefix: `section:${rect.id + 1}:drawer:${index + 1}`,
+          namePrefix: `Section ${rect.id + 1} Drawer ${index + 1}`,
+          x: rect.x,
+          z: top,
+          width: rect.w,
+          frontHeight: height,
+          depth: interiorDepth,
+          sectionId: rect.id + 1,
+          drawerIndex: index + 1,
+        });
         top -= p.drawerGap;
       });
     }
@@ -498,6 +531,211 @@ function addDoorFronts(
         },
       ),
     );
+  }
+}
+
+function addDrawerBox(
+  parts: CadPart[],
+  p: CabinetParameters,
+  area: {
+    idPrefix: string;
+    namePrefix: string;
+    x: number;
+    z: number;
+    width: number;
+    frontHeight: number;
+    depth: number;
+    sectionId: number;
+    drawerIndex: number;
+  },
+) {
+  const sideClearance = Math.min(13, Math.max(6, area.width * 0.04));
+  const wall = Math.min(p.drawerMaterialThickness, Math.max(6, area.width / 8));
+  const width = Math.max(30, area.width - 2 * sideClearance);
+  const depth = Math.max(60, area.depth - 24);
+  const height = Math.max(4, Math.min(area.frontHeight - 8, 180));
+  const bottom = Math.min(p.drawerBottomThickness, Math.max(2, height / 3));
+  const x = area.x + sideClearance;
+  const y = 12;
+  const z = area.z + Math.max(8, Math.min(16, (area.frontHeight - height) / 2));
+  const insideWidth = Math.max(12, width - 2 * wall);
+  const material = `Drawer box stock (${round(wall)} mm)`;
+  const metadata = {
+    drawer: area.drawerIndex,
+    sectionId: area.sectionId,
+    drawerBox: true,
+  };
+
+  parts.push(
+    part(
+      `${area.idPrefix}:box:left`,
+      `${area.namePrefix} Left Side`,
+      'drawer',
+      { x, y, z },
+      { x: wall, y: depth, z: height },
+      darkWood,
+      material,
+      metadata,
+    ),
+    part(
+      `${area.idPrefix}:box:right`,
+      `${area.namePrefix} Right Side`,
+      'drawer',
+      { x: x + width - wall, y, z },
+      { x: wall, y: depth, z: height },
+      darkWood,
+      material,
+      metadata,
+    ),
+    part(
+      `${area.idPrefix}:box:front`,
+      `${area.namePrefix} Box Front`,
+      'drawer',
+      { x: x + wall, y, z },
+      { x: insideWidth, y: wall, z: height },
+      darkWood,
+      material,
+      metadata,
+    ),
+    part(
+      `${area.idPrefix}:box:back`,
+      `${area.namePrefix} Box Back`,
+      'drawer',
+      { x: x + wall, y: y + depth - wall, z },
+      { x: insideWidth, y: wall, z: height },
+      darkWood,
+      material,
+      metadata,
+    ),
+    part(
+      `${area.idPrefix}:box:bottom`,
+      `${area.namePrefix} Bottom`,
+      'drawer',
+      { x: x + wall, y: y + wall, z: z + Math.min(10, height / 4) },
+      { x: insideWidth, y: Math.max(20, depth - 2 * wall), z: bottom },
+      lightWood,
+      `Drawer bottom stock (${round(bottom)} mm)`,
+      metadata,
+    ),
+  );
+}
+
+function sidePanelGeometry(
+  p: CabinetParameters,
+  base: number,
+  depth: number,
+  height: number,
+  toeKickNotch: boolean,
+): CadPart['geometry'] {
+  const notchDepth = toeKickNotch && p.mountStyle === 'floor' && p.baseStyle === 'toe_kick'
+    ? Math.min(Math.max(0, p.toeKickDepth), Math.max(0, depth - 20))
+    : 0;
+  const notchHeight = toeKickNotch ? Math.min(base, Math.max(0, height - 20)) : 0;
+  const outline = notchDepth > 0 && notchHeight > 0
+    ? [
+        { u: notchDepth, v: 0 },
+        { u: depth, v: 0 },
+        { u: depth, v: height },
+        { u: 0, v: height },
+        { u: 0, v: notchHeight },
+        { u: notchDepth, v: notchHeight },
+      ]
+    : [
+        { u: 0, v: 0 },
+        { u: depth, v: 0 },
+        { u: depth, v: height },
+        { u: 0, v: height },
+      ];
+
+  return {
+    kind: 'extruded-profile',
+    axis: 'x',
+    outline,
+    holes: sidePanelHoles(p, base, depth, height),
+  };
+}
+
+function sidePanelHoles(
+  p: CabinetParameters,
+  base: number,
+  depth: number,
+  height: number,
+): CadProfileHole[] {
+  const holes: CadProfileHole[] = [];
+  const interiorBottom = base + stockThickness(p.carcassStock, p.materialThickness);
+  const interiorTop = height - stockThickness(p.carcassStock, p.materialThickness);
+
+  if (p.shelfStyle === 'adjustable') {
+    const columns = [Math.min(55, depth * 0.18), Math.max(65, depth - Math.min(55, depth * 0.18))];
+    for (let z = interiorBottom + 48; z <= interiorTop - 48; z += 32) {
+      for (const y of columns) holes.push({ kind: 'circle', u: y, v: z, radius: 2.5 });
+    }
+  }
+
+  if (p.joineryStyle === 'screw') {
+    const ys = [Math.min(70, depth * 0.2), Math.max(80, depth - Math.min(70, depth * 0.2))];
+    const zs = [Math.max(12, base + stockThickness(p.carcassStock, p.materialThickness) / 2), Math.max(20, height - stockThickness(p.carcassStock, p.materialThickness) / 2)];
+    for (const y of ys) for (const z of zs) holes.push({ kind: 'circle', u: y, v: z, radius: 3 });
+  }
+
+  if (p.joineryStyle === 'tab_slot') {
+    const slotWidth = Math.min(36, Math.max(18, depth * 0.08));
+    const slotHeight = stockThickness(p.carcassStock, p.materialThickness) + p.dadoFitClearance;
+    const ys = [depth * 0.25, depth * 0.65];
+    for (const y of ys) {
+      holes.push({
+        kind: 'rect',
+        u: Math.max(2, y - slotWidth / 2),
+        v: Math.max(2, base - p.dadoFitClearance / 2),
+        width: slotWidth,
+        height: Math.max(4, slotHeight),
+      });
+    }
+  }
+
+  return holes;
+}
+
+function applyJoineryRenderFeatures(
+  parts: CadPart[],
+  p: CabinetParameters,
+  thickness: number,
+  base: number,
+) {
+  if (p.joineryStyle !== 'dado') return;
+
+  const left = parts.find(candidate => candidate.id === 'carcass:left');
+  const right = parts.find(candidate => candidate.id === 'carcass:right');
+  if (!left || !right) return;
+
+  const candidates = parts.filter(candidate =>
+    candidate.id === 'carcass:bottom' ||
+    candidate.category === 'shelf' ||
+    (candidate.category === 'divider' && candidate.size.z <= thickness * 1.5)
+  );
+  const depth = Math.min(Math.max(0.5, p.dadoDepth), Math.max(0.5, thickness - 0.5));
+  const clearance = Math.max(0, p.dadoFitClearance);
+
+  for (const candidate of candidates) {
+    if (candidate.position.z < base - 1 || candidate.position.z > p.height - thickness + 1) continue;
+    const featureDepth = Math.min(p.depth, Math.max(20, candidate.size.y));
+    const z = Math.max(0, candidate.position.z - clearance / 2);
+    const h = Math.max(1, candidate.size.z + clearance);
+    const feature = {
+      kind: 'dado' as const,
+      position: { x: Math.max(0, thickness - depth - 0.4), y: Math.max(0, candidate.position.y), z },
+      size: { x: depth + 0.8, y: featureDepth, z: h },
+      color: '#51351f',
+      opacity: 0.78,
+    };
+    left.renderFeatures = [...(left.renderFeatures ?? []), feature];
+    right.renderFeatures = [
+      ...(right.renderFeatures ?? []),
+      {
+        ...feature,
+        position: { ...feature.position, x: -0.4 },
+      },
+    ];
   }
 }
 

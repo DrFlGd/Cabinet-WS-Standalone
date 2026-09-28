@@ -84,8 +84,8 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   { key: 'materialThickness', kind: 'dimension', label: 'Measured carcass', description: 'Used when carcass stock is Measured stock.', section: 'Materials', min: 6, max: 50, step: 0.01, visibleWhen: p => p.carcassStock === 'custom_mm' },
   { key: 'backStock', kind: 'select', label: 'Back stock', description: 'Nominal or measured applied-back thickness.', section: 'Materials', options: stockOptions },
   { key: 'backThickness', kind: 'dimension', label: 'Measured back', description: 'Used when back stock is Measured stock.', section: 'Materials', min: 2, max: 25, step: 0.01, visibleWhen: p => p.backStock === 'custom_mm' },
-  { key: 'drawerMaterialThickness', kind: 'dimension', label: 'Drawer box stock', description: 'Reserved for the drawer-box parity milestone.', section: 'Materials', min: 6, max: 30, step: 0.01, advanced: true },
-  { key: 'drawerBottomThickness', kind: 'dimension', label: 'Drawer bottom stock', description: 'Reserved for the drawer-box parity milestone.', section: 'Materials', min: 2, max: 20, step: 0.01, advanced: true },
+  { key: 'drawerMaterialThickness', kind: 'dimension', label: 'Drawer box stock', description: 'Thickness used by rendered drawer sides, fronts, and backs.', section: 'Materials', min: 6, max: 30, step: 0.01, advanced: true },
+  { key: 'drawerBottomThickness', kind: 'dimension', label: 'Drawer bottom stock', description: 'Thickness used by rendered drawer bottoms.', section: 'Materials', min: 2, max: 20, step: 0.01, advanced: true },
   { key: 'drawerFrontThickness', kind: 'dimension', label: 'Drawer front stock', description: 'Decorative drawer-front thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
   { key: 'doorThickness', kind: 'dimension', label: 'Door stock', description: 'Decorative door thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
 
@@ -132,7 +132,7 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   ] },
   { key: 'toeKickHeight', kind: 'dimension', label: 'Toe-kick height', description: 'Vertical floor-base height.', section: 'Base', min: 0, max: 350, step: 1, visibleWhen: p => p.mountStyle === 'floor' && p.baseStyle === 'toe_kick' },
   { key: 'toeKickDepth', kind: 'dimension', label: 'Toe-kick setback', description: 'Front setback of toe-kick rail.', section: 'Base', min: 0, max: 300, step: 1, visibleWhen: p => p.mountStyle === 'floor' && p.baseStyle === 'toe_kick' },
-  { key: 'sideToeKickCutout', kind: 'select', label: 'Side toe-kick notch', description: 'Semantic side-panel notch intent; exact notch arrives with the B-Rep kernel.', section: 'Base', visibleWhen: p => p.mountStyle === 'floor' && p.baseStyle === 'toe_kick', options: [
+  { key: 'sideToeKickCutout', kind: 'select', label: 'Side toe-kick notch', description: 'Cuts the selected side-panel profile back to the toe-kick rail.', section: 'Base', visibleWhen: p => p.mountStyle === 'floor' && p.baseStyle === 'toe_kick', options: [
     { value: 'none', label: 'None' },
     { value: 'left', label: 'Left side' },
     { value: 'right', label: 'Right side' },
@@ -159,7 +159,7 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   { key: 'worktopFrontOverhang', kind: 'dimension', label: 'Front overhang', description: 'Worktop extension beyond cabinet front.', section: 'Worktop', min: 0, max: 300, step: 1, visibleWhen: p => p.includeWorktop },
   { key: 'worktopBackOverhang', kind: 'dimension', label: 'Back overhang', description: 'Worktop extension beyond cabinet rear.', section: 'Worktop', min: 0, max: 300, step: 1, visibleWhen: p => p.includeWorktop },
 
-  { key: 'joineryStyle', kind: 'select', label: 'Carcass joinery', description: 'Semantic carcass joinery intent ported from the web engine.', section: 'Joinery', options: [
+  { key: 'joineryStyle', kind: 'select', label: 'Carcass joinery', description: 'Renders visible screw drilling, dado recesses, or tab/slot cutouts on supported carcass joints.', section: 'Joinery', options: [
     { value: 'butt', label: 'Butt' },
     { value: 'screw', label: 'Screw' },
     { value: 'dado', label: 'Dado' },

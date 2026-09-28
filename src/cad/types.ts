@@ -4,6 +4,27 @@ export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | '
 
 export type Vec3 = { x: number; y: number; z: number };
 
+export type CadProfilePoint = { u: number; v: number };
+
+export type CadProfileHole =
+  | { kind: 'circle'; u: number; v: number; radius: number }
+  | { kind: 'rect'; u: number; v: number; width: number; height: number };
+
+export type CadPartGeometry = {
+  kind: 'extruded-profile';
+  axis: 'x' | 'z';
+  outline: CadProfilePoint[];
+  holes?: CadProfileHole[];
+};
+
+export type CadRenderFeature = {
+  kind: 'dado' | 'rabbet' | 'slot' | 'drill';
+  position: Vec3;
+  size: Vec3;
+  color?: string;
+  opacity?: number;
+};
+
 export type CadPart = {
   id: string;
   name: string;
@@ -13,6 +34,8 @@ export type CadPart = {
   size: Vec3;
   color: string;
   visible: boolean;
+  geometry?: CadPartGeometry;
+  renderFeatures?: CadRenderFeature[];
   metadata?: Record<string, string | number | boolean>;
 };
 

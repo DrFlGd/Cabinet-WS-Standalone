@@ -21,7 +21,7 @@ type Props = {
   onSelect: (part: CadPart | null) => void;
 };
 
-type PartObject = THREE.Mesh<THREE.BoxGeometry, THREE.MeshStandardMaterial>;
+type PartObject = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
 const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
   { document: cadDocument, selectedId, hiddenIds, explode, onSelect },
@@ -173,7 +173,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects(model.children, false)[0];
+      const hit = raycaster.intersectObjects(model.children.filter(object => object instanceof THREE.Mesh), false)[0];
       const id = hit?.object.userData.partId as string | undefined;
       latest.current.onSelect(id ? latest.current.cadDocument.parts.find(p => p.id === id) ?? null : null);
     };
@@ -201,7 +201,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
 
     for (const part of cadDocument.parts) {
       if (hiddenIds.has(part.id) || !part.visible) continue;
-      const geometry = new THREE.BoxGeometry(part.size.x, part.size.y, part.size.z);
+      const geometry = createPartGeometry(part);
       const material = new THREE.MeshStandardMaterial({
         color: part.color,
         roughness: 0.72,
@@ -209,23 +209,50 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       });
       const mesh: PartObject = new THREE.Mesh(geometry, material);
       const explodeVector = explodeOffset(part, explode, cadDocument.parameters.width, cadDocument.parameters.depth);
-      mesh.position.set(
-        part.position.x + part.size.x / 2 + explodeVector.x,
-        part.position.y + part.size.y / 2 + explodeVector.y,
-        part.position.z + part.size.z / 2 + explodeVector.z,
-      );
+      const partCenter = {
+        x: part.position.x + part.size.x / 2,
+        y: part.position.y + part.size.y / 2,
+        z: part.position.z + part.size.z / 2,
+      };
+      setBasePosition(mesh, partCenter, explodeVector);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
       mesh.userData.partId = part.id;
+      mesh.userData.primaryPartMesh = true;
       rt.model.add(mesh);
 
       const edges = new THREE.EdgesGeometry(geometry, 20);
       const edgeMaterial = new THREE.LineBasicMaterial({ color: '#4d3828', transparent: true, opacity: 0.68 });
       const line = new THREE.LineSegments(edges, edgeMaterial);
-      line.position.copy(mesh.position);
+      setBasePosition(line, partCenter, explodeVector);
       line.userData.decorative = true;
       line.userData.partId = part.id;
       rt.model.add(line);
+
+      for (const feature of part.renderFeatures ?? []) {
+        const featureGeometry = new THREE.BoxGeometry(feature.size.x, feature.size.y, feature.size.z);
+        const featureMaterial = new THREE.MeshStandardMaterial({
+          color: feature.color ?? '#58402d',
+          roughness: 0.9,
+          metalness: 0,
+          transparent: true,
+          opacity: feature.opacity ?? 0.72,
+          depthWrite: false,
+          polygonOffset: true,
+          polygonOffsetFactor: -2,
+          polygonOffsetUnits: -2,
+        });
+        const featureMesh = new THREE.Mesh(featureGeometry, featureMaterial);
+        const featureCenter = {
+          x: part.position.x + feature.position.x + feature.size.x / 2,
+          y: part.position.y + feature.position.y + feature.size.y / 2,
+          z: part.position.z + feature.position.z + feature.size.z / 2,
+        };
+        setBasePosition(featureMesh, featureCenter, explodeVector);
+        featureMesh.userData.partId = part.id;
+        featureMesh.userData.renderFeature = feature.kind;
+        rt.model.add(featureMesh);
+      }
     }
     rt.fit();
   }, [cadDocument, hiddenIds]);
@@ -234,7 +261,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     const rt = runtime.current;
     if (!rt) return;
     const mesh = selectedId
-      ? rt.model.children.find(o => o instanceof THREE.Mesh && o.userData.partId === selectedId) as PartObject | undefined
+      ? rt.model.children.find(o => o instanceof THREE.Mesh && o.userData.partId === selectedId && o.userData.primaryPartMesh) as PartObject | undefined
       : undefined;
     rt.selectionBox.visible = !!mesh;
     if (mesh) rt.selectionBox.box.setFromObject(mesh);
@@ -255,14 +282,11 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       const part = cadDocument.parts.find(p => p.id === id);
       if (!part) continue;
       const offset = explodeOffset(part, explode, cadDocument.parameters.width, cadDocument.parameters.depth);
-      object.position.set(
-        part.position.x + part.size.x / 2 + offset.x,
-        part.position.y + part.size.y / 2 + offset.y,
-        part.position.z + part.size.z / 2 + offset.z,
-      );
+      const base = object.userData.basePosition as [number, number, number] | undefined;
+      if (base) object.position.set(base[0] + offset.x, base[1] + offset.y, base[2] + offset.z);
     }
     const selectedMesh = selectedId
-      ? rt.model.children.find(o => o instanceof THREE.Mesh && o.userData.partId === selectedId)
+      ? rt.model.children.find(o => o instanceof THREE.Mesh && o.userData.partId === selectedId && o.userData.primaryPartMesh)
       : undefined;
     rt.selectionBox.visible = !!selectedMesh;
     if (selectedMesh) rt.selectionBox.box.setFromObject(selectedMesh);
@@ -279,10 +303,10 @@ function explodeOffset(part: CadPart, explode: number, width: number, depth: num
   const cy = part.position.y + part.size.y / 2 - depth / 2;
   const horizontal = Math.sign(cx) || 0;
   const foreAft = Math.sign(cy) || 0;
-  const categoryScale = part.category === 'front' ? 1.5 : part.category === 'shelf' ? 0.6 : 1;
+  const categoryScale = part.category === 'front' ? 1.5 : part.category === 'drawer' ? 1.25 : part.category === 'shelf' ? 0.6 : 1;
   return {
     x: horizontal * explode * categoryScale,
-    y: (part.category === 'front' ? -1 : foreAft) * explode * categoryScale,
+    y: (part.category === 'front' || part.category === 'drawer' ? -1 : foreAft) * explode * categoryScale,
     z: part.category === 'shelf' ? explode * 0.22 : 0,
   };
 }
@@ -295,4 +319,62 @@ function disposeGroup(group: THREE.Group) {
       materials.forEach(material => material.dispose());
     }
   }
+}
+
+
+function setBasePosition(
+  object: THREE.Object3D,
+  base: { x: number; y: number; z: number },
+  explode: { x: number; y: number; z: number },
+) {
+  object.userData.basePosition = [base.x, base.y, base.z];
+  object.position.set(base.x + explode.x, base.y + explode.y, base.z + explode.z);
+}
+
+function createPartGeometry(part: CadPart): THREE.BufferGeometry {
+  if (!part.geometry || part.geometry.kind !== 'extruded-profile') {
+    return new THREE.BoxGeometry(part.size.x, part.size.y, part.size.z);
+  }
+
+  const shape = new THREE.Shape();
+  part.geometry.outline.forEach((point, index) => {
+    if (index === 0) shape.moveTo(point.u, point.v);
+    else shape.lineTo(point.u, point.v);
+  });
+  shape.closePath();
+
+  for (const hole of part.geometry.holes ?? []) {
+    const path = new THREE.Path();
+    if (hole.kind === 'circle') {
+      path.absarc(hole.u, hole.v, hole.radius, 0, Math.PI * 2, false);
+    } else {
+      path.moveTo(hole.u, hole.v);
+      path.lineTo(hole.u + hole.width, hole.v);
+      path.lineTo(hole.u + hole.width, hole.v + hole.height);
+      path.lineTo(hole.u, hole.v + hole.height);
+      path.closePath();
+    }
+    shape.holes.push(path);
+  }
+
+  const depth = part.geometry.axis === 'x' ? part.size.x : part.size.z;
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth,
+    bevelEnabled: false,
+    curveSegments: 16,
+  });
+
+  if (part.geometry.axis === 'x') {
+    const mapYzToX = new THREE.Matrix4().set(
+      0, 0, 1, 0,
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 0, 1,
+    );
+    geometry.applyMatrix4(mapYzToX);
+  }
+
+  geometry.translate(-part.size.x / 2, -part.size.y / 2, -part.size.z / 2);
+  geometry.computeVertexNormals();
+  return geometry;
 }
