@@ -1,6 +1,7 @@
 import { buildCabinetDocument, sanitizeParameters } from './cabinetModel';
 import { makeUtilityDefaults } from './utilityStarters';
-import type { CabinetDocument, CabinetParameters, StockChoice } from './types';
+import { cloneSectionNodes, sectionsFromWebValues, treeErrors } from './sections';
+import type { CabinetDocument, CabinetParameters, SectionNode, StockChoice } from './types';
 import type { DisplayUnits } from './units';
 
 type StoredDocumentV2 = {
@@ -108,6 +109,8 @@ function migrateStandaloneParameters(value: unknown): CabinetParameters {
 
   if (source.carcassStock === undefined) migrated.carcassStock = 'custom_mm';
   if (source.backStock === undefined) migrated.backStock = 'custom_mm';
+  if (source.layoutMode === undefined) migrated.layoutMode = 'legacy';
+  if (source.sectionNodes === undefined) migrated.sectionNodes = cloneSectionNodes(makeUtilityDefaults().sectionNodes);
 
   return sanitizeParameters(migrated);
 }
@@ -131,6 +134,9 @@ function validateKnownStandaloneTypes(source: Record<string, unknown>) {
   if ('faceGap' in source && finiteNumber(source.faceGap) === null) {
     throw new Error('Invalid cabinet parameter: faceGap');
   }
+  if ('sectionNodes' in source && treeErrors(source.sectionNodes).length) {
+    throw new Error(`Invalid cabinet parameter: sectionNodes (${treeErrors(source.sectionNodes)[0]})`);
+  }
 }
 
 function looksLikeCabinetWorkshopProject(raw: unknown): raw is Record<string, unknown> {
@@ -145,7 +151,7 @@ function looksLikeCabinetWorkshopProject(raw: unknown): raw is Record<string, un
 function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedProject {
   const family = record.family;
   if (family !== 1 && family !== 'utility' && family !== 'utility_cabinet') {
-    throw new Error('This Cabinet Workshop project is not a Utility Cabinet. v0.3 imports Utility Cabinet projects only.');
+    throw new Error('This Cabinet Workshop project is not a Utility Cabinet. v0.4 imports Utility Cabinet projects only.');
   }
 
   if (!record.values || typeof record.values !== 'object') {
@@ -204,10 +210,16 @@ function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedPr
     shelfStyle: enumOr(values.shelf_style, ['fixed', 'adjustable'] as const, defaults.shelfStyle),
   };
 
+  const rawLayoutMode = typeof values.cabinet_layout_mode === 'string' ? values.cabinet_layout_mode : 'legacy';
+  const fallbackForSections = sanitizeParameters({ ...mapped, layoutMode: 'legacy' });
+  mapped.layoutMode = rawLayoutMode === 'mixed_bays' || rawLayoutMode === 'sections' ? 'sections' : 'legacy';
+  mapped.sectionNodes = sectionsFromWebValues(values, fallbackForSections);
+
   const warnings: string[] = [];
-  const layoutMode = typeof values.cabinet_layout_mode === 'string' ? values.cabinet_layout_mode : 'legacy';
-  if (layoutMode !== 'legacy') {
-    warnings.push(`Layout mode "${layoutMode}" is not yet supported; v0.3 imported the cabinet envelope and basic contents only.`);
+  if (rawLayoutMode === 'sections' && treeErrors(values.section_nodes).length) {
+    warnings.push(`The saved section tree was invalid (${treeErrors(values.section_nodes)[0]}). v0.4 fell back to the simple Utility layout.`);
+  } else if (!['legacy', 'mixed_bays', 'sections'].includes(rawLayoutMode)) {
+    warnings.push(`Layout mode "${rawLayoutMode}" is unknown; v0.4 fell back to the simple Utility layout.`);
   }
   if (values.drawer_height_mode && values.drawer_height_mode !== 'equal') {
     warnings.push('Non-equal drawer-height recipes are not yet supported; drawer fronts were imported as equal rows.');
@@ -232,7 +244,9 @@ function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedPr
     'include_worktop', 'worktop_thickness', 'worktop_side_overhang', 'worktop_front_overhang', 'worktop_back_overhang',
     'joinery_style', 'dado_depth', 'dado_fit_clearance',
     'front_mount_style', 'front_edge_reveal', 'door_gap', 'drawer_gap', 'shelf_style',
-    'design_name', 'cabinet_layout_mode', 'drawer_height_mode', 'ganging_style', 'hinge_style', 'drawer_mount',
+    'design_name', 'cabinet_layout_mode', 'section_nodes', 'drawer_height_mode', 'ganging_style', 'hinge_style', 'drawer_mount',
+    'mixed_bay_count', 'mixed_bay_types', 'mixed_bay_width_weights', 'mixed_bay_drawer_counts', 'mixed_bay_shelf_counts', 'mixed_bay_door_counts',
+    'mixed_bay_drawer_height_modes', 'mixed_bay_drawer_graduated_steps', 'mixed_bay_drawer_height_weights', 'include_mixed_bay_partitions',
   ]);
   const ignoredFieldCount = Object.keys(values).filter(key => !supportedLegacyKeys.has(key) && !key.startsWith('_')).length;
 
