@@ -89,13 +89,17 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   { key: 'drawerFrontThickness', kind: 'dimension', label: 'Drawer front stock', description: 'Decorative drawer-front thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
   { key: 'doorThickness', kind: 'dimension', label: 'Door stock', description: 'Decorative door thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
 
-  { key: 'cabinetContents', kind: 'select', label: 'Contents', description: 'Primary Utility Cabinet front layout.', section: 'Layout', options: [
+  { key: 'layoutMode', kind: 'select', label: 'Layout model', description: 'Simple uses the v0.3 single opening recipe. Sections enables the bounded nested bay tree and direct divider editor.', section: 'Layout', options: [
+    { value: 'legacy', label: 'Simple cabinet' },
+    { value: 'sections', label: 'Sections / bays' },
+  ] },
+  { key: 'cabinetContents', kind: 'select', label: 'Contents', description: 'Primary Utility Cabinet front layout.', section: 'Layout', visibleWhen: p => p.layoutMode === 'legacy', options: [
     { value: 'drawers', label: 'Drawers' },
     { value: 'doors', label: 'Doors' },
     { value: 'combo', label: 'Drawers + doors' },
   ] },
-  { key: 'drawerCount', kind: 'count', label: 'Drawer rows', description: 'Number of decorative drawer-front rows.', section: 'Layout', min: 0, max: 8, visibleWhen: p => p.cabinetContents !== 'doors' },
-  { key: 'doorCount', kind: 'count', label: 'Doors', description: 'Number of decorative doors.', section: 'Layout', min: 0, max: 4, visibleWhen: p => p.cabinetContents !== 'drawers' },
+  { key: 'drawerCount', kind: 'count', label: 'Drawer rows', description: 'Number of decorative drawer-front rows.', section: 'Layout', min: 0, max: 8, visibleWhen: p => p.layoutMode === 'legacy' && p.cabinetContents !== 'doors' },
+  { key: 'doorCount', kind: 'count', label: 'Doors', description: 'Number of decorative doors.', section: 'Layout', min: 0, max: 4, visibleWhen: p => p.layoutMode === 'legacy' && p.cabinetContents !== 'drawers' },
 
   { key: 'topStyle', kind: 'select', label: 'Top construction', description: 'Full cabinet top or front/rear stretchers.', section: 'Carcass', options: [
     { value: 'full', label: 'Full panel' },
@@ -143,8 +147,8 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   { key: 'drawerGap', kind: 'dimension', label: 'Drawer gap', description: 'Gap between adjacent drawer fronts.', section: 'Fronts', min: 0.5, max: 20, step: 0.1, visibleWhen: p => p.cabinetContents !== 'doors' },
   { key: 'doorGap', kind: 'dimension', label: 'Door gap', description: 'Gap between adjacent doors.', section: 'Fronts', min: 0.5, max: 20, step: 0.1, visibleWhen: p => p.cabinetContents !== 'drawers' },
 
-  { key: 'shelfCount', kind: 'count', label: 'Shelf panels', description: 'Number of shelves supplied in the door/open region.', section: 'Shelves', min: 0, max: 6, visibleWhen: p => p.cabinetContents !== 'drawers' },
-  { key: 'shelfStyle', kind: 'select', label: 'Shelf style', description: 'Fixed shelves or adjustable shelf-pin shelves.', section: 'Shelves', visibleWhen: p => p.cabinetContents !== 'drawers' && p.shelfCount > 0, options: [
+  { key: 'shelfCount', kind: 'count', label: 'Shelf panels', description: 'Number of shelves supplied in the door/open region.', section: 'Shelves', min: 0, max: 6, visibleWhen: p => p.layoutMode === 'legacy' && p.cabinetContents !== 'drawers' },
+  { key: 'shelfStyle', kind: 'select', label: 'Shelf style', description: 'Fixed shelves or adjustable shelf-pin shelves. In Sections mode this applies to generated shelf panels.', section: 'Shelves', visibleWhen: p => p.layoutMode === 'sections' || (p.cabinetContents !== 'drawers' && p.shelfCount > 0), options: [
     { value: 'fixed', label: 'Fixed' },
     { value: 'adjustable', label: 'Adjustable' },
   ] },
