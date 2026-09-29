@@ -2,6 +2,7 @@ const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
 const path = require('node:path');
+const { atomicWriteText } = require('./atomic-write.cjs');
 const { createRendererRecoveryHandler } = require('./lifecycle.cjs');
 
 const MAX_DOCUMENT_BYTES = 2_000_000;
@@ -64,10 +65,7 @@ async function atomicWrite(filePath, content) {
   if (typeof content !== 'string' || Buffer.byteLength(content, 'utf8') > MAX_DOCUMENT_BYTES) {
     throw new Error('Cabinet document is too large.');
   }
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-  const temporary = `${filePath}.tmp-${process.pid}`;
-  await fs.writeFile(temporary, content, 'utf8');
-  await fs.rename(temporary, filePath);
+  await atomicWriteText(filePath, content);
 }
 
 function registerIpc() {
