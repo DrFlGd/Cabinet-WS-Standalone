@@ -4,6 +4,24 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [Unreleased]
+
+### Added
+
+- Add a machine-readable family capability matrix covering all 1,678 retained settings with geometry-driving, manufacturing-driving, compatibility-only, or unsupported ownership status.
+- Add frozen Cabinet Workshop reference fixtures for Utility modular fit solving, Standalone Drawer joinery/divider machining, and Equipment Stand French-cleat construction.
+- Add a prioritized family-parity audit documenting confirmed gaps and verification boundaries.
+
+### Tests
+
+- Add behavioral gap regressions that compare Standalone outcomes with independent reference expectations instead of treating starter construction alone as parity evidence.
+- Lock the current Utility fit-target no-op, drawer joinery mode collapse, divider-mounting machining no-op, and rectangular French-cleat behavior so later fixes must update the audit explicitly.
+
+### Compatibility
+
+- No project schema, package version, geometry implementation, or release-request change.
+- The capability matrix reports ownership and known gaps; unmarked settings remain unverified rather than implicitly parity-complete.
+
 ## [0.14.1] - 2026-09-29
 
 ### Fixed
