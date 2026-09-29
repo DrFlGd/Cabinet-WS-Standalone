@@ -4,6 +4,7 @@ const fsSync = require('node:fs');
 const path = require('node:path');
 
 const MAX_DOCUMENT_BYTES = 2_000_000;
+const MAX_STEP_BYTES = 250_000_000;
 const approvedPaths = new Set();
 
 function userFile(name) {
@@ -111,6 +112,32 @@ function registerIpc() {
 
     await atomicWrite(filePath, content);
     await addRecent(filePath);
+    return { canceled: false, path: filePath, name: path.basename(filePath) };
+  });
+
+  ipcMain.handle('export:step', async (_event, options) => {
+    const bytes = options?.bytes;
+    const buffer = bytes instanceof ArrayBuffer
+      ? Buffer.from(bytes)
+      : ArrayBuffer.isView(bytes)
+        ? Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+        : null;
+    if (!buffer || buffer.byteLength <= 0 || buffer.byteLength > MAX_STEP_BYTES) {
+      throw new Error('STEP export is empty or too large.');
+    }
+
+    const result = await dialog.showSaveDialog({
+      title: 'Export STEP assembly',
+      defaultPath: String(options?.suggestedName || 'cabinet.step'),
+      filters: [
+        { name: 'STEP CAD assembly', extensions: ['step', 'stp'] },
+      ],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+
+    let filePath = result.filePath;
+    if (!/\.(step|stp)$/i.test(filePath)) filePath += '.step';
+    await fs.writeFile(filePath, buffer);
     return { canceled: false, path: filePath, name: path.basename(filePath) };
   });
 

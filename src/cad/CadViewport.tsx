@@ -7,6 +7,7 @@ import {
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CabinetDocument, CadPart, ViewPreset } from './types';
+import type { KernelFaceGroup, KernelSelection, TessellatedPart } from './kernel/types';
 
 export type CadViewportHandle = {
   setView: (preset: ViewPreset) => void;
@@ -18,13 +19,25 @@ type Props = {
   selectedId: string | null;
   hiddenIds: Set<string>;
   explode: number;
+  kernelParts?: TessellatedPart[];
+  kernelSelection?: KernelSelection | null;
   onSelect: (part: CadPart | null) => void;
+  onTopologySelect?: (selection: KernelSelection | null) => void;
 };
 
 type PartObject = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
 
 const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
-  { document: cadDocument, selectedId, hiddenIds, explode, onSelect },
+  {
+    document: cadDocument,
+    selectedId,
+    hiddenIds,
+    explode,
+    kernelParts = [],
+    kernelSelection = null,
+    onSelect,
+    onTopologySelect,
+  },
   ref,
 ) {
   const host = useRef<HTMLDivElement>(null);
@@ -40,8 +53,26 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     fit: () => void;
     setView: (preset: ViewPreset) => void;
   } | null>(null);
-  const latest = useRef({ cadDocument, selectedId, hiddenIds, explode, onSelect });
-  latest.current = { cadDocument, selectedId, hiddenIds, explode, onSelect };
+  const latest = useRef({
+    cadDocument,
+    selectedId,
+    hiddenIds,
+    explode,
+    kernelParts,
+    kernelSelection,
+    onSelect,
+    onTopologySelect,
+  });
+  latest.current = {
+    cadDocument,
+    selectedId,
+    hiddenIds,
+    explode,
+    kernelParts,
+    kernelSelection,
+    onSelect,
+    onTopologySelect,
+  };
 
   useImperativeHandle(ref, () => ({
     fit: () => runtime.current?.fit(),
@@ -95,6 +126,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     scene.add(selectionBox);
 
     const raycaster = new THREE.Raycaster();
+    raycaster.params.Line.threshold = 6;
     const pointer = new THREE.Vector2();
 
     const fit = () => {
@@ -173,9 +205,42 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         -((event.clientY - rect.top) / rect.height) * 2 + 1,
       );
       raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects(model.children.filter(object => object instanceof THREE.Mesh), false)[0];
+
+      if (event.shiftKey) {
+        const edgeHit = raycaster.intersectObjects(
+          model.children.filter(object => object instanceof THREE.LineSegments && object.userData.semanticEdgeId),
+          false,
+        )[0];
+        const edgePartId = edgeHit?.object.userData.partId as string | undefined;
+        const semanticEdgeId = edgeHit?.object.userData.semanticEdgeId as string | undefined;
+        if (edgePartId && semanticEdgeId) {
+          latest.current.onSelect(latest.current.cadDocument.parts.find(part => part.id === edgePartId) ?? null);
+          latest.current.onTopologySelect?.({ partId: edgePartId, kind: 'edge', semanticId: semanticEdgeId });
+          return;
+        }
+      }
+
+      const hit = raycaster.intersectObjects(
+        model.children.filter(object => object instanceof THREE.Mesh && object.userData.primaryPartMesh),
+        false,
+      )[0];
       const id = hit?.object.userData.partId as string | undefined;
-      latest.current.onSelect(id ? latest.current.cadDocument.parts.find(p => p.id === id) ?? null : null);
+      latest.current.onSelect(id ? latest.current.cadDocument.parts.find(part => part.id === id) ?? null : null);
+
+      const faceIndex = hit?.faceIndex;
+      if (!id || faceIndex == null) {
+        latest.current.onTopologySelect?.(null);
+        return;
+      }
+
+      const groups = hit.object.userData.kernelFaceGroups as KernelFaceGroup[] | undefined;
+      const indexOffset = faceIndex * 3;
+      const semanticFace = groups?.find(group => indexOffset >= group.start && indexOffset < group.start + group.count);
+      latest.current.onTopologySelect?.(
+        semanticFace
+          ? { partId: id, kind: 'face', semanticId: semanticFace.semanticId }
+          : null,
+      );
     };
     renderer.domElement.addEventListener('pointerdown', pointerDown);
     renderer.domElement.addEventListener('pointerup', pointerUp);
@@ -199,13 +264,16 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     disposeGroup(rt.model);
     rt.model.clear();
 
+    const exactByPartId = new Map(kernelParts.map(part => [part.partId, part]));
+
     for (const part of cadDocument.parts) {
       if (hiddenIds.has(part.id) || !part.visible) continue;
-      const geometry = createPartGeometry(part);
+      const exact = exactByPartId.get(part.id);
+      const geometry = exact ? createKernelPartGeometry(part, exact) : createPartGeometry(part);
       const material = new THREE.MeshStandardMaterial({
         color: part.color,
         roughness: 0.72,
-        metalness: 0,
+        metalness: part.category === 'hardware' ? 0.28 : 0,
       });
       const mesh: PartObject = new THREE.Mesh(geometry, material);
       const explodeVector = explodeOffset(part, explode, cadDocument.parameters.width, cadDocument.parameters.depth);
@@ -219,43 +287,49 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       mesh.receiveShadow = true;
       mesh.userData.partId = part.id;
       mesh.userData.primaryPartMesh = true;
+      mesh.userData.exactKernel = Boolean(exact);
+      if (exact) mesh.userData.kernelFaceGroups = exact.faceGroups;
       rt.model.add(mesh);
 
-      const edges = new THREE.EdgesGeometry(geometry, 20);
-      const edgeMaterial = new THREE.LineBasicMaterial({ color: '#4d3828', transparent: true, opacity: 0.68 });
-      const line = new THREE.LineSegments(edges, edgeMaterial);
-      setBasePosition(line, partCenter, explodeVector);
-      line.userData.decorative = true;
-      line.userData.partId = part.id;
-      rt.model.add(line);
+      if (exact) {
+        addKernelEdges(rt.model, part, exact, partCenter, explodeVector);
+      } else {
+        const edges = new THREE.EdgesGeometry(geometry, 20);
+        const edgeMaterial = new THREE.LineBasicMaterial({ color: '#4d3828', transparent: true, opacity: 0.68 });
+        const line = new THREE.LineSegments(edges, edgeMaterial);
+        setBasePosition(line, partCenter, explodeVector);
+        line.userData.decorative = true;
+        line.userData.partId = part.id;
+        rt.model.add(line);
 
-      for (const feature of part.renderFeatures ?? []) {
-        const featureGeometry = new THREE.BoxGeometry(feature.size.x, feature.size.y, feature.size.z);
-        const featureMaterial = new THREE.MeshStandardMaterial({
-          color: feature.color ?? '#58402d',
-          roughness: 0.9,
-          metalness: 0,
-          transparent: true,
-          opacity: feature.opacity ?? 0.72,
-          depthWrite: false,
-          polygonOffset: true,
-          polygonOffsetFactor: -2,
-          polygonOffsetUnits: -2,
-        });
-        const featureMesh = new THREE.Mesh(featureGeometry, featureMaterial);
-        const featureCenter = {
-          x: part.position.x + feature.position.x + feature.size.x / 2,
-          y: part.position.y + feature.position.y + feature.size.y / 2,
-          z: part.position.z + feature.position.z + feature.size.z / 2,
-        };
-        setBasePosition(featureMesh, featureCenter, explodeVector);
-        featureMesh.userData.partId = part.id;
-        featureMesh.userData.renderFeature = feature.kind;
-        rt.model.add(featureMesh);
+        for (const feature of part.renderFeatures ?? []) {
+          const featureGeometry = new THREE.BoxGeometry(feature.size.x, feature.size.y, feature.size.z);
+          const featureMaterial = new THREE.MeshStandardMaterial({
+            color: feature.color ?? '#58402d',
+            roughness: 0.9,
+            metalness: 0,
+            transparent: true,
+            opacity: feature.opacity ?? 0.72,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -2,
+            polygonOffsetUnits: -2,
+          });
+          const featureMesh = new THREE.Mesh(featureGeometry, featureMaterial);
+          const featureCenter = {
+            x: part.position.x + feature.position.x + feature.size.x / 2,
+            y: part.position.y + feature.position.y + feature.size.y / 2,
+            z: part.position.z + feature.position.z + feature.size.z / 2,
+          };
+          setBasePosition(featureMesh, featureCenter, explodeVector);
+          featureMesh.userData.partId = part.id;
+          featureMesh.userData.renderFeature = feature.kind;
+          rt.model.add(featureMesh);
+        }
       }
     }
     rt.fit();
-  }, [cadDocument, hiddenIds]);
+  }, [cadDocument, hiddenIds, kernelParts]);
 
   useEffect(() => {
     const rt = runtime.current;
@@ -271,7 +345,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       material.emissive.set(object.userData.partId === selectedId ? '#0d554c' : '#000000');
       material.emissiveIntensity = object.userData.partId === selectedId ? 0.9 : 0;
     }
-  }, [selectedId, cadDocument]);
+  }, [selectedId, kernelSelection, cadDocument]);
 
   useEffect(() => {
     const rt = runtime.current;
@@ -377,4 +451,51 @@ function createPartGeometry(part: CadPart): THREE.BufferGeometry {
   geometry.translate(-part.size.x / 2, -part.size.y / 2, -part.size.z / 2);
   geometry.computeVertexNormals();
   return geometry;
+}
+
+
+function createKernelPartGeometry(part: CadPart, exact: TessellatedPart) {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(exact.vertices, 3));
+  if (exact.normals.length === exact.vertices.length) {
+    geometry.setAttribute('normal', new THREE.Float32BufferAttribute(exact.normals, 3));
+  }
+  geometry.setIndex(exact.triangles);
+  geometry.translate(-part.size.x / 2, -part.size.y / 2, -part.size.z / 2);
+  if (!geometry.getAttribute('normal')) geometry.computeVertexNormals();
+  geometry.computeBoundingBox();
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function addKernelEdges(
+  model: THREE.Group,
+  part: CadPart,
+  exact: TessellatedPart,
+  partCenter: { x: number; y: number; z: number },
+  explodeVector: { x: number; y: number; z: number },
+) {
+  for (const group of exact.edgeGroups) {
+    const start = group.start * 3;
+    const end = (group.start + group.count) * 3;
+    const positions = exact.lines.slice(start, end);
+    if (positions.length < 6) continue;
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.translate(-part.size.x / 2, -part.size.y / 2, -part.size.z / 2);
+
+    const material = new THREE.LineBasicMaterial({
+      color: '#4d3828',
+      transparent: true,
+      opacity: 0.76,
+    });
+    const line = new THREE.LineSegments(geometry, material);
+    setBasePosition(line, partCenter, explodeVector);
+    line.userData.partId = part.id;
+    line.userData.decorative = true;
+    line.userData.exactKernel = true;
+    line.userData.semanticEdgeId = group.semanticId;
+    model.add(line);
+  }
 }

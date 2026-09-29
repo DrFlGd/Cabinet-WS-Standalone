@@ -1,6 +1,6 @@
 {
   "name": "cabinet-ws-standalone",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
   "type": "module",
   "main": "electron/main.cjs",
@@ -19,7 +19,9 @@
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "three": "0.185.1",
-    "vite": "8.0.13"
+    "vite": "8.0.13",
+    "replicad": "^1.1.0",
+    "replicad-opencascadejs": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "22.19.19",

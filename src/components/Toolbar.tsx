@@ -1,5 +1,6 @@
 import {
   Box,
+  FileDown,
   FilePlus2,
   Focus,
   Maximize2,
@@ -24,6 +25,7 @@ type Props = {
   units: DisplayUnits;
   canUndo: boolean;
   canRedo: boolean;
+  canExportStep: boolean;
   recentProjects: RecentProject[];
   onExplode: (value: number) => void;
   onView: (preset: ViewPreset) => void;
@@ -31,6 +33,7 @@ type Props = {
   onNew: () => void;
   onSave: () => void;
   onSaveAs: () => void;
+  onExportStep: () => void;
   onOpen: () => void;
   onOpenRecent: (path: string) => void;
   onUndo: () => void;
@@ -43,6 +46,7 @@ export default function Toolbar({
   units,
   canUndo,
   canRedo,
+  canExportStep,
   recentProjects,
   onExplode,
   onView,
@@ -50,6 +54,7 @@ export default function Toolbar({
   onNew,
   onSave,
   onSaveAs,
+  onExportStep,
   onOpen,
   onOpenRecent,
   onUndo,
@@ -74,6 +79,9 @@ export default function Toolbar({
       )}
       <button onClick={onSave}><Save size={15} /> Save</button>
       <button onClick={onSaveAs}><SaveAll size={15} /> Save As</button>
+      <button onClick={onExportStep} disabled={!canExportStep} title="Export exact OpenCascade assembly as STEP">
+        <FileDown size={15} /> STEP
+      </button>
     </div>
     <span className="toolbar-divider" />
     <div className="toolbar-group">

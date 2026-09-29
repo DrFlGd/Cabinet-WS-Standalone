@@ -13,6 +13,8 @@ import {
 import { formatDimension, unitLabel, type DisplayUnits } from './cad/units';
 import { simpleLayoutToSections } from './cad/sections';
 import { hardwareDefinition } from './cad/hardwareCatalog';
+import { useGeometryKernel } from './cad/kernel/useGeometryKernel';
+import type { KernelSelection } from './cad/kernel/types';
 import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
 import type { CabinetDocument, CabinetParameters, CadPart, SectionNode } from './cad/types';
 import PropertiesPanel from './components/PropertiesPanel';
@@ -55,6 +57,7 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [kernelSelection, setKernelSelection] = useState<KernelSelection | null>(null);
   const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
   const [sectionSelectedId, setSectionSelectedId] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
@@ -73,6 +76,7 @@ export default function App() {
     : null;
   const bodyCount = cadDocument.parts.filter(part => part.category !== 'hardware').length;
   const hardwareCount = cadDocument.hardware.length;
+  const kernel = useGeometryKernel(cadDocument);
 
   async function refreshRecent() {
     const desktop = desktopApi();
@@ -258,7 +262,47 @@ export default function App() {
 
   function select(part: CadPart | null) {
     setSelectedId(part?.id ?? null);
+    setKernelSelection(null);
     setNotice(part ? `Selected ${part.name} · related settings shown at right` : 'Cabinet selected');
+  }
+
+  function selectTopology(selection: KernelSelection | null) {
+    setKernelSelection(selection);
+    if (selection) {
+      setNotice(`Selected ${selection.kind} · ${selection.semanticId}`);
+    }
+  }
+
+  async function exportStep() {
+    try {
+      setNotice('Building exact STEP assembly…');
+      const bytes = await kernel.exportStep();
+      const suggestedName = `${safeBaseName(editor.name)}.step`;
+      const desktop = desktopApi();
+
+      if (desktop) {
+        const result = await desktop.saveStep({ bytes, suggestedName });
+        if (result.canceled) {
+          setNotice('STEP export canceled');
+          return;
+        }
+        setNotice(`Exported STEP · ${result.name ?? suggestedName}`);
+        return;
+      }
+
+      const blob = new Blob([bytes], { type: 'application/STEP' });
+      const href = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = href;
+      anchor.download = suggestedName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(href);
+      setNotice(`Exported STEP · ${suggestedName}`);
+    } catch (error) {
+      setNotice(error instanceof Error ? `STEP export failed: ${error.message}` : 'STEP export failed');
+    }
   }
 
   function openSection(sectionNodeId: number) {
@@ -409,7 +453,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.5.2</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.6.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -429,6 +473,8 @@ export default function App() {
       onNew={() => { void newDocument(); }}
       onSave={() => { void saveDocument(false); }}
       onSaveAs={() => { void saveDocument(true); }}
+      canExportStep={kernel.status === 'ready' || Boolean(kernel.result?.parts.length)}
+      onExportStep={() => { void exportStep(); }}
       onOpen={() => { void openDocument(); }}
       onOpenRecent={path => { void openRecent(path); }}
       onUndo={() => { history.undo(); setNotice('Undo'); }}
@@ -474,17 +520,27 @@ export default function App() {
 
       <section className="viewport-panel">
         <div className="viewport-badges">
-          <span><Cpu size={14} /> Realtime Utility Cabinet model</span>
-          <span><MousePointer2 size={14} /> Click parts to edit related settings</span>
+          <span><Cpu size={14} /> {kernelBadge(kernel.status, kernel.result?.stats.bodyCount ?? 0)}</span>
+          <span><MousePointer2 size={14} /> Click face · Shift-click exact edge</span>
         </div>
-        <CadViewport ref={viewport} document={cadDocument} selectedId={selectedId} hiddenIds={hiddenIds} explode={explode} onSelect={select} />
+        <CadViewport
+          ref={viewport}
+          document={cadDocument}
+          selectedId={selectedId}
+          hiddenIds={hiddenIds}
+          explode={explode}
+          kernelParts={kernel.result?.parts}
+          kernelSelection={kernelSelection}
+          onSelect={select}
+          onTopologySelect={selectTopology}
+        />
         <div className="viewport-footer">
           <DimensionBadge label="W" value={editor.parameters.width} units={editor.displayUnits} />
           <DimensionBadge label="H" value={editor.parameters.height} units={editor.displayUnits} />
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
           <div><strong>{hardwareCount}</strong><small>hardware instances</small></div>
-          <p>Utility v0.5.2 · Manual Layout Editor · contextual parts · hardware intelligence.</p>
+          <p>{kernelFooter(kernel.status, kernel.result?.stats.featureCount ?? 0, kernel.diagnostics.length)}</p>
         </div>
       </section>
 
@@ -494,6 +550,8 @@ export default function App() {
         displayUnits={editor.displayUnits}
         onChange={updateParameter}
         onApplyHardware={applyHardware}
+        topologySelection={kernelSelection}
+        kernelDiagnostics={kernel.diagnostics}
         onShowCabinetSettings={() => select(null)}
         onOpenSection={openSection}
       />
@@ -511,4 +569,23 @@ function humanize(value: string) {
 
 function fileName(filePath: string) {
   return filePath.split(/[\\/]/).at(-1) ?? filePath;
+}
+
+
+function safeBaseName(value: string) {
+  const cleaned = value.trim().replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, '-');
+  return cleaned || 'cabinet';
+}
+
+function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: number) {
+  if (status === 'ready') return `Exact CAD · ${bodyCount} OpenCascade bodies`;
+  if (status === 'error') return `Exact CAD partial · preview fallback active`;
+  if (status === 'loading') return 'Building exact CAD…';
+  return 'Exact CAD idle';
+}
+
+function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
+  if (status === 'ready') return `Utility v0.6 · exact B-Rep · ${featureCount} semantic features · STEP`;
+  if (status === 'error') return `Utility v0.6 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
+  return 'Utility v0.6 · OpenCascade worker initializing…';
 }

@@ -1,12 +1,14 @@
-# Prototype architecture
+# Cabinet WS Standalone architecture
 
 ## Core rule
 
-The CAD document owns cabinet meaning. Three.js only owns visualization.
+The CAD document owns cabinet meaning. Three.js owns visualization and interaction,
+not cabinet truth.
 
-Do not store cabinet truth in mesh UUIDs, scene graph ordering, or renderer state.
+Do not store durable cabinet identity in mesh UUIDs, scene ordering, OpenCascade
+face indexes, or renderer state.
 
-## Current flow
+## v0.6 modeling flow
 
 ```text
 CabinetParameters
@@ -14,64 +16,71 @@ CabinetParameters
       v
 buildCabinetDocument()
       |
-      +--> stable CadPart records
-      |      id / material / position / size / metadata
+      +--> stable CadPart / HardwareInstance records
+      |       id / material / position / size / metadata
       |
-      +--> Tree + Properties UI
+      +--> immediate analytical preview
+      |       |
+      |       v
+      |    Three.js
       |
-      +--> CadViewport
-             |
-             +--> Three.js meshes
-```
-
-## Target flow
-
-```text
-CabinetDocument
-      |
-      v
-Feature / dependency graph
-      |
-      v
-GeometryKernel (worker)
-      |
-      +--> B-Rep bodies + semantic topology
-      |
-      +--> tessellation cache
+      +--> buildFeatureGraph()
               |
               v
-           Three.js
+      WorkerGeometryKernel
+              |
+              +--> Replicad / OpenCascade B-Rep
+              |       panel blanks
+              |       profile cutouts
+              |       dado / rabbet / pocket booleans
+              |       drilling / hole patterns
+              |
+              +--> semantic topology map
+              |       stable face / edge / feature IDs
+              |
+              +--> per-part tessellation cache
+                      |
+                      v
+                   Three.js
 ```
 
-## Why semantic IDs matter
+The analytical model is intentionally retained. It is the cheap interaction preview
+while a worker rebuild is running and the fallback for any part whose exact rebuild
+reports an error. Once a matching exact result returns, its tessellation replaces the
+preview for that part.
 
-A geometry kernel may recreate its topology every time a cabinet dimension changes. The application therefore needs stable domain IDs such as:
+## GeometryKernel boundary
 
-- `carcass:left`
-- `face:carcass:left:inside`
-- `feature:carcass:left:bottom-dado`
-- `door:1`
-
-Selection, BOM rows, machining, dimensions, constraints, visibility, and saved references should attach to these semantic IDs rather than kernel-generated topology numbers.
-
-## Proposed kernel interface
-
-A future `GeometryKernel` should provide operations like:
+The renderer talks to the kernel through a small asynchronous boundary:
 
 ```ts
 interface GeometryKernel {
   rebuild(document: CabinetDocument, dirtyIds?: string[]): Promise<KernelResult>;
-  tessellate(bodyIds: string[]): Promise<TessellatedPart[]>;
+  tessellate(bodyIds?: string[]): TessellatedPart[];
   exportStep(bodyIds?: string[]): Promise<ArrayBuffer>;
   dispose(): void;
 }
 ```
 
-`KernelResult` should map stable part/face/edge names to the corresponding generated topology.
+The browser/Electron renderer never receives live OpenCascade objects. The worker
+returns transferable/plain tessellation and semantic-topology records. STEP is
+generated inside the worker and returned as bytes for the desktop save dialog.
 
-## Cabinet-specific feature model
+### Rebuild behavior
 
-Do not begin with a general-purpose sketch solver. Cabinet manufacturing gets high value from a smaller feature vocabulary:
+- Each rebuild has a monotonically increasing request ID.
+- Older pending rebuilds are rejected/superseded when a newer edit arrives.
+- The worker yields between parts so queued edits can invalidate stale work.
+- The client compares part/feature signatures and sends dirty part IDs.
+- Unchanged tessellations are served from the worker cache.
+- Exact-result errors are returned as diagnostics and surfaced in Properties.
+- During any rebuild the viewport returns to the current analytical preview instead
+  of displaying exact geometry from an older parameter state.
+
+## Feature graph
+
+The feature graph is generated from cabinet semantics and is not persisted as raw
+kernel state. Current feature vocabulary includes:
 
 - panel blank
 - dado
@@ -80,10 +89,69 @@ Do not begin with a general-purpose sketch solver. Cabinet manufacturing gets hi
 - pocket
 - hole
 - hole pattern
-- chamfer/bevel
-- edge banding
-- face drilling
 - hardware reference
-- transform / assembly placement
+- assembly transform
 
-These features should be both geometry-producing and manufacturing-aware.
+Chamfer/bevel and edge-treatment IDs are reserved in the type system but their
+geometry/manufacturing behavior is deferred.
+
+A feature has a stable cabinet-facing ID such as a part-local dado or back-rabbet
+operation. Manufacturing work should consume these registered features rather than
+reverse-engineering operations from tessellated triangles.
+
+## Semantic topology
+
+OpenCascade can reorder topology whenever a boolean or dimension changes, so raw
+kernel indexes are never user-facing identities.
+
+The worker classifies generated topology into stable names such as:
+
+- `carcass:left`
+- `face:carcass:left:inside`
+- `face:carcass:left:front`
+- `edge:carcass:left:front-top`
+- semantic `feature:...` IDs from the feature graph
+
+Raw face/edge IDs are kept only long enough to map tessellation groups to these
+semantic names. Selection, future measurements, dimensions, constraints, and
+manufacturing references should bind to the semantic identity.
+
+## Exact geometry currently covered
+
+For the Utility Cabinet v0.6 proof of concept the kernel creates exact bodies for
+fabricated cabinet parts. Purchased hardware remains simplified semantic reference geometry. It also applies the machining intent already present in the
+semantic cabinet model, including:
+
+- panel/profile extrusion
+- toe-kick side profiles
+- dado/pocket subtraction
+- applied-back rabbet proof geometry on cabinet sides
+- adjustable-shelf line boring and other registered drilling
+- semantic purchased-hardware references remain preview-only; they are deliberately excluded from the exact body set
+
+STEP export writes the exact assembly with stable part names and millimeter units.
+
+The applied-back rabbet is currently a kernel proof operation on the side panels;
+the existing analytical applied-back envelope has not yet been redesigned around a
+full production rabbet construction recipe. That construction-detail refinement
+belongs with the broader cabinet manufacturing work rather than being hidden as a
+false parity claim.
+
+## Three.js responsibilities
+
+Three.js remains responsible for:
+
+- viewport rendering
+- camera/orbit interaction
+- part highlighting
+- raycasting
+- display of semantic face/edge selection
+- cheap preview geometry while exact work runs
+
+It is not responsible for manufacturing truth or boolean geometry.
+
+## Next architectural layer
+
+v0.7 can build direct CAD interaction on top of this boundary: visible face/feature
+selection, editable dimension handles, measurements, isolate/hide tools, and richer
+selection breadcrumbs. Exact rebuilds should remain worker-owned and asynchronous.
