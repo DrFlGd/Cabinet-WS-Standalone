@@ -379,4 +379,5 @@ function compareBomRows(a: BomRow, b: BomRow) {
   const order: PartCategory[] = ['carcass','divider','back','frame','shelf','drawer','front','worktop','hardware'];
   return order.indexOf(a.category)-order.indexOf(b.category) || a.partNumber.localeCompare(b.partNumber, undefined, { numeric:true });
 }
-function esc(value: unknown) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] ?? c)); }
+const htmlEscapes: Record<string, string> = { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' };
+function esc(value: unknown) { return String(value).replace(/[&<>"']/g, c => htmlEscapes[c] ?? c); }
