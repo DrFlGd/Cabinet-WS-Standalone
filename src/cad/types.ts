@@ -19,6 +19,7 @@ export type CadPartGeometry = {
 
 export type CadRenderFeature = {
   kind: 'dado' | 'rabbet' | 'slot' | 'drill';
+  sourcePartId?: string;
   position: Vec3;
   size: Vec3;
   color?: string;
