@@ -43,4 +43,20 @@ describe('desktop dropdown controls', () => {
     expect(propertiesSource).toContain('partSettingsContext');
     expect(propertiesSource).toContain('Edit this section');
   });
+
+  it('keeps exact CAD worker, STEP export, and semantic topology wired into the desktop shell', () => {
+    const appSource = readFileSync('src/App.tsx', 'utf8');
+    const viewportSource = readFileSync('src/cad/CadViewport.tsx', 'utf8');
+    const workerSource = readFileSync('src/cad/kernel/geometry.worker.ts', 'utf8');
+    const desktopSource = readFileSync('electron/main.cjs', 'utf8');
+
+    expect(appSource).toContain('useGeometryKernel');
+    expect(appSource).toContain('onExportStep');
+    expect(viewportSource).toContain('kernelFaceGroups');
+    expect(viewportSource).toContain('semanticEdgeId');
+    expect(workerSource).toContain("replicad-opencascadejs/wasm?url");
+    expect(workerSource).toContain('exportSTEP');
+    expect(workerSource).toContain('meshCache');
+    expect(desktopSource).toContain("ipcMain.handle('export:step'");
+  });
 });
