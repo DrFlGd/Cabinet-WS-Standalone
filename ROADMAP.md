@@ -54,7 +54,7 @@ scope, not a claim that the Windows application has been manually verified.
 ## Next: dependable build and desktop baseline
 
 - [x] Commit a dependency lockfile and switch all CI workflows to `npm ci`.
-- [x] Launch the packaged Windows EXE in smoke tests: load the geometry worker, open a
+- [ ] Validate a complete passing run of the packaged Windows EXE in smoke tests: load the geometry worker, open a
   representative project, edit, save/reopen, and export.
 - [ ] Add modeling-workspace error boundaries and actionable recovery UI.
 - [ ] Exercise autosave/recovery across crashes and migrations; add About/version info.

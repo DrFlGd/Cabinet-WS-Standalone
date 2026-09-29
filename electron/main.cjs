@@ -18,6 +18,8 @@ if (smokeRoot) {
   fsSync.mkdirSync(smokeUserData, { recursive: true });
   app.setPath('userData', smokeUserData);
 
+  app.commandLine.appendSwitch('enable-logging', 'file');
+  app.commandLine.appendSwitch('log-file', path.join(smokeRoot, 'chromium.log'));
   const debugPort = process.env.CABINET_WS_SMOKE_DEBUG_PORT;
   if (debugPort && /^\d+$/.test(debugPort)) {
     app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1');
@@ -277,6 +279,13 @@ function createWindow() {
     if (url.startsWith('https://')) shell.openExternal(url);
   });
 
+  if (smokeRoot) {
+    const log = (event, detail) => fsSync.appendFileSync(path.join(smokeRoot, 'lifecycle.log'), JSON.stringify({ event, detail, time: Date.now() }) + '\n');
+    win.on('unresponsive', () => log('unresponsive'));
+    win.webContents.on('render-process-gone', (_event, details) => log('render-process-gone', details));
+    win.webContents.on('did-fail-load', (_event, code, description) => log('did-fail-load', { code, description }));
+    win.webContents.on('console-message', (_event, details) => log('console', { level: details.level, message: details.message }));
+  }
   const devUrl = process.env.VITE_DEV_SERVER_URL;
   if (devUrl) win.loadURL(devUrl);
   else win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));

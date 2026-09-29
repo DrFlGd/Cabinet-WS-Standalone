@@ -1,3 +1,4 @@
+import { createWriteStream } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
@@ -22,6 +23,9 @@ class CdpClient {
     this.nextId = 1;
     this.pending = new Map();
     this.exceptions = [];
+    this.consoleMessages = [];
+    this.pausedFrames = [];
+    this.lastExpression = '';
     this.closed = false;
   }
 
@@ -48,8 +52,14 @@ class CdpClient {
         else pending.resolve(message.result);
         return;
       }
+      if (message.method === 'Debugger.paused') {
+        this.pausedFrames = message.params.callFrames.map(frame => ({ name: frame.functionName, url: frame.url, location: frame.location }));
+      }
+      if (message.method === 'Runtime.consoleAPICalled') {
+        this.consoleMessages.push({ type: message.params.type, args: message.params.args.map(arg => arg.value ?? arg.description) });
+      }
       if (message.method === 'Runtime.exceptionThrown') {
-        this.exceptions.push(message.params?.exceptionDetails?.text || 'Unhandled renderer exception');
+        this.exceptions.push(message.params?.exceptionDetails?.exception?.description || message.params?.exceptionDetails?.text || 'Unhandled renderer exception');
       }
     });
     this.socket.addEventListener('close', () => {
@@ -60,15 +70,16 @@ class CdpClient {
       this.pending.clear();
     });
     await this.call('Runtime.enable');
+    await this.call('Debugger.enable');
   }
 
-  call(method, params = {}) {
+  call(method, params = {}, timeoutMs = 15_000) {
     const id = this.nextId++;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
         reject(new Error(`Timed out waiting for Chromium DevTools ${method}.`));
-      }, 15_000);
+      }, timeoutMs);
       this.pending.set(id, {
         resolve: value => {
           clearTimeout(timer);
@@ -84,12 +95,13 @@ class CdpClient {
   }
 
   async evaluate(expression) {
+    this.lastExpression = expression;
     const result = await this.call('Runtime.evaluate', {
       expression,
       awaitPromise: true,
       returnByValue: true,
       userGesture: true,
-    });
+    }, 60_000);
     if (result.exceptionDetails) {
       throw new Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text || 'Renderer evaluation failed.');
     }
@@ -214,6 +226,7 @@ await rm(SMOKE_DIR, { recursive: true, force: true });
 await mkdir(SMOKE_DIR, { recursive: true });
 
 const executable = await findPortableExe();
+const processLog = createWriteStream(path.join(SMOKE_DIR, 'electron.log'));
 const child = spawn(executable, [], {
   cwd: ROOT,
   env: {
@@ -223,8 +236,10 @@ const child = spawn(executable, [], {
     ELECTRON_ENABLE_LOGGING: '1',
   },
   windowsHide: true,
-  stdio: 'ignore',
+  stdio: ['ignore', 'pipe', 'pipe'],
 });
+child.stdout.pipe(processLog, { end: false });
+child.stderr.pipe(processLog, { end: false });
 
 let client;
 let summary = {
@@ -307,11 +322,22 @@ try {
   console.log(`Packaged Windows smoke test passed: ${summary.checks.join('; ')}`);
 } catch (error) {
   summary.error = error instanceof Error ? error.stack || error.message : String(error);
-  summary.finalNotice = client ? await notice(client).catch(() => '') : '';
+  summary.lastExpression = client?.lastExpression;
+  if (client && !client.closed) {
+    await client.call('Debugger.pause', {}, 5000).catch(() => undefined);
+    await sleep(500);
+    summary.pausedFrames = client.pausedFrames;
+    await client.call('Debugger.resume', {}, 5000).catch(() => undefined);
+    await client.call('Page.captureScreenshot', {}, 5000).then(async result => {
+      await writeFile(path.join(SMOKE_DIR, 'failure.png'), Buffer.from(result.data, 'base64'));
+    }).catch(() => undefined);
+  }
   throw error;
 } finally {
   summary.rendererExceptions = client?.exceptions ?? [];
+  summary.consoleMessages = client?.consoleMessages ?? [];
   await writeFile(SUMMARY_PATH, JSON.stringify(summary, null, 2), 'utf8');
   client?.close();
   await stopProcess(child);
+  processLog.end();
 }

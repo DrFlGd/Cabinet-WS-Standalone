@@ -6,6 +6,13 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Smoke-test validation follow-up
+
+- Capture the last evaluation, renderer exceptions/console, paused stack, screenshot and Electron/Chromium lifecycle logs when packaged validation fails.
+- Allow bounded 60-second DevTools evaluations during cold exact-geometry startup; keep full workflow validation required.
+- Keep the packaged-workflow roadmap item open until CI verifies the complete sequence.
+
+
 ### Added
 
 - Commit `package-lock.json` and add a packaged Windows smoke harness that launches the portable EXE, waits for the exact geometry worker, saves/opens a schema-v3 project, edits a cabinet dimension, saves/reopens, exports STEP, and records hashes/evidence.
