@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, Eye, EyeOff, FunctionSquare, SlidersHorizontal } from 'lucide-react';
 import {
   FAMILY_SETTINGS_SECTION_ORDER,
@@ -313,68 +313,117 @@ function FamilyArrayInput({
   disabled: boolean;
   onChange: (value: JsonValue) => void;
 }) {
+  const focused = useRef(false);
   const nested = value.some(item => Array.isArray(item) || (item !== null && typeof item === 'object'));
   const numericArray = value.every(item => typeof item === 'number');
   const dimensionArray = field.unit === 'mm' && numericArray;
+  const formatted = formatArrayDraft(value, field, displayUnits);
+  const [draft, setDraft] = useState(formatted);
+
+  useEffect(() => {
+    if (!focused.current) setDraft(formatted);
+  }, [formatted]);
+
+  function commit(nextDraft: string) {
+    if (nested) {
+      try {
+        const parsed = JSON.parse(nextDraft) as unknown;
+        if (Array.isArray(parsed)) onChange(parsed as JsonValue[]);
+      } catch {
+        setDraft(formatted);
+      }
+      return;
+    }
+
+    const tokens = nextDraft.split(',').map(token => token.trim()).filter(Boolean);
+    if (!tokens.length) {
+      onChange([]);
+      return;
+    }
+
+    if (numericArray || (!value.length && field.unit === 'mm')) {
+      const numbers = tokens.map(Number);
+      if (numbers.every(Number.isFinite)) {
+        onChange(numbers.map(item => dimensionArray || field.unit === 'mm' ? toMillimeters(item, displayUnits) : item));
+      } else {
+        setDraft(formatted);
+      }
+      return;
+    }
+
+    if (value.every(item => typeof item === 'boolean')) {
+      onChange(tokens.map(token => {
+        const normalized = token.toLowerCase();
+        return normalized === 'true' || normalized === '1';
+      }));
+      return;
+    }
+
+    onChange(tokens);
+  }
 
   if (nested) {
     return (
       <textarea
         className="family-array-input family-json-input"
-        value={JSON.stringify(value)}
+        value={draft}
         disabled={disabled}
         rows={Math.min(5, Math.max(2, value.length))}
-        onChange={event => {
-          try {
-            const parsed = JSON.parse(event.currentTarget.value) as unknown;
-            if (Array.isArray(parsed)) onChange(parsed as JsonValue[]);
-          } catch {
-            return;
+        onFocus={() => { focused.current = true; }}
+        onChange={event => setDraft(event.currentTarget.value)}
+        onBlur={() => {
+          focused.current = false;
+          commit(draft);
+        }}
+        onKeyDown={event => {
+          if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            setDraft(formatted);
+            event.currentTarget.blur();
           }
         }}
       />
     );
   }
 
-  const shown = value.map(item => {
-    if (dimensionArray && typeof item === 'number') return roundInput(fromMillimeters(item, displayUnits));
-    return String(item);
-  }).join(', ');
-
   return (
     <input
       className="family-text-input family-array-input"
       type="text"
-      value={shown}
+      value={draft}
       disabled={disabled}
       placeholder="comma-separated values"
-      onChange={event => {
-        const tokens = event.currentTarget.value.split(',').map(token => token.trim()).filter(Boolean);
-        if (!tokens.length) {
-          onChange([]);
-          return;
+      onFocus={() => { focused.current = true; }}
+      onChange={event => setDraft(event.currentTarget.value)}
+      onBlur={() => {
+        focused.current = false;
+        commit(draft);
+      }}
+      onKeyDown={event => {
+        if (event.key === 'Enter') event.currentTarget.blur();
+        if (event.key === 'Escape') {
+          setDraft(formatted);
+          event.currentTarget.blur();
         }
-
-        if (numericArray || (!value.length && field.unit === 'mm')) {
-          const numbers = tokens.map(Number);
-          if (numbers.every(Number.isFinite)) {
-            onChange(numbers.map(item => dimensionArray || field.unit === 'mm' ? toMillimeters(item, displayUnits) : item));
-          }
-          return;
-        }
-
-        if (value.every(item => typeof item === 'boolean')) {
-          onChange(tokens.map(token => {
-            const normalized = token.toLowerCase();
-            return normalized === 'true' || normalized === '1';
-          }));
-          return;
-        }
-
-        onChange(tokens);
       }}
     />
   );
+}
+
+function formatArrayDraft(
+  value: JsonValue[],
+  field: FamilyFieldDefinition,
+  displayUnits: DisplayUnits,
+) {
+  const nested = value.some(item => Array.isArray(item) || (item !== null && typeof item === 'object'));
+  if (nested) return JSON.stringify(value);
+
+  const numericArray = value.every(item => typeof item === 'number');
+  const dimensionArray = field.unit === 'mm' && numericArray;
+  return value.map(item => {
+    if (dimensionArray && typeof item === 'number') return roundInput(fromMillimeters(item, displayUnits));
+    return String(item);
+  }).join(', ');
 }
 
 function ReadOnlyValue({
