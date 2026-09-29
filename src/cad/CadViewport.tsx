@@ -33,6 +33,8 @@ type Props = {
   onSelect: (part: CadPart | null, additive?: boolean) => void;
   onTopologySelect?: (selection: KernelSelection | null) => void;
   onDimensionChange: (key: 'width' | 'height' | 'depth', value: number) => void;
+  onShelfPositionChange: (partId: string, nextZ: number) => void;
+  onSectionDividerChange: (partId: string, delta: number) => void;
   onHideSelected: () => void;
   onIsolateSelected: () => void;
   onShowAll: () => void;
@@ -56,6 +58,8 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     onSelect,
     onTopologySelect,
     onDimensionChange,
+    onShelfPositionChange,
+    onSectionDividerChange,
     onHideSelected,
     onIsolateSelected,
     onShowAll,
@@ -91,6 +95,8 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     onSelect,
     onTopologySelect,
     onDimensionChange,
+    onShelfPositionChange,
+    onSectionDividerChange,
     onHideSelected,
     onIsolateSelected,
     onShowAll,
@@ -110,6 +116,8 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     onSelect,
     onTopologySelect,
     onDimensionChange,
+    onShelfPositionChange,
+    onSectionDividerChange,
     onHideSelected,
     onIsolateSelected,
     onShowAll,
@@ -271,14 +279,67 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       startPoint: THREE.Vector3;
       startValue: number;
     } | null = null;
+    let draggingShelf: {
+      partId: string;
+      plane: THREE.Plane;
+      startPoint: THREE.Vector3;
+      startZ: number;
+    } | null = null;
+    let draggingDivider: {
+      partId: string;
+      axis: THREE.Vector3;
+      plane: THREE.Plane;
+      startPoint: THREE.Vector3;
+      lastDelta: number;
+    } | null = null;
 
     const setPointerFromEvent = (event: PointerEvent | MouseEvent) => {
-      setPointerFromEvent(event);
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.set(
+        ((event.clientX - rect.left) / rect.width) * 2 - 1,
+        -((event.clientY - rect.top) / rect.height) * 2 + 1,
+      );
+      raycaster.setFromCamera(pointer, camera);
     };
+
+    const interactionPlane = (point: THREE.Vector3) =>
+      new THREE.Plane().setFromNormalAndCoplanarPoint(camera.getWorldDirection(new THREE.Vector3()), point);
 
     const pointerDown = (event: PointerEvent) => {
       if (event.button !== 0) return;
       setPointerFromEvent(event);
+
+      const directHit = raycaster.intersectObjects(
+        model.children.filter(object => object.userData.directHandleKind),
+        false,
+      )[0];
+      if (directHit?.object.userData.directHandleKind === 'shelf') {
+        const partId = String(directHit.object.userData.partId);
+        const part = latest.current.cadDocument.parts.find(candidate => candidate.id === partId);
+        if (part) {
+          event.preventDefault();
+          draggingShelf = { partId, plane: interactionPlane(directHit.point), startPoint: directHit.point.clone(), startZ: part.position.z };
+          controls.enabled = false;
+          down = null;
+          return;
+        }
+      }
+      if (directHit?.object.userData.directHandleKind === 'divider') {
+        const partId = String(directHit.object.userData.partId);
+        const axisName = directHit.object.userData.dividerAxis === 'x' ? 'x' : 'z';
+        event.preventDefault();
+        draggingDivider = {
+          partId,
+          axis: axisName === 'x' ? new THREE.Vector3(1, 0, 0) : new THREE.Vector3(0, 0, 1),
+          plane: interactionPlane(directHit.point),
+          startPoint: directHit.point.clone(),
+          lastDelta: 0,
+        };
+        controls.enabled = false;
+        down = null;
+        return;
+      }
+
       const handleHit = raycaster.intersectObjects(
         model.children.filter(object => object.userData.dimensionKey),
         false,
@@ -292,12 +353,10 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
             ? new THREE.Vector3(0, 1, 0)
             : new THREE.Vector3(0, 0, 1);
         const startPoint = handleHit.point.clone();
-        const cameraDirection = camera.getWorldDirection(new THREE.Vector3());
-        const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(cameraDirection, startPoint);
         draggingDimension = {
           key,
           axis,
-          plane,
+          plane: interactionPlane(startPoint),
           startPoint,
           startValue: latest.current.cadDocument.parameters[key],
         };
@@ -309,17 +368,39 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     };
 
     const pointerMove = (event: PointerEvent) => {
-      if (!draggingDimension) return;
+      if (!draggingDimension && !draggingShelf && !draggingDivider) return;
       setPointerFromEvent(event);
-      const point = raycaster.ray.intersectPlane(draggingDimension.plane, new THREE.Vector3());
-      if (!point) return;
-      const delta = point.clone().sub(draggingDimension.startPoint).dot(draggingDimension.axis);
-      latest.current.onDimensionChange(draggingDimension.key, Math.max(50, draggingDimension.startValue + delta));
+      if (draggingDimension) {
+        const point = raycaster.ray.intersectPlane(draggingDimension.plane, new THREE.Vector3());
+        if (!point) return;
+        const delta = point.clone().sub(draggingDimension.startPoint).dot(draggingDimension.axis);
+        latest.current.onDimensionChange(draggingDimension.key, Math.max(50, draggingDimension.startValue + delta));
+        return;
+      }
+      if (draggingShelf) {
+        const point = raycaster.ray.intersectPlane(draggingShelf.plane, new THREE.Vector3());
+        if (!point) return;
+        const delta = point.z - draggingShelf.startPoint.z;
+        latest.current.onShelfPositionChange(draggingShelf.partId, draggingShelf.startZ + delta);
+        return;
+      }
+      if (draggingDivider) {
+        const point = raycaster.ray.intersectPlane(draggingDivider.plane, new THREE.Vector3());
+        if (!point) return;
+        const total = point.clone().sub(draggingDivider.startPoint).dot(draggingDivider.axis);
+        const incremental = total - draggingDivider.lastDelta;
+        if (Math.abs(incremental) >= 0.2) {
+          latest.current.onSectionDividerChange(draggingDivider.partId, incremental);
+          draggingDivider.lastDelta = total;
+        }
+      }
     };
 
     const pointerUp = (event: PointerEvent) => {
-      if (draggingDimension) {
+      if (draggingDimension || draggingShelf || draggingDivider) {
         draggingDimension = null;
+        draggingShelf = null;
+        draggingDivider = null;
         controls.enabled = true;
         return;
       }
@@ -500,6 +581,30 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       rt.model.add(handle);
     }
 
+    const directSize = Math.max(12, handleSize * 0.6);
+    const shelfHandleMaterial = () => new THREE.MeshStandardMaterial({ color: '#e5bd67', roughness: 0.45, depthTest: false });
+    const dividerHandleMaterial = () => new THREE.MeshStandardMaterial({ color: '#6eb8e8', roughness: 0.45, depthTest: false });
+    for (const part of cadDocument.parts) {
+      if (hiddenIds.has(part.id) || !part.visible) continue;
+      if (part.category === 'shelf' && Number(part.metadata?.shelfIndex ?? 0) > 0) {
+        const handle = new THREE.Mesh(new THREE.SphereGeometry(directSize * 0.5, 12, 8), shelfHandleMaterial());
+        handle.position.set(part.position.x + part.size.x / 2, Math.max(-directSize, part.position.y - directSize), part.position.z + part.size.z / 2);
+        handle.renderOrder = 21;
+        handle.userData.directHandleKind = 'shelf';
+        handle.userData.partId = part.id;
+        rt.model.add(handle);
+      }
+      if (part.category === 'divider' && part.metadata?.sectionDivider && (part.metadata?.dividerAxis === 'x' || part.metadata?.dividerAxis === 'z')) {
+        const handle = new THREE.Mesh(new THREE.BoxGeometry(directSize, directSize, directSize), dividerHandleMaterial());
+        handle.position.set(part.position.x + part.size.x / 2, Math.max(-directSize, part.position.y - directSize), part.position.z + part.size.z / 2);
+        handle.renderOrder = 21;
+        handle.userData.directHandleKind = 'divider';
+        handle.userData.partId = part.id;
+        handle.userData.dividerAxis = part.metadata.dividerAxis;
+        rt.model.add(handle);
+      }
+    }
+
     rt.fit();
   }, [cadDocument, hiddenIds, kernelParts, displayMode, clipEnabled, clipZ, projection]);
 
@@ -545,7 +650,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
 
   return <div className="cad-viewport-shell" onPointerDown={() => contextMenu && setContextMenu(null)}>
     <div className="cad-viewport" ref={host} />
-    <div className="cad-direct-hint">Drag turquoise W / D / H handles · Ctrl-click adds parts · Right-click opens actions</div>
+    <div className="cad-direct-hint">Turquoise: W/D/H · gold: shelf height · blue: section divider · Ctrl-click multi-select · Shift-click edge</div>
     {contextMenu && contextPart && (
       <div className="cad-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} onPointerDown={event => event.stopPropagation()}>
         <strong>{contextPart.name}</strong>
