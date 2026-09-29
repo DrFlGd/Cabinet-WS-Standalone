@@ -130,5 +130,7 @@ export interface GeometryKernel {
 }
 
 export function isKernelEligiblePart(part: CadPart) {
-  return part.visible && part.size.x > 0 && part.size.y > 0 && part.size.z > 0;
+  // Purchased hardware is still simplified reference geometry in v0.6.
+  // Do not present those envelopes as exact manufactured OpenCascade bodies.
+  return part.category !== 'hardware' && part.visible && part.size.x > 0 && part.size.y > 0 && part.size.z > 0;
 }
