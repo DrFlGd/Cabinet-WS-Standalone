@@ -293,6 +293,22 @@ function ParameterFields({
             </div>
           )}
 
+          {field.kind === 'number' && (
+            <div className="number-input count-input">
+              <input
+                type="number"
+                value={parameters[field.key] as number}
+                min={field.min}
+                max={field.max}
+                step={field.step}
+                onChange={event => {
+                  const next = event.currentTarget.valueAsNumber;
+                  if (Number.isFinite(next)) onChange(field.key, next);
+                }}
+              />
+            </div>
+          )}
+
           {field.kind === 'select' && (
             <SelectControl
               className="parameter-select"
