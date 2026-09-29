@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
 import { buildCabinetDocument, DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
-import CadViewport, { type CadViewportHandle } from './cad/CadViewport';
+import CadViewport, {
+  type CadViewportHandle,
+  type ViewportDisplayMode,
+  type ViewportProjection,
+} from './cad/CadViewport';
 import {
   downloadDocument,
   parseDocument,
@@ -21,6 +25,7 @@ import HardwareDrawer from './components/HardwareDrawer';
 import PropertiesPanel from './components/PropertiesPanel';
 import SectionLayoutPanel from './components/SectionLayoutPanel';
 import SelectControl from './components/SelectControl';
+import DimensionInput from './components/DimensionInput';
 import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
 import { desktopApi, type RecentProject } from './desktop';
@@ -58,7 +63,12 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [kernelSelection, setKernelSelection] = useState<KernelSelection | null>(null);
+  const [displayMode, setDisplayMode] = useState<ViewportDisplayMode>('shaded-edges');
+  const [projection, setProjection] = useState<ViewportProjection>('perspective');
+  const [clipEnabled, setClipEnabled] = useState(false);
+  const [clipZ, setClipZ] = useState(INITIAL_EDITOR.parameters.height);
   const [hardwareCatalogExpanded, setHardwareCatalogExpanded] = useState(false);
   const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
   const [sectionSelectedId, setSectionSelectedId] = useState(0);
@@ -98,7 +108,16 @@ export default function App() {
     if (selectedId && !cadDocument.parts.some(part => part.id === selectedId)) {
       setSelectedId(null);
     }
+    setSelectedIds(current => {
+      const next = new Set([...current].filter(id => cadDocument.parts.some(part => part.id === id)));
+      return next.size === current.size ? current : next;
+    });
   }, [cadDocument.parts, selectedId]);
+
+  useEffect(() => {
+    if (!clipEnabled) setClipZ(editor.parameters.height);
+    else setClipZ(current => Math.min(current, editor.parameters.height));
+  }, [clipEnabled, editor.parameters.height]);
 
   useEffect(() => {
     document.title = `${dirty ? '* ' : ''}${editor.name || 'Untitled'} — Cabinet WS Standalone`;
@@ -255,17 +274,57 @@ export default function App() {
     }));
 
     setSelectedId(null);
+    setSelectedIds(new Set());
     setSectionSelectedId(0);
     setHiddenIds(new Set());
     setExplode(0);
+    setClipEnabled(false);
     setNotice(`Loaded ${starter.name}`);
     requestAnimationFrame(() => viewport.current?.fit());
   }
 
-  function select(part: CadPart | null) {
-    setSelectedId(part?.id ?? null);
+  function select(part: CadPart | null, additive = false) {
+    if (!part) {
+      setSelectedId(null);
+      setSelectedIds(new Set());
+      setKernelSelection(null);
+      setNotice('Cabinet selected');
+      return;
+    }
+
+    if (!additive) {
+      setSelectedIds(new Set([part.id]));
+      setSelectedId(part.id);
+    } else {
+      setSelectedIds(current => {
+        const next = new Set(current);
+        if (next.has(part.id)) next.delete(part.id);
+        else next.add(part.id);
+        setSelectedId(next.has(part.id) ? part.id : [...next].at(-1) ?? null);
+        return next;
+      });
+    }
     setKernelSelection(null);
-    setNotice(part ? `Selected ${part.name} · related settings shown at right` : 'Cabinet selected');
+    setNotice(additive
+      ? 'Selection updated · Ctrl-click to add/remove parts'
+      : `Selected ${part.name} · related settings shown at right`);
+  }
+
+  function hideSelected() {
+    if (!selectedIds.size) return;
+    setHiddenIds(current => new Set([...current, ...selectedIds]));
+    setNotice(`Hidden ${selectedIds.size} selected part${selectedIds.size === 1 ? '' : 's'}`);
+  }
+
+  function isolateSelected() {
+    if (!selectedIds.size) return;
+    setHiddenIds(new Set(cadDocument.parts.filter(part => !selectedIds.has(part.id)).map(part => part.id)));
+    setNotice(`Isolated ${selectedIds.size} selected part${selectedIds.size === 1 ? '' : 's'}`);
+  }
+
+  function showAllParts() {
+    setHiddenIds(new Set());
+    setNotice('Showing all parts');
   }
 
   function selectTopology(selection: KernelSelection | null) {
@@ -337,9 +396,11 @@ export default function App() {
     setSavedContent(serializeDocument(toCadDocument(next)));
     setCurrentPath(null);
     setSelectedId(null);
+    setSelectedIds(new Set());
     setSectionSelectedId(0);
     setHiddenIds(new Set());
     setExplode(0);
+    setClipEnabled(false);
     await clearRecovery();
     setNotice('New Utility Cabinet');
     requestAnimationFrame(() => viewport.current?.fit());
@@ -355,9 +416,11 @@ export default function App() {
     setSavedContent(serializeDocument(document));
     setCurrentPath(sourcePath);
     setSelectedId(null);
+    setSelectedIds(new Set());
     setSectionSelectedId(0);
     setHiddenIds(new Set());
     setExplode(0);
+    setClipEnabled(false);
     await clearRecovery();
     await refreshRecent();
 
@@ -455,7 +518,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.6.1</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.7.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -482,6 +545,19 @@ export default function App() {
       onUndo={() => { history.undo(); setNotice('Undo'); }}
       onRedo={() => { history.redo(); setNotice('Redo'); }}
       onUnits={updateDisplayUnits}
+      displayMode={displayMode}
+      projection={projection}
+      clipEnabled={clipEnabled}
+      clipZ={clipZ}
+      clipMax={editor.parameters.height}
+      hasSelection={selectedIds.size > 0}
+      onDisplayMode={setDisplayMode}
+      onProjection={setProjection}
+      onClipEnabled={setClipEnabled}
+      onClipZ={setClipZ}
+      onHideSelected={hideSelected}
+      onIsolateSelected={isolateSelected}
+      onShowAll={showAllParts}
     />
     <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
@@ -517,6 +593,7 @@ export default function App() {
           <TreePanel
             document={cadDocument}
             selectedId={selectedId}
+            selectedIds={selectedIds}
             hiddenIds={hiddenIds}
             expanded={partBrowserExpanded}
             onToggle={() => setPartBrowserExpanded(current => !current)}
@@ -529,18 +606,33 @@ export default function App() {
       <section className="viewport-panel">
         <div className="viewport-badges">
           <span><Cpu size={14} /> {kernelBadge(kernel.status, kernel.result?.stats.bodyCount ?? 0)}</span>
-          <span><MousePointer2 size={14} /> Click face · Shift-click exact edge</span>
+          <span><MousePointer2 size={14} /> Click face · Shift-click edge · Ctrl-click multi-select</span>
+          {selectedIds.size > 0 && <span className="selection-breadcrumb">{selectedIds.size} selected · {selected?.id ?? [...selectedIds][0]}</span>}
         </div>
+        <ViewportDimensionEditor
+          parameters={editor.parameters}
+          units={editor.displayUnits}
+          onChange={(key, value) => updateParameter(key, value)}
+        />
         <CadViewport
           ref={viewport}
           document={cadDocument}
           selectedId={selectedId}
+          selectedIds={selectedIds}
           hiddenIds={hiddenIds}
           explode={explode}
+          displayMode={displayMode}
+          projection={projection}
+          clipEnabled={clipEnabled}
+          clipZ={clipZ}
           kernelParts={kernel.result?.parts}
           kernelSelection={kernelSelection}
           onSelect={select}
           onTopologySelect={selectTopology}
+          onDimensionChange={(key, value) => updateParameter(key, value)}
+          onHideSelected={hideSelected}
+          onIsolateSelected={isolateSelected}
+          onShowAll={showAllParts}
         />
         <div className="viewport-footer">
           <DimensionBadge label="W" value={editor.parameters.width} units={editor.displayUnits} />
@@ -564,6 +656,29 @@ export default function App() {
       />
     </div>
   </main>;
+}
+
+function ViewportDimensionEditor({
+  parameters,
+  units,
+  onChange,
+}: {
+  parameters: CabinetParameters;
+  units: DisplayUnits;
+  onChange: (key: 'width' | 'height' | 'depth', value: number) => void;
+}) {
+  return <div className="viewport-dimension-editor" aria-label="Direct cabinet dimensions">
+    {([
+      ['W', 'width'],
+      ['H', 'height'],
+      ['D', 'depth'],
+    ] as const).map(([label, key]) => (
+      <label key={key}>
+        <span>{label}</span>
+        <DimensionInput value={parameters[key]} units={units} min={50} onChange={value => onChange(key, value)} />
+      </label>
+    ))}
+  </div>;
 }
 
 function DimensionBadge({ label, value, units }: { label: string; value: number; units: DisplayUnits }) {
@@ -592,7 +707,7 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
 }
 
 function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.6.1 · exact B-Rep · ${featureCount} semantic features · STEP`;
-  if (status === 'error') return `Utility v0.6.1 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
-  return 'Utility v0.6.1 · OpenCascade worker initializing…';
+  if (status === 'ready') return `Utility v0.7.0 · exact B-Rep · ${featureCount} semantic features · direct CAD editing · STEP`;
+  if (status === 'error') return `Utility v0.7.0 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
+  return 'Utility v0.7.0 · OpenCascade worker initializing…';
 }

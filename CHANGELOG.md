@@ -4,6 +4,38 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.7.0] - 2026-09-28
+
+### Added
+
+- In-viewport width, height, and depth editors that use the existing unit-aware `DimensionInput` path.
+- Turquoise W/D/H drag handles for direct overall cabinet envelope editing; handle drags update semantic cabinet parameters and remain compatible with undo/redo coalescing.
+- Ctrl-click additive part selection with multi-selection highlighting in the viewport and Parts browser.
+- Selection breadcrumb showing the active multi-selection while Properties continues to edit the primary selected part.
+- Toolbar and right-click actions to isolate selected parts, hide selected parts, and restore all parts.
+- Right-click viewport part context menu based on stable part IDs.
+- Z clipping plane inspection control.
+- Shaded, shaded-with-edges, and wireframe viewport modes.
+- Perspective and orthographic camera projection modes while retaining iso/front/right/top orientation controls.
+- Source-level regression guards covering direct dimension editing, selection actions, clipping, display modes, and projection switching.
+
+### Changed
+
+- Application/package version advanced to 0.7.0.
+- Direct viewport edits route through `CabinetParameters` and editor history instead of applying renderer-only transforms.
+- Exact geometry remains worker-owned: direct edits use the analytical preview immediately and then receive matching Replicad/OpenCascade tessellation.
+- README, roadmap, and architecture documentation now consistently describe the implemented v0.6 exact kernel and v0.7 direct-interaction boundary.
+
+### Compatibility
+
+- No saved-project schema change. Existing schema-v2 projects remain compatible.
+- Viewport selection, clipping, display mode, camera projection, and isolation are editor state and do not alter persisted cabinet geometry.
+
+### Deferred
+
+- Arbitrary shelf-position dragging is deferred until shelf positions exist as persistent semantic document parameters; v0.7 does not create renderer-only shelf offsets.
+- 3D section-divider dragging and semantic distance/face/angle measurement remain follow-on direct-interaction work.
+
 ## [0.6.1] - 2026-09-28
 
 ### Changed

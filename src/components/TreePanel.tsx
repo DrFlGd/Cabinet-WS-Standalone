@@ -4,6 +4,7 @@ import type { CabinetDocument, CadPart, PartCategory } from '../cad/types';
 type Props = {
   document: CabinetDocument;
   selectedId: string | null;
+  selectedIds: Set<string>;
   hiddenIds: Set<string>;
   expanded: boolean;
   onToggle: () => void;
@@ -25,6 +26,7 @@ const labels: Record<PartCategory, string> = {
 export default function TreePanel({
   document,
   selectedId,
+  selectedIds,
   hiddenIds,
   expanded,
   onToggle,
@@ -74,7 +76,7 @@ export default function TreePanel({
           <details key={category} open>
             <summary>{labels[category]}</summary>
             {document.parts.filter(part => part.category === category).map(part => (
-              <div className={`tree-row ${selectedId === part.id ? 'selected' : ''}`} key={part.id}>
+              <div className={`tree-row ${selectedIds.has(part.id) ? 'selected' : ''}`} key={part.id}>
                 <button className="tree-select" onClick={() => onSelect(part)} title={part.id}>
                   <span className="tree-icon">◇</span><span>{part.name}</span>
                 </button>

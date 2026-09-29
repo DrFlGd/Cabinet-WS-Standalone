@@ -8,7 +8,7 @@ not cabinet truth.
 Do not store durable cabinet identity in mesh UUIDs, scene ordering, OpenCascade
 face indexes, or renderer state.
 
-## v0.6 modeling flow
+## v0.7 modeling flow
 
 ```text
 CabinetParameters
@@ -137,6 +137,14 @@ full production rabbet construction recipe. That construction-detail refinement
 belongs with the broader cabinet manufacturing work rather than being hidden as a
 false parity claim.
 
+## Direct interaction boundary
+
+v0.7 adds direct manipulation without changing cabinet ownership. Width/height/depth overlays and W/D/H drag handles call the same `CabinetParameters` update/history path used by Properties. The analytical document rebuild is immediate; exact OpenCascade work remains asynchronous in the worker.
+
+Multi-selection, isolate/hide state, clipping, display mode, camera projection, and the right-click part menu are editor/viewport state. They must not become durable cabinet identity or substitute renderer transforms for persistent cabinet parameters. A direct manipulation is only a real model edit when it changes semantic document data and therefore participates in undo/redo and exact rebuilds.
+
+The current Utility model does not persist arbitrary shelf coordinates, so v0.7 intentionally does not fake shelf dragging by moving Three.js meshes independently of the document. Future shelf/divider manipulation must first establish the corresponding semantic parameter/constraint model.
+
 ## Three.js responsibilities
 
 Three.js remains responsible for:
@@ -152,6 +160,4 @@ It is not responsible for manufacturing truth or boolean geometry.
 
 ## Next architectural layer
 
-v0.7 can build direct CAD interaction on top of this boundary: visible face/feature
-selection, editable dimension handles, measurements, isolate/hide tools, and richer
-selection breadcrumbs. Exact rebuilds should remain worker-owned and asynchronous.
+The next work extends the same boundary rather than replacing it: semantic measurement tools, persistent movable shelf/divider constraints, then the Phase 8 drawer/door/face-frame model. Manufacturing and measurement consumers should continue to bind to semantic parts/features/topology rather than renderer objects or transient OpenCascade indexes.

@@ -3,6 +3,7 @@ import {
   useEffect,
   useImperativeHandle,
   useRef,
+  useState,
 } from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
@@ -14,15 +15,27 @@ export type CadViewportHandle = {
   fit: () => void;
 };
 
+export type ViewportDisplayMode = 'shaded' | 'shaded-edges' | 'wireframe';
+export type ViewportProjection = 'perspective' | 'orthographic';
+
 type Props = {
   document: CabinetDocument;
   selectedId: string | null;
+  selectedIds: Set<string>;
   hiddenIds: Set<string>;
   explode: number;
+  displayMode: ViewportDisplayMode;
+  projection: ViewportProjection;
+  clipEnabled: boolean;
+  clipZ: number;
   kernelParts?: TessellatedPart[];
   kernelSelection?: KernelSelection | null;
-  onSelect: (part: CadPart | null) => void;
+  onSelect: (part: CadPart | null, additive?: boolean) => void;
   onTopologySelect?: (selection: KernelSelection | null) => void;
+  onDimensionChange: (key: 'width' | 'height' | 'depth', value: number) => void;
+  onHideSelected: () => void;
+  onIsolateSelected: () => void;
+  onShowAll: () => void;
 };
 
 type PartObject = THREE.Mesh<THREE.BufferGeometry, THREE.MeshStandardMaterial>;
@@ -31,19 +44,29 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
   {
     document: cadDocument,
     selectedId,
+    selectedIds,
     hiddenIds,
     explode,
+    displayMode,
+    projection,
+    clipEnabled,
+    clipZ,
     kernelParts = [],
     kernelSelection = null,
     onSelect,
     onTopologySelect,
+    onDimensionChange,
+    onHideSelected,
+    onIsolateSelected,
+    onShowAll,
   },
   ref,
 ) {
   const host = useRef<HTMLDivElement>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; partId: string } | null>(null);
   const runtime = useRef<{
     scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
+    camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
     renderer: THREE.WebGLRenderer;
     controls: OrbitControls;
     model: THREE.Group;
@@ -56,22 +79,40 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
   const latest = useRef({
     cadDocument,
     selectedId,
+    selectedIds,
     hiddenIds,
     explode,
+    displayMode,
+    projection,
+    clipEnabled,
+    clipZ,
     kernelParts,
     kernelSelection,
     onSelect,
     onTopologySelect,
+    onDimensionChange,
+    onHideSelected,
+    onIsolateSelected,
+    onShowAll,
   });
   latest.current = {
     cadDocument,
     selectedId,
+    selectedIds,
     hiddenIds,
     explode,
+    displayMode,
+    projection,
+    clipEnabled,
+    clipZ,
     kernelParts,
     kernelSelection,
     onSelect,
     onTopologySelect,
+    onDimensionChange,
+    onHideSelected,
+    onIsolateSelected,
+    onShowAll,
   };
 
   useImperativeHandle(ref, () => ({
@@ -86,7 +127,9 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     scene.background = new THREE.Color('#1c2024');
     scene.fog = new THREE.Fog('#1c2024', 3500, 9000);
 
-    const camera = new THREE.PerspectiveCamera(38, 1, 1, 20000);
+    const camera: THREE.PerspectiveCamera | THREE.OrthographicCamera = projection === 'orthographic'
+      ? new THREE.OrthographicCamera(-1000, 1000, 1000, -1000, 0.1, 30000)
+      : new THREE.PerspectiveCamera(38, 1, 1, 20000);
     camera.up.set(0, 0, 1);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
@@ -94,6 +137,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.localClippingEnabled = true;
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -135,11 +179,24 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
       const span = Math.max(size.x, size.y, size.z, 1);
-      const distance = span / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 1.65;
       controls.target.copy(center);
-      camera.position.copy(center).add(new THREE.Vector3(1.15, -1.55, 1.05).normalize().multiplyScalar(distance));
-      camera.near = Math.max(0.1, span / 1000);
-      camera.far = Math.max(10000, span * 30);
+      const direction = new THREE.Vector3(1.15, -1.55, 1.05).normalize();
+      if (camera instanceof THREE.PerspectiveCamera) {
+        const distance = span / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 1.65;
+        camera.position.copy(center).add(direction.multiplyScalar(distance));
+        camera.near = Math.max(0.1, span / 1000);
+        camera.far = Math.max(10000, span * 30);
+      } else {
+        const aspect = Math.max(0.25, container.clientWidth / Math.max(container.clientHeight, 1));
+        const halfHeight = span * 0.82;
+        camera.left = -halfHeight * aspect;
+        camera.right = halfHeight * aspect;
+        camera.top = halfHeight;
+        camera.bottom = -halfHeight;
+        camera.position.copy(center).add(direction.multiplyScalar(span * 2.5));
+        camera.near = 0.1;
+        camera.far = Math.max(10000, span * 30);
+      }
       camera.updateProjectionMatrix();
       controls.update();
     };
@@ -150,7 +207,6 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
       const span = Math.max(size.x, size.y, size.z, 1);
-      const distance = span / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 1.65;
       const vectors: Record<ViewPreset, THREE.Vector3> = {
         iso: new THREE.Vector3(1.15, -1.55, 1.05),
         front: new THREE.Vector3(0, -1, 0),
@@ -159,6 +215,17 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       };
       const direction = vectors[preset].clone().normalize();
       controls.target.copy(center);
+      const distance = camera instanceof THREE.PerspectiveCamera
+        ? span / (2 * Math.tan((camera.fov * Math.PI) / 360)) * 1.65
+        : span * 2.5;
+      if (camera instanceof THREE.OrthographicCamera) {
+        const aspect = Math.max(0.25, container.clientWidth / Math.max(container.clientHeight, 1));
+        const halfHeight = span * 0.82;
+        camera.left = -halfHeight * aspect;
+        camera.right = halfHeight * aspect;
+        camera.top = halfHeight;
+        camera.bottom = -halfHeight;
+      }
       camera.position.copy(center).add(direction.multiplyScalar(distance));
       if (preset === 'top') camera.up.set(0, 1, 0);
       else camera.up.set(0, 0, 1);
@@ -174,7 +241,14 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       const height = container.clientHeight;
       if (!width || !height) return;
       renderer.setSize(width, height, false);
-      camera.aspect = width / height;
+      if (camera instanceof THREE.PerspectiveCamera) {
+        camera.aspect = width / height;
+      } else {
+        const halfHeight = Math.max(1, (camera.top - camera.bottom) / 2);
+        const aspect = width / height;
+        camera.left = -halfHeight * aspect;
+        camera.right = halfHeight * aspect;
+      }
       camera.updateProjectionMatrix();
     };
     const observer = new ResizeObserver(resize);
@@ -190,10 +264,65 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     animate();
 
     let down: { x: number; y: number } | null = null;
-    const pointerDown = (event: PointerEvent) => {
-      if (event.button === 0) down = { x: event.clientX, y: event.clientY };
+    let draggingDimension: {
+      key: 'width' | 'height' | 'depth';
+      axis: THREE.Vector3;
+      plane: THREE.Plane;
+      startPoint: THREE.Vector3;
+      startValue: number;
+    } | null = null;
+
+    const setPointerFromEvent = (event: PointerEvent | MouseEvent) => {
+      setPointerFromEvent(event);
     };
+
+    const pointerDown = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      setPointerFromEvent(event);
+      const handleHit = raycaster.intersectObjects(
+        model.children.filter(object => object.userData.dimensionKey),
+        false,
+      )[0];
+      const key = handleHit?.object.userData.dimensionKey as 'width' | 'height' | 'depth' | undefined;
+      if (key) {
+        event.preventDefault();
+        const axis = key === 'width'
+          ? new THREE.Vector3(1, 0, 0)
+          : key === 'depth'
+            ? new THREE.Vector3(0, 1, 0)
+            : new THREE.Vector3(0, 0, 1);
+        const startPoint = handleHit.point.clone();
+        const cameraDirection = camera.getWorldDirection(new THREE.Vector3());
+        const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(cameraDirection, startPoint);
+        draggingDimension = {
+          key,
+          axis,
+          plane,
+          startPoint,
+          startValue: latest.current.cadDocument.parameters[key],
+        };
+        controls.enabled = false;
+        down = null;
+        return;
+      }
+      down = { x: event.clientX, y: event.clientY };
+    };
+
+    const pointerMove = (event: PointerEvent) => {
+      if (!draggingDimension) return;
+      setPointerFromEvent(event);
+      const point = raycaster.ray.intersectPlane(draggingDimension.plane, new THREE.Vector3());
+      if (!point) return;
+      const delta = point.clone().sub(draggingDimension.startPoint).dot(draggingDimension.axis);
+      latest.current.onDimensionChange(draggingDimension.key, Math.max(50, draggingDimension.startValue + delta));
+    };
+
     const pointerUp = (event: PointerEvent) => {
+      if (draggingDimension) {
+        draggingDimension = null;
+        controls.enabled = true;
+        return;
+      }
       if (!down || Math.hypot(event.clientX - down.x, event.clientY - down.y) > 5) {
         down = null;
         return;
@@ -225,7 +354,10 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         false,
       )[0];
       const id = hit?.object.userData.partId as string | undefined;
-      latest.current.onSelect(id ? latest.current.cadDocument.parts.find(part => part.id === id) ?? null : null);
+      latest.current.onSelect(
+        id ? latest.current.cadDocument.parts.find(part => part.id === id) ?? null : null,
+        event.ctrlKey || event.metaKey,
+      );
 
       const faceIndex = hit?.faceIndex;
       if (!id || faceIndex == null) {
@@ -242,21 +374,42 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
           : null,
       );
     };
+    const contextMenu = (event: MouseEvent) => {
+      event.preventDefault();
+      setPointerFromEvent(event);
+      const hit = raycaster.intersectObjects(
+        model.children.filter(object => object instanceof THREE.Mesh && object.userData.primaryPartMesh),
+        false,
+      )[0];
+      const id = hit?.object.userData.partId as string | undefined;
+      if (!id) {
+        setContextMenu(null);
+        return;
+      }
+      latest.current.onSelect(latest.current.cadDocument.parts.find(part => part.id === id) ?? null, event.ctrlKey || event.metaKey);
+      const rect = container.getBoundingClientRect();
+      setContextMenu({ x: event.clientX - rect.left, y: event.clientY - rect.top, partId: id });
+    };
+
     renderer.domElement.addEventListener('pointerdown', pointerDown);
+    renderer.domElement.addEventListener('pointermove', pointerMove);
     renderer.domElement.addEventListener('pointerup', pointerUp);
+    renderer.domElement.addEventListener('contextmenu', contextMenu);
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
       renderer.domElement.removeEventListener('pointerdown', pointerDown);
+      renderer.domElement.removeEventListener('pointermove', pointerMove);
       renderer.domElement.removeEventListener('pointerup', pointerUp);
+      renderer.domElement.removeEventListener('contextmenu', contextMenu);
       controls.dispose();
       disposeGroup(model);
       renderer.dispose();
       renderer.domElement.remove();
       runtime.current = null;
     };
-  }, []);
+  }, [projection]);
 
   useEffect(() => {
     const rt = runtime.current;
@@ -274,6 +427,8 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         color: part.color,
         roughness: 0.72,
         metalness: part.category === 'hardware' ? 0.28 : 0,
+        wireframe: displayMode === 'wireframe',
+        clippingPlanes: clipEnabled ? [new THREE.Plane(new THREE.Vector3(0, 0, -1), clipZ)] : [],
       });
       const mesh: PartObject = new THREE.Mesh(geometry, material);
       const explodeVector = explodeOffset(part, explode, cadDocument.parameters.width, cadDocument.parameters.depth);
@@ -292,7 +447,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       rt.model.add(mesh);
 
       if (exact) {
-        addKernelEdges(rt.model, part, exact, partCenter, explodeVector);
+        addKernelEdges(rt.model, part, exact, partCenter, explodeVector, displayMode === 'shaded-edges');
       } else {
         const edges = new THREE.EdgesGeometry(geometry, 20);
         const edgeMaterial = new THREE.LineBasicMaterial({ color: '#4d3828', transparent: true, opacity: 0.68 });
@@ -300,6 +455,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         setBasePosition(line, partCenter, explodeVector);
         line.userData.decorative = true;
         line.userData.partId = part.id;
+        line.visible = displayMode === 'shaded-edges';
         rt.model.add(line);
 
         for (const feature of part.renderFeatures ?? []) {
@@ -328,8 +484,24 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         }
       }
     }
+
+    const handleSize = Math.max(18, Math.min(42, Math.max(cadDocument.parameters.width, cadDocument.parameters.height, cadDocument.parameters.depth) * 0.035));
+    const handleMaterial = () => new THREE.MeshStandardMaterial({ color: '#35d0ba', roughness: 0.4, metalness: 0.15, depthTest: false });
+    const handles: Array<{ key: 'width' | 'height' | 'depth'; position: [number, number, number] }> = [
+      { key: 'width', position: [cadDocument.parameters.width, cadDocument.parameters.depth / 2, cadDocument.parameters.height / 2] },
+      { key: 'depth', position: [cadDocument.parameters.width / 2, cadDocument.parameters.depth, cadDocument.parameters.height / 2] },
+      { key: 'height', position: [cadDocument.parameters.width / 2, cadDocument.parameters.depth / 2, cadDocument.parameters.height] },
+    ];
+    for (const spec of handles) {
+      const handle = new THREE.Mesh(new THREE.BoxGeometry(handleSize, handleSize, handleSize), handleMaterial());
+      handle.position.set(...spec.position);
+      handle.renderOrder = 20;
+      handle.userData.dimensionKey = spec.key;
+      rt.model.add(handle);
+    }
+
     rt.fit();
-  }, [cadDocument, hiddenIds, kernelParts]);
+  }, [cadDocument, hiddenIds, kernelParts, displayMode, clipEnabled, clipZ, projection]);
 
   useEffect(() => {
     const rt = runtime.current;
@@ -342,10 +514,11 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     for (const object of rt.model.children) {
       if (!(object instanceof THREE.Mesh)) continue;
       const material = object.material as THREE.MeshStandardMaterial;
-      material.emissive.set(object.userData.partId === selectedId ? '#0d554c' : '#000000');
-      material.emissiveIntensity = object.userData.partId === selectedId ? 0.9 : 0;
+      const selected = selectedIds.has(String(object.userData.partId ?? ''));
+      material.emissive.set(selected ? '#0d554c' : '#000000');
+      material.emissiveIntensity = selected ? 0.9 : 0;
     }
-  }, [selectedId, kernelSelection, cadDocument]);
+  }, [selectedId, selectedIds, kernelSelection, cadDocument]);
 
   useEffect(() => {
     const rt = runtime.current;
@@ -366,7 +539,23 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     if (selectedMesh) rt.selectionBox.box.setFromObject(selectedMesh);
   }, [explode, cadDocument, selectedId]);
 
-  return <div className="cad-viewport" ref={host} />;
+  const contextPart = contextMenu
+    ? cadDocument.parts.find(part => part.id === contextMenu.partId) ?? null
+    : null;
+
+  return <div className="cad-viewport-shell" onPointerDown={() => contextMenu && setContextMenu(null)}>
+    <div className="cad-viewport" ref={host} />
+    <div className="cad-direct-hint">Drag turquoise W / D / H handles · Ctrl-click adds parts · Right-click opens actions</div>
+    {contextMenu && contextPart && (
+      <div className="cad-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} onPointerDown={event => event.stopPropagation()}>
+        <strong>{contextPart.name}</strong>
+        <small>{contextPart.id}</small>
+        <button type="button" onClick={() => { onIsolateSelected(); setContextMenu(null); }}>Isolate selection</button>
+        <button type="button" onClick={() => { onHideSelected(); setContextMenu(null); }}>Hide selection</button>
+        <button type="button" onClick={() => { onShowAll(); setContextMenu(null); }}>Show all parts</button>
+      </div>
+    )}
+  </div>;
 });
 
 export default CadViewport;
@@ -474,6 +663,7 @@ function addKernelEdges(
   exact: TessellatedPart,
   partCenter: { x: number; y: number; z: number },
   explodeVector: { x: number; y: number; z: number },
+  visible: boolean,
 ) {
   for (const group of exact.edgeGroups) {
     const start = group.start * 3;
@@ -496,6 +686,7 @@ function addKernelEdges(
     line.userData.decorative = true;
     line.userData.exactKernel = true;
     line.userData.semanticEdgeId = group.semanticId;
+    line.visible = visible;
     model.add(line);
   }
 }
