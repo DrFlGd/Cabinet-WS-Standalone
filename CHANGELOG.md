@@ -13,13 +13,13 @@ The project follows milestone versions while the standalone CAD architecture is 
 - Dirty-part signature tracking plus a per-part exact tessellation cache.
 - Cabinet-native feature graph generated from semantic parts instead of reverse-engineering manufacturing intent from Three.js meshes.
 - First-class feature records for panel blanks, dadoes, rabbets, grooves, pockets, holes, hole patterns, hardware references, and assembly transforms.
-- Exact B-Rep bodies for the Utility Cabinet reference family.
+- Exact B-Rep bodies for fabricated parts in the Utility Cabinet reference family; purchased hardware envelopes remain reference geometry.
 - Exact extrusion of side profiles, including toe-kick side cutouts.
 - Exact subtraction of registered dado/pocket and drilling features.
 - Applied-back rabbet proof geometry on cabinet side B-Reps.
 - Exact adjustable-shelf line boring and other registered hole patterns.
 - Semantic face and edge identity mapped from transient OpenCascade topology, including IDs such as `face:carcass:left:inside` and `edge:carcass:left:front-top`.
-- Three.js rendering from exact OpenCascade tessellations while retaining the analytical geometry as a responsive/failure fallback.
+- Three.js rendering from exact OpenCascade tessellations for fabricated parts while retaining analytical/reference geometry as a responsive/failure fallback.
 - Exact face selection by normal click and semantic edge selection by Shift-click.
 - Kernel diagnostics surfaced in the Properties panel instead of allowing a failed exact part to take down the editor.
 - STEP assembly export with stable part names and millimeter units.
