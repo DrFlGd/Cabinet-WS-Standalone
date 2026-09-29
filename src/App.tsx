@@ -17,6 +17,8 @@ import {
 import { formatDimension, unitLabel, type DisplayUnits } from './cad/units';
 import { cloneSectionNodes, sectionRects, sectionRoot, simpleLayoutToSections } from './cad/sections';
 import { computeMeasurement, requiredMeasurementSelections, type MeasurementMode } from './cad/measurements';
+import { analyzeDesignHealth } from './cad/designHealth';
+import type { FitSolution } from './cad/fitSolver';
 import { hardwareDefinition } from './cad/hardwareCatalog';
 import { useGeometryKernel } from './cad/kernel/useGeometryKernel';
 import type { KernelSelection } from './cad/kernel/types';
@@ -30,6 +32,7 @@ import DimensionInput from './components/DimensionInput';
 import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
 import MeasurementPanel from './components/MeasurementPanel';
+import DesignHealthPanel from './components/DesignHealthPanel';
 import { desktopApi, type RecentProject } from './desktop';
 import { clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
 import type { EditorDocument } from './editor/history';
@@ -96,6 +99,13 @@ export default function App() {
   const measurementResult = useMemo(
     () => computeMeasurement(cadDocument, kernel.result?.parts ?? [], measurementMode, measurementSelections),
     [cadDocument, kernel.result?.parts, measurementMode, measurementSelections],
+  );
+  const designHealth = useMemo(
+    () => analyzeDesignHealth(cadDocument, {
+      kernelDiagnostics: kernel.diagnostics,
+      kernelStatus: kernel.status,
+    }),
+    [cadDocument, kernel.diagnostics, kernel.status],
   );
 
   async function refreshRecent() {
@@ -367,6 +377,19 @@ export default function App() {
     setMeasurementMode('off');
   }
 
+  function applyFitSolution(solution: FitSolution) {
+    if (!solution.feasible) return;
+    history.edit(current => ({
+      ...current,
+      parameters: sanitizeParameters({
+        ...current.parameters,
+        ...solution.patch,
+      }),
+    }));
+    setNotice(`Applied ${solution.title} · Undo restores the previous cabinet`);
+    requestAnimationFrame(() => viewport.current?.fit());
+  }
+
   function updateShelfPosition(partId: string, nextZ: number) {
     const part = cadDocument.parts.find(candidate => candidate.id === partId);
     if (!part) return;
@@ -621,7 +644,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.8.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.9.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -725,6 +748,12 @@ export default function App() {
           onMode={changeMeasurementMode}
           onClear={clearMeasurement}
         />
+        <DesignHealthPanel
+          report={designHealth}
+          parameters={editor.parameters}
+          units={editor.displayUnits}
+          onApplySolution={applyFitSolution}
+        />
         <CadViewport
           ref={viewport}
           document={cadDocument}
@@ -820,7 +849,7 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
 }
 
 function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.8.0 · exact B-Rep · ${featureCount} semantic features · cabinet-depth editing · STEP`;
-  if (status === 'error') return `Utility v0.8.0 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
-  return 'Utility v0.8.0 · OpenCascade worker initializing…';
+  if (status === 'ready') return `Utility v0.9.0 · exact B-Rep · ${featureCount} semantic features · Design Health · STEP`;
+  if (status === 'error') return `Utility v0.9.0 · exact kernel diagnostics: ${diagnosticCount} · Design Health review`;
+  return 'Utility v0.9.0 · OpenCascade worker initializing…';
 }
