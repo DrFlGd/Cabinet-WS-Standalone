@@ -655,8 +655,10 @@ function svgGeometry(geometry: ManufacturingGeometry, height: number) {
   if (geometry.type === 'text') {
     return '<text class="label" x="' + num(geometry.x) + '" y="' + num(height - geometry.y) + '" font-size="' + num(geometry.height) + '">' + xml(geometry.text) + '</text>';
   }
-  return '<polyline points="' + geometry.points.map(point => num(point.x) + ',' + num(height - point.y)).join(' ') + '"' +
-    (geometry.closed ? ' fill="none"' : '') + '/>';
+  const points = geometry.points.map(point => num(point.x) + ',' + num(height - point.y)).join(' ');
+  return geometry.closed
+    ? '<polygon points="' + points + '" fill="none"/>'
+    : '<polyline points="' + points + '" fill="none"/>';
 }
 
 export function drillingMapCsv(part: ManufacturingPart) {
