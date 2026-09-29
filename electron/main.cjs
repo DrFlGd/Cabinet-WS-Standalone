@@ -2,7 +2,7 @@ const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
 const path = require('node:path');
-const { atomicWriteText } = require('./atomic-write.cjs');
+const { atomicWriteText, clearAtomicText } = require('./atomic-write.cjs');
 const { createRendererRecoveryHandler } = require('./lifecycle.cjs');
 
 const MAX_DOCUMENT_BYTES = 2_000_000;
@@ -226,11 +226,7 @@ function registerIpc() {
   });
 
   ipcMain.handle('recovery:clear', async () => {
-    try {
-      await fs.unlink(userFile('recovery.cabinetws.json'));
-    } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
-    }
+    await clearAtomicText(userFile('recovery.cabinetws.json'));
   });
 }
 
