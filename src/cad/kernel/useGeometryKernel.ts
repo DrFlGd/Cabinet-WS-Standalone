@@ -25,7 +25,11 @@ export function useGeometryKernel(document: CabinetDocument): GeometryKernelStat
   useEffect(() => {
     const current = kernel.current!;
     let active = true;
-    setStatus(result ? 'ready' : 'loading');
+    // Never display stale exact geometry while a document edit is rebuilding.
+    // The analytical model remains the immediate interaction preview.
+    setStatus('loading');
+    setResult(null);
+    setDiagnostics([]);
 
     current.rebuild(document)
       .then(next => {
