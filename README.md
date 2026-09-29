@@ -7,15 +7,29 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with Manual Layout, collapsible Hardware/Parts drawers, realtime 3D viewport, searchable Properties panel, and toolbar.
-- Utility Cabinet v0.12 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, Design Health/fit solving, shop documentation, feature-driven manufacturing geometry, and grain-aware sheet production planning.
+- Seven native cabinet families in v0.13—Shop Cart, Utility, Benchtop Drawers, Stackable, Kitchen, Standalone Drawer, and Equipment Stand—with all 110 shipped Cabinet Workshop examples available from the family/example browser.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, Ctrl-click multi-selection, semantic distance/face/angle measurements, movable shelves/section dividers, contextual part actions, and editable cabinet dimensions.
 - Hide/show/isolate parts, exploded view, clipping, shaded/edge/wireframe display modes, perspective/orthographic cameras, iso/front/right/top views, persistent shelf handles, and 3D section-divider handles.
-- Versioned schema-v2 cabinet projects with automatic v1 migration and runtime validation.
+- Versioned schema-v3 cabinet projects with automatic v1/v2 migration, persisted family/starter identity, retained legacy family recipe values, and runtime parameter validation.
 - Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts, including one-step undo for applied fit-solver results.
 - Exact STEP assembly export plus Shop Docs cut-list/assembly reports, Phase 11 DXF/SVG/drilling manufacturing exports, and Phase 12 sheet-nesting/registration outputs.
+
+## v0.13 Seven-family and example-catalog parity
+
+v0.13 removes the Utility-only product boundary. The editor can switch among all seven Cabinet Workshop families: **Shop Cart, Utility Cabinet, Benchtop Drawers, Stackable Cabinet, Kitchen Cabinet, Standalone Drawer, and Equipment Stand**. The family browser exposes every shipped legacy example: **110 starters total** (6 Shop Cart, 11 Utility, 8 Benchtop, 6 Stackable, 57 Kitchen, 7 Standalone Drawer, and 15 Equipment Stand).
+
+The original legacy starter recipes are retained as data and resolved against their family defaults before adaptation. Schema v3 stores `family`, `starterId`, and the original `familyValues` recipe alongside the canonical Standalone parameters. This means a saved project remains traceable to the family-specific recipe even when a legacy-only setting does not yet have a dedicated Standalone control.
+
+Shop Cart, Utility, Benchtop, Stackable, and Kitchen recipes adapt into the existing semantic cabinet generator so they immediately inherit bounded layouts, native parts, the exact OpenCascade path, Design Health, BOM/shop documentation, Phase 11 manufacturing, and Phase 12 production planning. Stackable modules add semantic stack-interface/base parts.
+
+Standalone Drawer and Equipment Stand use dedicated native family generators rather than pretending they are ordinary Utility carcasses. Drawer recipes support enclosure/outside/inside/modular-grid sizing, semantic box members, captured-bottom machining intent, optional divider grids, decorative fronts, and slide references. Equipment Stand recipes generate semantic sides, trays, cheeks/lips, upper bays, panel/structural/stretcher backs, skeletonized side cutouts, and French-cleat rails where the recipe calls for them.
+
+Legacy Cabinet Workshop imports now accept all seven numeric/string family IDs. Old Standalone schema-v1/v2 projects migrate to schema v3 as Utility projects without changing their existing canonical parameters.
+
+This milestone ports **the families and shipped example catalog**, not the web application's entire 99–310-field presentation layer. The shared native Properties surface remains the primary editor; family-only legacy values that do not yet have a redesigned control remain retained in `familyValues` and continue to drive the family adapter where implemented. OpenSCAD remains reference/oracle code only and is not reintroduced into the production runtime.
 
 ## v0.12 Sheet nesting and production planning
 
@@ -273,6 +287,6 @@ The normal build workflow and Windows packaging workflow remain in the repositor
 ## Recommended next milestones
 
 1. Complete the remaining Phase 12 CNC step with compensated path generation and a verified explicit machine/postprocessor profile before enabling G-code.
-2. Port the remaining six cabinet families using the Utility family as the reference implementation.
+2. Expand family-specific native property schemas where workflows need controls beyond the retained v0.13 recipe data.
 3. Extend the hardware catalog with explicit manufacturer-verified face-frame hinge/mounting metadata.
 4. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.
