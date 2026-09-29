@@ -451,15 +451,16 @@ function tryPlace(
     const footprintWidth = partWidth + clearance;
     const footprintHeight = partHeight + clearance;
 
-    sheet.freeRects.forEach((rect, rectIndex) => {
-      if (footprintWidth > rect.width + 0.001 || footprintHeight > rect.height + 0.001) return;
+    for (let rectIndex = 0; rectIndex < sheet.freeRects.length; rectIndex += 1) {
+      const rect = sheet.freeRects[rectIndex];
+      if (footprintWidth > rect.width + 0.001 || footprintHeight > rect.height + 0.001) continue;
       const wastedArea = rect.width * rect.height - footprintWidth * footprintHeight;
       const shortSide = Math.min(rect.width - footprintWidth, rect.height - footprintHeight);
       const score: [number, number, number] = [wastedArea, shortSide, rotation];
       if (!best || compareScore(score, best.score) < 0) {
         best = { rectIndex, rotation, partWidth, partHeight, footprintWidth, footprintHeight, score };
       }
-    });
+    }
   }
 
   if (!best) return false;
