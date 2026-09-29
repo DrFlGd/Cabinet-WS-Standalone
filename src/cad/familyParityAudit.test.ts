@@ -11,7 +11,8 @@ import {
 import { familyFieldDefinitions } from './familySettings';
 import { buildFamilyCabinetDocument } from './familyModel';
 import { buildFeatureGraph } from './kernel/featureGraph';
-import type { CabinetFamily, FamilyRecipeValues } from './types';
+import { sectionLeaf } from './sections';
+import type { CabinetFamily, FamilyRecipeValues, SectionNode } from './types';
 
 type ReferenceFixture = {
   id: string;
@@ -73,6 +74,87 @@ describe('family parity audit', () => {
       status: 'unsupported',
       parity: 'known-gap',
     });
+  });
+
+  it('classifies helper-resolved drawer stock and measured thickness as geometry-driving', () => {
+    const families: CabinetFamily[] = ['shop_cart', 'utility', 'benchtop', 'stackable', 'kitchen', 'drawer'];
+    const keys = [
+      'drawer_stock',
+      'drawer_bottom_stock',
+      'drawer_front_stock',
+      'custom_drawer_material_thickness',
+      'custom_drawer_bottom_thickness',
+      'custom_drawer_front_thickness',
+    ];
+
+    for (const family of families) {
+      const schemaKeys = new Set(familyFieldDefinitions(family).map(field => field.key));
+      for (const key of keys.filter(candidate => schemaKeys.has(candidate))) {
+        expect(familyCapabilityFor(family, key), family + ':' + key).toMatchObject({
+          status: 'geometry-driving',
+          owner: 'family-adapter',
+        });
+      }
+    }
+
+    const starter = familyStarter('drawer');
+    const values = recipeWithPatch(starter.values, {
+      drawer_stock: 'custom_mm',
+      custom_drawer_material_thickness: 9,
+      drawer_bottom_stock: 'custom_mm',
+      custom_drawer_bottom_thickness: 4,
+      drawer_front_stock: 'custom_mm',
+      custom_drawer_front_thickness: 13,
+      drawer_face_style: 'overlay',
+    });
+    const parameters = parametersFromFamilyValues('drawer', values);
+    expect(parameters.drawerMaterialThickness).toBe(9);
+    expect(parameters.drawerBottomThickness).toBe(4);
+    expect(parameters.drawerFrontThickness).toBe(13);
+
+    const document = buildFamilyCabinetDocument(parameters, 'Measured drawer stock audit', 'mm', {
+      family: 'drawer',
+      starterId: starter.id,
+      familyValues: values,
+    });
+    expect(document.parts.find(part => part.id === 'drawer:1:box:left')?.size.x).toBe(9);
+    expect(document.parts.find(part => part.id === 'drawer:1:bottom')?.size.z).toBe(4);
+    expect(document.parts.find(part => part.id === 'drawer:1:front')?.size.y).toBe(13);
+  });
+
+  it('classifies Kitchen section_nodes as layout-driving and applies the supplied section tree', () => {
+    expect(familyCapabilityFor('kitchen', 'section_nodes')).toMatchObject({
+      status: 'geometry-driving',
+      owner: 'layout-converter',
+    });
+
+    const starter = familyStarter('kitchen', 'photo_section_cabinet');
+    const root = sectionLeaf();
+    root[2] = 'x';
+    root[10] = 'panel';
+    const drawers = sectionLeaf(0, 0, 'drawers', 2);
+    drawers[4] = 1;
+    const doors = sectionLeaf(0, 1, 'doors', 1);
+    doors[4] = 2;
+    doors[11] = 1;
+    const sectionNodes: SectionNode[] = [root, drawers, doors];
+    const values = recipeWithPatch(starter.values, {
+      cabinet_layout_mode: 'sections',
+      section_nodes: sectionNodes,
+    });
+
+    const parameters = parametersFromFamilyValues('kitchen', values);
+    expect(parameters.layoutMode).toBe('sections');
+    expect(parameters.sectionNodes).toEqual(sectionNodes);
+
+    const document = buildFamilyCabinetDocument(parameters, 'Kitchen section-node audit', 'mm', {
+      family: 'kitchen',
+      starterId: starter.id,
+      familyValues: values,
+    });
+    expect(document.parts.filter(part => /section:\\d+:drawer:\\d+:front/.test(part.id))).toHaveLength(2);
+    expect(document.parts.filter(part => /section:\\d+:door:\\d+/.test(part.id))).toHaveLength(1);
+    expect(document.parts.some(part => part.metadata?.sectionDivider === true)).toBe(true);
   });
 
   it('records the independent Utility modular-grid target oracle and the current unresolved behavior', () => {
