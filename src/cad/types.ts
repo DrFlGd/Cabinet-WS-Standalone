@@ -1,6 +1,6 @@
 import type { DisplayUnits } from './units';
 
-export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware' | 'worktop' | 'divider';
+export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware' | 'worktop' | 'divider' | 'frame';
 
 export type Vec3 = { x: number; y: number; z: number };
 
@@ -64,6 +64,11 @@ export type LayoutMode = 'legacy' | 'sections';
 export type DrawerMount = 'wood_rails' | 'metal_slides';
 export type HingeStyle = 'none' | 'euro_35mm';
 export type HardwareDrillingMode = 'off' | 'recommended';
+export type DrawerHeightMode = 'equal' | 'graduated' | 'custom_weights';
+export type DrawerJoineryStyle = 'butt' | 'rabbet' | 'lock_rabbet';
+export type DrawerBottomStyle = 'captured' | 'applied';
+export type DrawerFrontRegistration = 'centered' | 'flush_top' | 'flush_bottom';
+export type FaceFrameStyle = 'none' | 'full';
 
 export type HardwareCategory = 'drawer_slide' | 'hinge';
 
@@ -157,6 +162,7 @@ export type SectionNode = [
   customWeights: number[],
   divider: 'panel' | 'rail' | 'none',
   shelfCount: number,
+  shelfPositions?: number[],
 ];
 
 export type CabinetParameters = {
@@ -179,6 +185,10 @@ export type CabinetParameters = {
   drawerCount: number;
   doorCount: number;
   shelfCount: number;
+  drawerHeightMode: DrawerHeightMode;
+  drawerGraduatedStep: number;
+  drawerCustomWeights: number[];
+  shelfPositions: number[];
 
   topStyle: TopStyle;
   topStretcherDepth: number;
@@ -209,6 +219,18 @@ export type CabinetParameters = {
   doorGap: number;
   drawerGap: number;
   shelfStyle: ShelfStyle;
+  drawerJoineryStyle: DrawerJoineryStyle;
+  drawerBottomStyle: DrawerBottomStyle;
+  drawerBottomGrooveDepth: number;
+  drawerDividerCount: number;
+  drawerDividerRows: number;
+  drawerFrontRegistration: DrawerFrontRegistration;
+
+  faceFrameStyle: FaceFrameStyle;
+  faceFrameThickness: number;
+  faceFrameStileWidth: number;
+  faceFrameRailWidth: number;
+  faceFrameCenterStileWidth: number;
 
   drawerMount: DrawerMount;
   drawerSlideId: string;
