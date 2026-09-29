@@ -1026,3 +1026,67 @@ button { color: inherit; }
   .clip-control input[type="range"] { width: 58px; }
   .explode-control output, .clip-control output { display: none; }
 }
+
+
+/* v0.8 semantic measurement */
+.measurement-panel {
+  position: absolute;
+  top: 96px;
+  left: 12px;
+  z-index: 6;
+  width: 250px;
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid #3b474f;
+  border-radius: 7px;
+  background: rgba(23, 28, 32, .92);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 26px rgba(0,0,0,.22);
+}
+.measurement-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #cfd9dd;
+  font-size: 10px;
+}
+.measurement-heading strong { flex: 1; }
+.measurement-heading button {
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #7f9099;
+  cursor: pointer;
+}
+.measurement-modes { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; }
+.measurement-modes button {
+  border: 1px solid #3c474f;
+  border-radius: 4px;
+  background: #20272c;
+  color: #aab7bd;
+  padding: 5px 6px;
+  font-size: 9px;
+  cursor: pointer;
+}
+.measurement-modes button.active {
+  border-color: #35d0ba;
+  color: #d8f5f0;
+  background: #17312e;
+}
+.measurement-panel p {
+  margin: 0;
+  color: #809099;
+  font-size: 9px;
+  line-height: 1.45;
+}
+.measurement-result {
+  display: grid;
+  gap: 3px;
+  padding-top: 3px;
+  border-top: 1px solid #303941;
+}
+.measurement-result span { color: #819099; font-size: 9px; }
+.measurement-result strong { color: #e8edf0; font-size: 14px; }
+.measurement-result small { color: #708089; font-size: 8px; overflow-wrap: anywhere; }
