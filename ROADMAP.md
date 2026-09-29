@@ -440,73 +440,74 @@ worker rebuilds and exact-kernel errors.**
 
 # Phase 7 — Direct CAD interaction
 
-**Status: v0.7 viewport-editing baseline implemented**
+**Status: complete for the Utility Cabinet interaction baseline in v0.8**
 
 Purpose: make the standalone product materially better than the web configurator.
 
 - [x] editable width/height/depth overlays
 - [x] drag overall width/height/depth handles
-- [ ] drag shelf positions *(requires a persistent shelf-position model; renderer-only offsets are intentionally avoided)*
-- [ ] drag section dividers directly in the 3D viewport *(the dedicated Manual Layout editor already supports undoable divider dragging)*
+- [x] drag shelf positions *(persistent Simple/section shelf-position data; no renderer-only offset)*
+- [x] drag section dividers directly in the 3D viewport *(updates the bounded section tree through editor history)*
 - [x] direct selection of parts and semantic faces/edges
 - [x] isolate selected
 - [x] hide/show selected
 - [x] multi-select with Ctrl-click
 - [x] selection breadcrumb
 - [x] part context menu
-- [ ] measure distance
-- [ ] measure face size
-- [ ] measure angle
+- [x] measure distance from semantic face/edge references
+- [x] measure face size from the selected exact tessellation face group
+- [x] measure angle from exact semantic face normals
 - [x] section/clipping plane
 - [x] wireframe / shaded / shaded-with-edges modes
 - [x] orthographic/perspective camera switch
 - [x] iso/front/right/top orientation controls
 
-Direct envelope edits continue to update `CabinetParameters` through the editor history layer. The analytical model responds immediately, then the worker-owned Replicad/OpenCascade kernel replaces it with matching exact tessellation. View modes, clipping, and isolation remain inspection state rather than cabinet truth.
-
-The remaining unchecked items deliberately require domain support rather than renderer-only transforms. In particular, shelf dragging will be added when shelf positions become persistent semantic parameters, and measurement tools will bind to semantic topology rather than raw Three.js indices.
+Direct edits continue to update semantic document parameters/section data through the editor history layer. The analytical model responds immediately, then the worker-owned Replicad/OpenCascade kernel replaces it with matching exact tessellation. Measurement consumers bind to semantic topology rather than raw renderer or OpenCascade identities.
 
 ### Definition of done
 
-The v0.7 baseline supports routine envelope editing, selection, isolation, clipping, and inspection from the viewport while preserving the CAD-document/kernel boundary. Semantic measurement and movable-shelf/divider workflows remain tracked follow-on work.
+Routine cabinet envelope/layout editing, semantic inspection, selection/isolation, clipping, shelf placement, section-divider manipulation, and measurements are available from the viewport while preserving the CAD-document/kernel boundary. **Met for the Utility Cabinet interaction baseline in v0.8.**
 
 ---
 
 # Phase 8 — Drawers, doors and face frames
 
+**Status: implemented for the Utility Cabinet reference family in v0.8**
+
 Purpose: reach feature depth needed for practical cabinetry.
 
 ## Drawers
 
-- [ ] complete drawer-box assemblies
-- [ ] equal / graduated / custom drawer heights
-- [ ] drawer joinery styles
-- [ ] drawer-bottom construction
-- [ ] slide clearances
-- [ ] slide drilling
-- [ ] divider/grid support
+- [x] complete drawer-box assemblies
+- [x] equal / graduated / custom drawer heights *(Simple and section layouts)*
+- [x] drawer joinery styles *(butt, rabbet, lock-rabbet intent)*
+- [x] drawer-bottom construction *(captured groove or applied bottom)*
+- [x] slide clearances
+- [x] slide drilling
+- [x] divider/grid support
 
 ## Doors/fronts
 
-- [ ] overlay and inset fronts
-- [ ] door counts
-- [ ] hinge boring
-- [ ] reveals/gaps
-- [ ] paired doors
-- [ ] drawer-front registration
+- [x] overlay and inset fronts
+- [x] door counts
+- [x] hinge boring
+- [x] reveals/gaps
+- [x] paired doors
+- [x] drawer-front registration
 
 ## Face frames
 
-- [ ] stiles
-- [ ] rails
-- [ ] center stiles
-- [ ] face-frame opening relationships
-- [ ] face-frame-aware section dimensions
+- [x] stiles
+- [x] rails
+- [x] center stiles / center rails
+- [x] face-frame opening relationships
+- [x] face-frame-aware section dimensions and front placement
+
+Face-frame members are semantic fabricated parts and therefore flow through exact B-Rep generation, selection, STEP, and BOM grouping. Existing hinge cup/plate drilling remains available; the application does not invent manufacturer-specific face-frame hinge classifications where the imported hardware catalog lacks explicit metadata.
 
 ### Definition of done
 
-Standalone can model common frameless and face-frame cabinet construction with
-manufacturing-relevant drawer/door geometry.
+Standalone can model common frameless and face-frame Utility cabinet construction with manufacturing-relevant drawer/door geometry, persistent opening relationships, and exact registered drawer machining intent. **Met for the Utility Cabinet reference family in v0.8.**
 
 ---
 
