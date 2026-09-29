@@ -390,7 +390,7 @@ function normalizeFieldValue(
 
   if (typeof value === 'number') {
     const bounds = field.bounds;
-    if (bounds?.length >= 2) {
+    if (bounds && bounds.length >= 2) {
       return Math.max(bounds[0], Math.min(bounds[1], value));
     }
     return value;
