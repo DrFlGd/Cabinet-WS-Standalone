@@ -2,11 +2,25 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
 
-function createAtomicTextWriter({
+function createAtomicTextFileOperations({
   fsImpl = fs,
   randomId = randomUUID,
 } = {}) {
   const pendingByPath = new Map();
+
+  function enqueue(filePath, operation) {
+    const previous = pendingByPath.get(filePath) ?? Promise.resolve();
+    const current = previous
+      .catch(() => undefined)
+      .then(operation);
+
+    pendingByPath.set(filePath, current);
+    return current.finally(() => {
+      if (pendingByPath.get(filePath) === current) {
+        pendingByPath.delete(filePath);
+      }
+    });
+  }
 
   async function writeOnce(filePath, content) {
     await fsImpl.mkdir(path.dirname(filePath), { recursive: true });
@@ -29,24 +43,35 @@ function createAtomicTextWriter({
     }
   }
 
-  return function atomicWriteText(filePath, content) {
-    const previous = pendingByPath.get(filePath) ?? Promise.resolve();
-    const write = previous
-      .catch(() => undefined)
-      .then(() => writeOnce(filePath, content));
+  async function clearOnce(filePath) {
+    try {
+      await fsImpl.unlink(filePath);
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
 
-    pendingByPath.set(filePath, write);
-    return write.finally(() => {
-      if (pendingByPath.get(filePath) === write) {
-        pendingByPath.delete(filePath);
-      }
-    });
+  return {
+    write(filePath, content) {
+      return enqueue(filePath, () => writeOnce(filePath, content));
+    },
+    clear(filePath) {
+      return enqueue(filePath, () => clearOnce(filePath));
+    },
   };
 }
 
-const atomicWriteText = createAtomicTextWriter();
+function createAtomicTextWriter(options) {
+  return createAtomicTextFileOperations(options).write;
+}
+
+const atomicTextFiles = createAtomicTextFileOperations();
+const atomicWriteText = atomicTextFiles.write;
+const clearAtomicText = atomicTextFiles.clear;
 
 module.exports = {
   atomicWriteText,
+  clearAtomicText,
+  createAtomicTextFileOperations,
   createAtomicTextWriter,
 };
