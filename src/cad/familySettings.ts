@@ -340,13 +340,26 @@ export function familyFieldInactiveReason(
   return null;
 }
 
+export function completeFamilyValues(
+  family: CabinetFamily,
+  values: FamilyRecipeValues,
+): FamilyRecipeValues {
+  const next: FamilyRecipeValues = {};
+  for (const field of familyFieldDefinitions(family)) {
+    if (field.value !== null) next[field.key] = JSON.parse(JSON.stringify(field.value)) as JsonValue;
+    else next[field.key] = null;
+  }
+  for (const [key, value] of Object.entries(values)) next[key] = JSON.parse(JSON.stringify(value)) as JsonValue;
+  return recomputeFamilyExpressions(family, next);
+}
+
 export function applyFamilyFieldChange(
   family: CabinetFamily,
   values: FamilyRecipeValues,
   key: string,
   value: JsonValue,
 ) {
-  const next: FamilyRecipeValues = JSON.parse(JSON.stringify(values)) as FamilyRecipeValues;
+  const next = completeFamilyValues(family, values);
   next[key] = normalizeFieldValue(family, key, value);
   return recomputeFamilyExpressions(family, next);
 }
@@ -465,7 +478,7 @@ export function syncFamilyValuesFromParameters(
   values: FamilyRecipeValues,
   parameters: import('./types').CabinetParameters,
 ): FamilyRecipeValues {
-  const next: FamilyRecipeValues = JSON.parse(JSON.stringify(values)) as FamilyRecipeValues;
+  const next = completeFamilyValues(family, values);
   const set = (key: string, value: JsonValue) => {
     if (familyFieldDefinitions(family).some(field => field.key === key)) next[key] = value;
   };
