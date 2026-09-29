@@ -265,3 +265,53 @@ function hardwareInstanceNotes(instance: HardwareInstance) {
 function buildAssemblySteps(document: CabinetDocument, bom: BomRow[], hardware: HardwareChecklistRow[]): AssemblyStep[] {
   const byId = new Map(bom.map(row => [row.partId, row]));
   const steps: AssemblyStep[] = [];
+  const add = (id: string, title: string, instruction: string, predicate: (part: CadPart) => boolean, hardwarePredicate: (row: HardwareChecklistRow) => boolean = () => false) => {
+    const partIds = document.parts.filter(part => part.category !== 'hardware' && predicate(part)).map(part => part.id);
+    const hardwareRows = hardware.filter(hardwarePredicate);
+    if (!partIds.length && !hardwareRows.length) return;
+    steps.push({
+      id, order: steps.length + 1, title, instruction, partIds,
+      partNumbers: partIds.map(partId => byId.get(partId)?.partNumber ?? partId),
+      hardwareIds: hardwareRows.flatMap(row => row.instanceIds),
+    });
+  };
+
+  add('carcass', 'Carcass and structural dividers', 'Dry-fit the cabinet sides, bottom, top/stretchers, toe kick, and structural partitions. Confirm square and opening dimensions before permanent fastening.', part => part.category === 'carcass' || part.category === 'divider');
+  add('back-frame', 'Back and face frame', 'Install the back construction, then fit face-frame stiles and rails where configured. Recheck diagonals and opening dimensions.', part => part.category === 'back' || part.category === 'frame');
+  add('drawer-boxes', 'Drawer boxes and organizers', 'Assemble drawer sides/front/back/bottom and internal organizers. Verify box squareness and bottom registration before installing slides.', part => part.category === 'drawer', row => row.instanceIds.some(id => id.startsWith('hardware:slide:')));
+  add('fronts', 'Doors and drawer fronts', 'Fit doors and drawer fronts to the configured overlay/inset relationships. Preserve the documented reveals and gaps before final hardware adjustment.', part => part.category === 'front', row => row.instanceIds.some(id => id.startsWith('hardware:hinge:')));
+  add('shelves', 'Shelves', 'Install fixed or adjustable shelves at their semantic positions. Confirm clearance from hinges, slides, and other hardware keepouts.', part => part.category === 'shelf');
+  add('worktop', 'Worktop', 'Fit and secure the worktop after the cabinet is square and fronts operate correctly. Confirm overhangs before final fastening.', part => part.category === 'worktop');
+
+  if (!steps.length) steps.push({ id: 'cabinet', order: 1, title: 'Cabinet assembly', instruction: 'Inventory all labeled parts against the BOM, dry-fit the assembly, confirm square, then complete final fastening and hardware installation.', partIds: bom.map(row => row.partId), partNumbers: bom.map(row => row.partNumber), hardwareIds: hardware.flatMap(row => row.instanceIds) });
+  return steps;
+}
+
+export function cutListCsv(docs: ShopDocumentation) {
+  return csv([
+    ['PART_NUMBER','SEMANTIC_ID','NAME','CATEGORY','QTY','MATERIAL','FINISHED_X_MM','FINISHED_Y_MM','FINISHED_Z_MM','BLANK_X_MM','BLANK_Y_MM','BLANK_Z_MM','THICKNESS_AXIS','GRAIN_AXIS','EDGE_BANDING','MACHINING','NOTES'],
+    ...docs.bom.map(row => [row.partNumber,row.partId,row.name,row.category,String(row.quantity),row.material,numberCsv(row.finished.x),numberCsv(row.finished.y),numberCsv(row.finished.z),numberCsv(row.blank.x),numberCsv(row.blank.y),numberCsv(row.blank.z),row.thicknessAxis,row.grainDirection,row.edgeBanding.join(' + ') || 'none',row.machining.join(' + ') || 'none',row.notes.join(' ')]),
+  ]);
+}
+
+export function hardwareCsv(docs: ShopDocumentation) {
+  return csv([
+    ['PART_NUMBER','QTY','LABEL','MANUFACTURER','MODEL','VERIFICATION','INSTANCE_IDS','MOUNTING_PARTS','NOTES'],
+    ...docs.hardware.map(row => [row.partNumber,String(row.quantity),row.label,row.manufacturer,row.model,row.verificationStatus,row.instanceIds.join(' + '),row.mountingPartIds.join(' + '),row.notes.join(' ')]),
+  ]);
+}
+
+function numberCsv(value: number) { return Number(value.toFixed(4)).toString(); }
+function csv(rows: string[][]) { return rows.map(row => row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\r\n') + '\r\n'; }
+
+export function buildCutListReportHtml(document: CabinetDocument, docs: ShopDocumentation, units: DisplayUnits) {
+  const f = (value: number) => `${formatDimension(value, units)} ${unitLabel(units)}`;
+  const partRows = docs.bom.map(row => {
+    const blank = panelDimensions(row.blank, row.thicknessAxis);
+    const finished = panelDimensions(row.finished, row.thicknessAxis);
+    return `<tr><td>${esc(row.partNumber)}</td><td>${esc(row.name)}</td><td>${esc(row.material)}</td><td>${esc(f(finished.length))} × ${esc(f(finished.width))} × ${esc(f(finished.thickness))}</td><td>${esc(f(blank.length))} × ${esc(f(blank.width))} × ${esc(f(blank.thickness))}</td><td>${esc(row.grainDirection === 'none' ? 'n/a' : row.grainDirection.toUpperCase())}</td><td>${esc(row.edgeBanding.join(', ') || 'none')}</td><td>${esc(row.machining.join('; ') || 'none')}</td></tr>`;
+  }).join('');
+  const materialRows = docs.materialGroups.map(group => `<tr><td>${esc(group.material)}</td><td>${esc(f(group.thickness))}</td><td>${group.partCount}</td><td>${esc((group.blankAreaMm2 / 1_000_000).toFixed(3))} m²</td><td>${esc(group.partNumbers.join(', '))}</td></tr>`).join('');
+  const hardwareRows = docs.hardware.map(row => `<tr><td>${esc(row.partNumber)}</td><td>${row.quantity}</td><td>${esc(row.label)}</td><td>${esc(row.manufacturer)}</td><td>${esc(row.model)}</td><td>${esc(row.verificationStatus)}</td></tr>`).join('');
+
+  return printableHtml(`${document.name} — BOM & cut list`, `<h1>${esc(document.name)} · BOM & cut list</h1>
