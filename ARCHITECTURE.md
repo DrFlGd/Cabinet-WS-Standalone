@@ -143,7 +143,15 @@ v0.7 adds direct manipulation without changing cabinet ownership. Width/height/d
 
 Multi-selection, isolate/hide state, clipping, display mode, camera projection, and the right-click part menu are editor/viewport state. They must not become durable cabinet identity or substitute renderer transforms for persistent cabinet parameters. A direct manipulation is only a real model edit when it changes semantic document data and therefore participates in undo/redo and exact rebuilds.
 
-The current Utility model does not persist arbitrary shelf coordinates, so v0.7 intentionally does not fake shelf dragging by moving Three.js meshes independently of the document. Future shelf/divider manipulation must first establish the corresponding semantic parameter/constraint model.
+v0.8 extends that rule to shelves and section dividers. Simple shelves persist normalized positions in cabinet parameters; section shelves persist an optional normalized position list on their owning section node. 3D divider handles modify adjacent bounded-section weights through editor history. No shelf or divider drag survives only as a renderer transform.
+
+## v0.8 construction and measurement boundary
+
+Drawer joinery, bottom construction, organizer grids, and face frames are generated as semantic `CadPart` records plus registered cut features. Captured-bottom grooves and drawer rabbets enter the same feature graph consumed by the exact worker; face-frame stiles/rails are fabricated bodies rather than decorative viewport overlays.
+
+Semantic measurement is read-only over exact output. Distance resolves semantic face centers/edge midpoints, face size uses the selected tessellation face group, and angle uses semantic face normals. Measurement state is not persisted and cannot mutate geometry.
+
+The bounded section tree remains the source of opening truth. Face-frame-aware UI dimensions show the usable frame-clear opening while preserving the underlying carcass section constraints. New section nodes may persist an optional shelf-position array; legacy 12-field nodes remain accepted and are migrated/defaulted in memory.
 
 ## Three.js responsibilities
 
@@ -160,4 +168,4 @@ It is not responsible for manufacturing truth or boolean geometry.
 
 ## Next architectural layer
 
-The next work extends the same boundary rather than replacing it: semantic measurement tools, persistent movable shelf/divider constraints, then the Phase 8 drawer/door/face-frame model. Manufacturing and measurement consumers should continue to bind to semantic parts/features/topology rather than renderer objects or transient OpenCascade indexes.
+Phase 9 can now consume the richer semantic model for Design Health and fit solving: drawer/slide conflicts, face-frame opening constraints, hinge clearances, machining overlap, material thickness, and collisions. Manufacturing consumers should continue to bind to semantic parts/features/topology rather than renderer objects or transient OpenCascade indexes.
