@@ -697,7 +697,7 @@ export default function App() {
   async function exportManufacturingPackage(reviewedAt: string) {
     try {
       const bytes = reviewedManufacturingZip(manufacturing, reviewedAt);
-      const suggestedName = safeBaseName(editor.name) + '-manufacturing-v0.13.zip';
+      const suggestedName = safeBaseName(editor.name) + '-manufacturing-v0.14.zip';
       const desktop = desktopApi();
       const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 
@@ -882,7 +882,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>{familyDefinition(editor.family).shortCode} CAD · v0.13.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>{familyDefinition(editor.family).shortCode} CAD · v0.14.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -1128,7 +1128,7 @@ function kernelFooter(
   diagnosticCount: number,
   familyName: string,
 ) {
-  if (status === 'ready') return `${familyName} · v0.13.0 · exact B-Rep · ${featureCount} semantic features · STEP`;
-  if (status === 'error') return `${familyName} · v0.13.0 · exact kernel diagnostics: ${diagnosticCount}`;
-  return `${familyName} · v0.13.0 · OpenCascade worker initializing…`;
+  if (status === 'ready') return `${familyName} · v0.14.0 · exact B-Rep · ${featureCount} semantic features · STEP`;
+  if (status === 'error') return `${familyName} · v0.14.0 · exact kernel diagnostics: ${diagnosticCount}`;
+  return `${familyName} · v0.14.0 · OpenCascade worker initializing…`;
 }
