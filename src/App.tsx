@@ -17,6 +17,7 @@ import { useGeometryKernel } from './cad/kernel/useGeometryKernel';
 import type { KernelSelection } from './cad/kernel/types';
 import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
 import type { CabinetDocument, CabinetParameters, CadPart, SectionNode } from './cad/types';
+import HardwareDrawer from './components/HardwareDrawer';
 import PropertiesPanel from './components/PropertiesPanel';
 import SectionLayoutPanel from './components/SectionLayoutPanel';
 import SelectControl from './components/SelectControl';
@@ -58,6 +59,7 @@ export default function App() {
   const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [kernelSelection, setKernelSelection] = useState<KernelSelection | null>(null);
+  const [hardwareCatalogExpanded, setHardwareCatalogExpanded] = useState(false);
   const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
   const [sectionSelectedId, setSectionSelectedId] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
@@ -483,7 +485,7 @@ export default function App() {
     />
     <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
-    <div className={`workspace ${partBrowserExpanded ? 'parts-browser-expanded' : ''}`}>
+    <div className={`workspace ${hardwareCatalogExpanded ? 'hardware-browser-expanded' : ''} ${partBrowserExpanded ? 'parts-browser-expanded' : ''}`}>
       <div className="left-stack">
         <section className="panel preset-panel">
           <span className="eyebrow">UTILITY CABINET STARTERS</span>
@@ -496,13 +498,19 @@ export default function App() {
           />
           <p>Starter recipes set cabinet construction and can seed either simple or manual section layouts.</p>
         </section>
-        <div className={`layout-navigation-row ${partBrowserExpanded ? 'parts-open' : 'parts-collapsed'}`}>
+        <div className={`layout-navigation-row ${hardwareCatalogExpanded ? 'hardware-open' : 'hardware-collapsed'} ${partBrowserExpanded ? 'parts-open' : 'parts-collapsed'}`}>
+          <HardwareDrawer
+            parameters={editor.parameters}
+            expanded={hardwareCatalogExpanded}
+            onToggle={() => setHardwareCatalogExpanded(current => !current)}
+            onApply={applyHardware}
+          />
           <SectionLayoutPanel
             parameters={editor.parameters}
             thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
             units={editor.displayUnits}
             selectedSectionId={sectionSelectedId}
-            onLayoutModeChange={mode => updateParameter('layoutMode', mode)}
+            onParameterChange={updateParameter}
             onSelectedSectionChange={setSectionSelectedId}
             onChange={updateSections}
           />
@@ -549,7 +557,6 @@ export default function App() {
         selected={selected}
         displayUnits={editor.displayUnits}
         onChange={updateParameter}
-        onApplyHardware={applyHardware}
         topologySelection={kernelSelection}
         kernelDiagnostics={kernel.diagnostics}
         onShowCabinetSettings={() => select(null)}
