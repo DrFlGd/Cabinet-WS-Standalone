@@ -7,7 +7,7 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with Manual Layout, collapsible Hardware/Parts drawers, realtime 3D viewport, searchable Properties panel, and toolbar.
-- Utility Cabinet v0.9 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, drawer/face-frame depth, native Design Health, and target-driven fit solving.
+- Utility Cabinet v0.10 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, native Design Health/fit solving, and semantic BOM/cut-list/assembly documentation.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, Ctrl-click multi-selection, semantic distance/face/angle measurements, movable shelves/section dividers, contextual part actions, and editable cabinet dimensions.
 - Hide/show/isolate parts, exploded view, clipping, shaded/edge/wireframe display modes, perspective/orthographic cameras, iso/front/right/top views, persistent shelf handles, and 3D section-divider handles.
@@ -15,7 +15,19 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts, including one-step undo for applied fit-solver results.
-- Exact STEP assembly export from the toolbar, plus browser development mode and an Electron desktop wrapper.
+- Exact STEP assembly export plus Shop Docs CSV/printable report export from the toolbar, with browser development mode and an Electron desktop wrapper.
+
+## v0.10 BOM, cut list, and assembly documentation
+
+v0.10 adds a native **Shop Docs** workspace generated directly from the current semantic `CabinetDocument`, registered feature graph, purchased-hardware instances, and Design Health result. It does not parse OpenSCAD report text.
+
+The BOM/cut-list view assigns deterministic shop part numbers from stable semantic part IDs, groups material/stock thickness, reports finished and rectangular blank envelopes, records grain direction, inferred exposed-edge banding requirements, purchased hardware quantities, and registered machining summaries. Selecting a BOM row selects the same semantic CAD part; selecting a CAD part highlights and scrolls to its BOM row.
+
+Cut-list and purchased-hardware CSV exports remain millimeter-native. Printable BOM/cut-list HTML uses the current display units and can be saved through the native Electron file dialog, then printed or saved as PDF.
+
+The Assembly view groups the cabinet into practical build stages, carries the same stable part callouts, includes a purchased-hardware checklist, and can highlight each step in the live CAD viewport while reusing the existing exploded isometric view. A printable assembly packet includes those steps plus a generated schematic exploded SVG.
+
+Phase 10 intentionally treats **blank and finished dimensions as semantic body/panel envelopes**. Profiled parts and registered machining are summarized, but operation-layer/profile manufacturing geometry remains Phase 11. Edge-banding requirements are inferred from exposed cabinet roles; v0.10 does not invent an edge-band material/thickness specification that is not yet a cabinet parameter.
 
 ## v0.9 Design Health and fitting
 
@@ -184,7 +196,7 @@ npm run desktop:dist
 The packaged application is written to `release/` with a name similar to:
 
 ```text
-Cabinet-WS-Standalone-0.9.0-Windows-x64.exe
+Cabinet-WS-Standalone-0.10.0-Windows-x64.exe
 ```
 
 The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
@@ -208,18 +220,18 @@ This is useful for testing development builds without setting up a local Windows
 
 Named releases are published by `.github/workflows/release.yml`. The workflow supports explicit `v*` tags and a `release-request.json` file on `main`.
 
-The requested version must exactly match `package.json`. For example, to publish `0.9.0`:
+The requested version must exactly match `package.json`. For example, to publish `0.10.0`:
 
-1. Set `"version": "0.9.0"` in `package.json` and push that change.
-2. Set `"version": "0.9.0"` in `release-request.json` and push it to `main`.
-3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.9.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
+1. Set `"version": "0.10.0"` in `package.json` and push that change.
+2. Set `"version": "0.10.0"` in `release-request.json` and push it to `main`.
+3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.10.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
 
-An explicit matching `v0.9.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
+An explicit matching `v0.10.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
 
 The release assets are:
 
-- `Cabinet-WS-Standalone-0.9.0-Windows-x64.exe`
-- `Cabinet-WS-Standalone-0.9.0-Windows-x64.zip`
+- `Cabinet-WS-Standalone-0.10.0-Windows-x64.exe`
+- `Cabinet-WS-Standalone-0.10.0-Windows-x64.zip`
 - `SHA256SUMS.txt`
 
 ## Build verification
@@ -230,9 +242,8 @@ The normal build workflow and Windows packaging workflow remain in the repositor
 
 ## Recommended next milestones
 
-1. Build Phase 10 BOM, cut list, and assembly documentation from stable semantic parts/features.
-2. Produce Phase 11 feature-driven DXF/SVG/drilling outputs and manufacturing review.
-3. Port the remaining six cabinet families using the Utility family as the reference implementation.
-4. Extend the hardware catalog with explicit manufacturer-verified face-frame hinge/mounting metadata.
-5. Add sheet-goods nesting and CNC operation planning.
-6. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.
+1. Produce Phase 11 feature-driven DXF/SVG/drilling outputs and manufacturing review.
+2. Port the remaining six cabinet families using the Utility family as the reference implementation.
+3. Extend the hardware catalog with explicit manufacturer-verified face-frame hinge/mounting metadata.
+4. Add sheet-goods nesting and CNC operation planning.
+5. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.
