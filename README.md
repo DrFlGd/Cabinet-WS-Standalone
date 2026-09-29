@@ -1,21 +1,33 @@
 # Cabinet WS Standalone
 
-A CAD-first prototype for dedicated cabinet-making software.
+A CAD-first prototype for dedicated cabinet-making software with a worker-based OpenCascade/Replicad exact-geometry path.
 
 This repository is intentionally separate from Cabinet Workshop. The goal is a desktop cabinet CAD application with a persistent document model, real-time 3D editing, stable part identity, manufacturing-aware parts, and a future B-Rep geometry kernel.
 
 ## Prototype features
 
 - React desktop-style workspace with model tree, realtime 3D viewport, properties panel, and toolbar.
-- Utility Cabinet v0.5 model with bounded sections, realtime semantic 3D parts, and first-class drawer-slide/hinge hardware intelligence.
+- Utility Cabinet v0.6 model with bounded sections, first-class hardware, and exact OpenCascade/Replicad B-Rep generation behind the realtime editor.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
-- Direct click selection in the Three.js viewport with contextual editable settings for the selected part.
+- Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, and contextual editable settings for the selected part.
 - Hide/show parts, exploded view, fit-to-model, and iso/front/right/top views.
 - Versioned schema-v2 cabinet projects with automatic v1 migration and runtime validation.
 - Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
-- Browser development mode plus an Electron desktop wrapper.
+- Exact STEP assembly export from the toolbar, plus browser development mode and an Electron desktop wrapper.
+
+## v0.6 Exact CAD kernel
+
+v0.6 introduces the first production-oriented geometry boundary. The Utility Cabinet document is converted into a cabinet-native feature graph and rebuilt asynchronously in a Web Worker using **Replicad + OpenCascade**. The existing analytical geometry remains the immediate interaction preview; once the matching exact rebuild completes, its tessellation replaces the preview in Three.js.
+
+The kernel currently creates exact B-Rep bodies for modeled Utility parts and applies registered profile/cutting features such as toe-kick side profiles, dado/pocket subtraction, an applied-back rabbet proof operation, and shelf/drilling patterns. Unchanged part tessellations are cached, edits identify dirty parts, stale worker rebuilds are discarded, and exact failures fall back per-part to preview geometry with diagnostics shown in Properties.
+
+Exact topology is mapped back to cabinet-semantic identities rather than exposing raw OpenCascade indexes. Clicking exact geometry selects a semantic face; **Shift-click** targets semantic edges. IDs follow forms such as `face:carcass:left:inside` and `edge:carcass:left:front-top`.
+
+The toolbar now includes **STEP**, which exports the exact cabinet assembly in millimeters. In Electron this opens a native Save dialog. STEP generation occurs inside the geometry worker; the renderer receives only the resulting bytes.
+
+The applied-back rabbet is deliberately described as a proof operation: the side-panel B-Rep carries the rabbet, but the existing applied-back construction recipe has not yet been redesigned to extend the back panel into that rabbet. Chamfer/bevel and edge-treatment feature kinds are reserved for later milestones rather than being represented as completed geometry.
 
 ## v0.5.2 Manual Layout workspace
 
@@ -43,18 +55,18 @@ Face-frame-specific hardware rules remain deferred until face frames exist in th
 
 ## Geometry status
 
-The current prototype uses parametric rectangular panel solids. It is intentionally **not yet a production B-Rep kernel**.
+v0.6 has an exact B-Rep path for the Utility Cabinet using Replicad/OpenCascade in a worker. Three.js continues to provide the interactive analytical preview while exact work is rebuilding or when a specific exact part reports an error.
 
-The target architecture is:
+The architecture is:
 
 ```text
 CabinetDocument
   -> cabinet feature/component graph
   -> geometry worker
   -> OpenCascade / Replicad B-Rep bodies
-  -> tessellated meshes
+  -> semantic topology + tessellation cache
   -> Three.js viewport
-  -> manufacturing features / STEP / DXF / CNC
+  -> STEP now / manufacturing features, DXF and CNC in later milestones
 ```
 
 The editor talks in terms of persistent cabinet parts rather than Three.js mesh UUIDs, so the solid generator can be replaced without rewriting selection, the model tree, saved documents, or property editing. See [ARCHITECTURE.md](ARCHITECTURE.md).
