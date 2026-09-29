@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
 import { DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
 import { buildFamilyCabinetDocument } from './cad/familyModel';
-import { FAMILY_DEFINITIONS, familyDefinition, familyStarter, familyStarters, parametersFromFamilyValues } from './cad/familyCatalog';
-import { applyFamilyFieldChange, syncFamilyValuesFromParameters } from './cad/familySettings';
+import { FAMILY_DEFINITIONS, familyDefinition, familyStarter, familyStarters } from './cad/familyCatalog';
+import { editFamilySetting, syncFamilyValuesFromParameters } from './cad/familySettings';
 import CadViewport, {
   type CadViewportHandle,
   type ViewportDisplayMode,
@@ -297,8 +297,7 @@ export default function App() {
 
   function updateFamilyValue(key: string, value: JsonValue) {
     history.edit(current => {
-      const familyValues = applyFamilyFieldChange(current.family, current.familyValues, key, value);
-      const parameters = parametersFromFamilyValues(current.family, familyValues);
+      const { familyValues, parameters } = editFamilySetting(current.family, current.familyValues, current.parameters, key, value);
       return {
         ...current,
         starterId: null,
@@ -1132,3 +1131,4 @@ function kernelFooter(
   if (status === 'error') return `${familyName} · v0.14.0 · exact kernel diagnostics: ${diagnosticCount}`;
   return `${familyName} · v0.14.0 · OpenCascade worker initializing…`;
 }
+

@@ -4,6 +4,37 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [Unreleased]
+
+### Fixed
+
+- Preserve unrelated canonical settings during family edits instead of regenerating every native parameter from recipe defaults.
+- Synchronize mapped native differences without rewriting family-only recipe alternatives during edits or save/reopen.
+- Preserve Simple layout after leaving Sections, and account for segmented face-frame dado depth when synchronizing Kitchen nominal depth.
+- Invert Standalone Drawer inside-clear/enclosure dimensions, including face setback and rear clearance; arbitrary native modular-grid resizing switches to outside-box sizing.
+- Native Equipment Stand envelope resizing switches to manual sizing so later family edits retain the requested dimensions.
+- Native drawer/front/door/face-frame thickness edits select measured stock so nominal recipe choices cannot override the edited values.
+- Hydrate sparse legacy web recipes before deriving native geometry.
+- Deep-clone nested canonical parameter arrays in undo/redo snapshots.
+- Reject STEP export when a requested body is missing or any machining cut failed; retain useful diagnostics instead of silently returning a partial assembly.
+- Release assembled STEP shapes after successful export and after build/serialization failure.
+
+### Tests
+
+- Add repeated save/reopen checks for all 110 starters and edit/save/undo/redo sequences across all seven families.
+- Add sizing/layout regression cases and STEP worker body/cut/missing-body/serialization failure tests.
+
+### Documentation
+
+- Replace overlapping historical README/architecture/roadmap narratives with current capabilities, ownership contracts, known limits and a prioritized backlog.
+- Remove the stale v0.7 next-task instruction and distinguish schema/catalog coverage from verified construction parity.
+
+### Compatibility
+
+- Project schema remains v3; existing v1/v2 migrations remain supported.
+- No named release or package-version change in this stabilization patch.
+- Production-settings persistence, lockfile/CI hardening, and full geometry parity remain follow-on work.
+
 ## [0.14.0] - 2026-09-29
 
 ### Added
@@ -533,3 +564,4 @@ The project follows milestone versions while the standalone CAD architecture is 
 - Wide mixed-bay Utility starters, pending the v0.4 Sections model.
 - Hardware-specific hinge and drawer-slide machining, pending the hardware milestone.
 - Exact joinery booleans, pending the B-Rep geometry-kernel milestone.
+

@@ -209,7 +209,7 @@ function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedPr
   }
 
   const family = legacyFamily(record.family);
-  const values = cloneJsonObject(record.values);
+  const values = completeFamilyValues(family, cloneJsonObject(record.values));
   const parameters = parametersFromFamilyValues(family, values);
   const valueRecord = values as Record<string, unknown>;
   const requestedStarter = typeof valueRecord._starter === 'string' ? valueRecord._starter : null;
@@ -321,3 +321,4 @@ export function suggestedFileName(name: string) {
 function safeName(name: string) {
   return name.trim().replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'cabinet';
 }
+

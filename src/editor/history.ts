@@ -34,7 +34,7 @@ export function cloneEditorDocument(document: EditorDocument): EditorDocument {
     familyValues: JSON.parse(JSON.stringify(document.familyValues)) as FamilyRecipeValues,
     name: document.name,
     displayUnits: document.displayUnits,
-    parameters: { ...document.parameters },
+    parameters: structuredClone(document.parameters),
   };
 }
 
@@ -94,3 +94,4 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
     lastEditAt: action.now,
   };
 }
+

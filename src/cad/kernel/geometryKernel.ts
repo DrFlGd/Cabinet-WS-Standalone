@@ -115,6 +115,14 @@ export class WorkerGeometryKernel implements GeometryKernel {
       return;
     }
 
+    const incomplete = response.diagnostics.filter(item => item.severity === 'error' || item.code === 'feature-cut-failed');
+    if (incomplete.length) {
+      pending.reject(new KernelExecutionError(
+        'Incomplete STEP assembly: ' + incomplete.map(item => item.message).join('; '),
+        response.diagnostics,
+      ));
+      return;
+    }
     pending.resolve(response.bytes);
   };
 
@@ -163,3 +171,4 @@ export class KernelExecutionError extends Error {
     this.name = 'KernelExecutionError';
   }
 }
+
