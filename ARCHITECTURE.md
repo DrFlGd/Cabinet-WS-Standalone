@@ -154,6 +154,10 @@ starter catalog is checked for stable IDs and viable semantic parts; this is not
 an independent cross-engine parity proof.
 
 STEP worker tests inject body/cut/serialization failures and check rejection and
-cleanup. These tests isolate transaction behavior with mocked geometry APIs; exact
-OpenCascade and packaged Electron execution need dedicated integration/smoke checks.
-CI currently runs Vitest, TypeScript/Vite builds and Windows portable packaging.
+cleanup. These tests isolate transaction behavior with mocked geometry APIs. CI
+installs the committed dependency graph with `npm ci`, then runs Vitest and the
+TypeScript/Vite build. Windows CI additionally launches the produced portable EXE
+and drives the real renderer/Electron IPC path through exact-worker readiness,
+project save/open, a semantic dimension edit, save/reopen, and STEP export. Smoke
+mode substitutes deterministic filesystem targets only for native picker choices;
+native dialog interaction and crash/recovery remain separate verification work.
