@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('cabinetDesktop', {
   platform: process.platform,
+  getAppInfo: () => ipcRenderer.invoke('app:info'),
   openDocument: () => ipcRenderer.invoke('document:open'),
   openRecent: (path) => ipcRenderer.invoke('document:open-recent', path),
   saveDocument: (options) => ipcRenderer.invoke('document:save', options),

@@ -2,12 +2,18 @@ const { app, BrowserWindow, dialog, ipcMain, shell } = require('electron');
 const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
 const path = require('node:path');
+const { createRendererRecoveryHandler } = require('./lifecycle.cjs');
 
 const MAX_DOCUMENT_BYTES = 2_000_000;
 const MAX_STEP_BYTES = 250_000_000;
 const MAX_TEXT_EXPORT_BYTES = 20_000_000;
 const MAX_BINARY_EXPORT_BYTES = 250_000_000;
 const approvedPaths = new Set();
+let isQuitting = false;
+const recoverRenderer = createRendererRecoveryHandler({
+  dialog,
+  isShuttingDown: () => isQuitting,
+});
 
 function userFile(name) {
   return path.join(app.getPath('userData'), name);
@@ -65,6 +71,15 @@ async function atomicWrite(filePath, content) {
 }
 
 function registerIpc() {
+  ipcMain.handle('app:info', async () => ({
+    name: 'Cabinet WS Standalone',
+    version: app.getVersion(),
+    platform: process.platform,
+    electron: process.versions.electron,
+    chromium: process.versions.chrome,
+    isPackaged: app.isPackaged,
+  }));
+
   ipcMain.handle('document:open', async () => {
     const result = await dialog.showOpenDialog({
       title: 'Open Cabinet WS project',
@@ -249,10 +264,18 @@ function createWindow() {
     if (url.startsWith('https://')) shell.openExternal(url);
   });
 
+  win.webContents.on('render-process-gone', (_event, details) => {
+    void recoverRenderer(win, details);
+  });
+
   const devUrl = process.env.VITE_DEV_SERVER_URL;
   if (devUrl) win.loadURL(devUrl);
   else win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
 }
+
+app.on('before-quit', () => {
+  isQuitting = true;
+});
 
 app.whenReady().then(() => {
   registerIpc();
