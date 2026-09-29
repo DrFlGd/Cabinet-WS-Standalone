@@ -25,8 +25,9 @@ describe('desktop dropdown controls', () => {
     expect(source).toContain('aria-expanded={open}');
   });
 
-  it('keeps Manual Layout primary and the Parts browser secondary/collapsible', () => {
+  it('keeps Hardware / Manual Layout / Parts as the left workspace hierarchy', () => {
     const sectionSource = readFileSync('src/components/SectionLayoutPanel.tsx', 'utf8');
+    const hardwareDrawerSource = readFileSync('src/components/HardwareDrawer.tsx', 'utf8');
     const treeSource = readFileSync('src/components/TreePanel.tsx', 'utf8');
     const appSource = readFileSync('src/App.tsx', 'utf8');
     const schemaSource = readFileSync('src/cad/parameterSchema.ts', 'utf8');
@@ -34,12 +35,27 @@ describe('desktop dropdown controls', () => {
 
     expect(sectionSource).toContain('Manual Layout Editor');
     expect(sectionSource).toContain('ariaLabel="Layout mode"');
+    expect(sectionSource).toContain('ariaLabel="Cabinet contents"');
+    expect(sectionSource).toContain('Drawer rows');
+    expect(sectionSource).toContain('Doors');
+    expect(sectionSource).toContain('onParameterChange');
+
+    expect(hardwareDrawerSource).toContain('Open hardware catalog');
+    expect(hardwareDrawerSource).toContain('Collapse hardware catalog');
+    expect(hardwareDrawerSource).toContain('<HardwarePicker');
+
+    expect(appSource).toContain('hardware-browser-expanded');
     expect(appSource).toContain('parts-browser-expanded');
-    expect(appSource).toContain('onLayoutModeChange');
+    expect(appSource.indexOf('<HardwareDrawer')).toBeLessThan(appSource.indexOf('<SectionLayoutPanel'));
+    expect(appSource.indexOf('<SectionLayoutPanel')).toBeLessThan(appSource.indexOf('<TreePanel'));
+
     expect(treeSource).toContain('Open parts browser');
     expect(treeSource).toContain('Collapse parts browser');
     expect(schemaSource).not.toContain("key: 'layoutMode'");
-    expect(appSource).toContain('onOpenSection={openSection}');
+
+    expect(propertiesSource).toContain('aria-label="Search properties"');
+    expect(propertiesSource).toContain("field.section !== 'Layout'");
+    expect(propertiesSource).not.toContain("import HardwarePicker");
     expect(propertiesSource).toContain('partSettingsContext');
     expect(propertiesSource).toContain('Edit this section');
   });
