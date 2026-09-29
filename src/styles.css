@@ -798,3 +798,76 @@ button { color: inherit; }
 .contextual-settings .hardware-picker-card {
   margin-bottom: 12px;
 }
+
+
+/* v0.6 exact CAD kernel diagnostics and semantic topology. */
+.kernel-topology-card {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 11px;
+  padding: 10px;
+  border: 1px solid #39786d;
+  border-radius: 7px;
+  background: #182724;
+}
+.kernel-topology-card strong {
+  font-size: 11px;
+  color: #dffbf5;
+}
+.kernel-topology-card code {
+  display: block;
+  overflow-wrap: anywhere;
+  border-radius: 4px;
+  background: #101817;
+  padding: 6px;
+  color: #72dccb;
+  font: 8px ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.kernel-topology-card p {
+  margin: 0;
+  color: #879a96;
+  font-size: 8px;
+  line-height: 1.45;
+}
+.kernel-diagnostics {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 11px;
+  padding: 9px;
+  border: 1px solid #39454d;
+  border-radius: 7px;
+  background: #181e22;
+}
+.kernel-diagnostics-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.kernel-diagnostics-heading strong {
+  font-size: 10px;
+}
+.kernel-diagnostics-heading span,
+.kernel-diagnostics > small {
+  color: #788890;
+  font-size: 8px;
+}
+.kernel-diagnostics p {
+  margin: 0;
+  border-radius: 4px;
+  padding: 5px 6px;
+  font-size: 8px;
+  line-height: 1.4;
+}
+.kernel-diagnostics p.error {
+  background: #3d2525;
+  color: #edaaa3;
+}
+.kernel-diagnostics p.warning {
+  background: #382f20;
+  color: #d7bd7e;
+}
+.kernel-diagnostics p.info {
+  background: #1d2d32;
+  color: #9bc4ce;
+}
