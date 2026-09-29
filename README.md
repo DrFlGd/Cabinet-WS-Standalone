@@ -7,15 +7,29 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with Manual Layout, collapsible Hardware/Parts drawers, realtime 3D viewport, searchable Properties panel, and toolbar.
-- Utility Cabinet v0.8 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, drawer construction depth, and face frames.
+- Utility Cabinet v0.9 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, drawer/face-frame depth, native Design Health, and target-driven fit solving.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, Ctrl-click multi-selection, semantic distance/face/angle measurements, movable shelves/section dividers, contextual part actions, and editable cabinet dimensions.
 - Hide/show/isolate parts, exploded view, clipping, shaded/edge/wireframe display modes, perspective/orthographic cameras, iso/front/right/top views, persistent shelf handles, and 3D section-divider handles.
 - Versioned schema-v2 cabinet projects with automatic v1 migration and runtime validation.
 - Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
-- Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
+- Undo/redo with coalesced continuous parameter edits and keyboard shortcuts, including one-step undo for applied fit-solver results.
 - Exact STEP assembly export from the toolbar, plus browser development mode and an Electron desktop wrapper.
+
+## v0.9 Design Health and fitting
+
+v0.9 replaces the old web application's OpenSCAD-report validation dependency with a native semantic **Design Health** engine. The live viewport panel evaluates cabinet/document integrity, joinery/material residual stock, bounded section feasibility, selected hardware compatibility and verification support, shelf/hardware keepout collisions, machining edge distance, overlapping subtractive feature envelopes, exact-kernel diagnostics, validation coverage, and manufacturing readiness.
+
+Checks are generated from the same `CabinetDocument`, registered feature graph, hardware definitions/keepouts, and exact-kernel diagnostics used by the editor. They do not parse OpenSCAD `ECHO` text and do not reverse-engineer manufacturing intent from Three.js meshes. Errors block manufacturing readiness; warnings put the design into review status; the coverage section records which validation surfaces were checked, partial, or not applicable.
+
+The integrated **Fit Solver** adds three target-driven workflows:
+
+- **Drawer** — solve cabinet width/depth from requested usable drawer interior while honoring drawer stock, slide side clearance, rear construction, face-frame opening deductions, and selected slide-length limits.
+- **Equipment** — solve the outside cabinet envelope from an equipment W/H/D target plus side, vertical, and depth clearances.
+- **Modules** — solve cabinet width or height from module pitch, count, and edge margin.
+
+Every solver result explains its calculation and reports the achieved dimensions before application. Results outside the supported Utility envelope, or drawer targets that exceed the selected slide's usable length, are marked infeasible rather than silently clamped. Applying a feasible result updates semantic cabinet parameters through the editor history as one undoable operation, after which Design Health immediately reevaluates the solved cabinet.
 
 ## v0.8 Cabinet depth and interaction completion
 
@@ -170,7 +184,7 @@ npm run desktop:dist
 The packaged application is written to `release/` with a name similar to:
 
 ```text
-Cabinet-WS-Standalone-0.8.0-Windows-x64.exe
+Cabinet-WS-Standalone-0.9.0-Windows-x64.exe
 ```
 
 The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
@@ -194,18 +208,18 @@ This is useful for testing development builds without setting up a local Windows
 
 Named releases are published by `.github/workflows/release.yml`. The workflow supports explicit `v*` tags and a `release-request.json` file on `main`.
 
-The requested version must exactly match `package.json`. For example, to publish `0.8.0`:
+The requested version must exactly match `package.json`. For example, to publish `0.9.0`:
 
-1. Set `"version": "0.8.0"` in `package.json` and push that change.
-2. Set `"version": "0.8.0"` in `release-request.json` and push it to `main`.
-3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.8.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
+1. Set `"version": "0.9.0"` in `package.json` and push that change.
+2. Set `"version": "0.9.0"` in `release-request.json` and push it to `main`.
+3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.9.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
 
-An explicit matching `v0.8.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
+An explicit matching `v0.9.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
 
 The release assets are:
 
-- `Cabinet-WS-Standalone-0.8.0-Windows-x64.exe`
-- `Cabinet-WS-Standalone-0.8.0-Windows-x64.zip`
+- `Cabinet-WS-Standalone-0.9.0-Windows-x64.exe`
+- `Cabinet-WS-Standalone-0.9.0-Windows-x64.zip`
 - `SHA256SUMS.txt`
 
 ## Build verification
@@ -216,10 +230,9 @@ The normal build workflow and Windows packaging workflow remain in the repositor
 
 ## Recommended next milestones
 
-1. Build Phase 9 Design Health and fit solving directly from semantic document/features.
-2. Expand BOM/cut-list and assembly documentation from stable semantic parts and the new drawer/frame construction.
-3. Produce feature-driven DXF/SVG/drilling outputs and manufacturing review.
-4. Port the remaining six cabinet families using the Utility family as the reference implementation.
-5. Extend the hardware catalog with explicit manufacturer-verified face-frame hinge/mounting metadata.
-6. Add sheet-goods nesting and CNC operation planning.
-7. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.
+1. Build Phase 10 BOM, cut list, and assembly documentation from stable semantic parts/features.
+2. Produce Phase 11 feature-driven DXF/SVG/drilling outputs and manufacturing review.
+3. Port the remaining six cabinet families using the Utility family as the reference implementation.
+4. Extend the hardware catalog with explicit manufacturer-verified face-frame hinge/mounting metadata.
+5. Add sheet-goods nesting and CNC operation planning.
+6. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.
