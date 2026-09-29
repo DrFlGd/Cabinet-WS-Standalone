@@ -21,6 +21,7 @@ const labels: Record<PartCategory, string> = {
   hardware: 'Hardware',
   worktop: 'Worktops',
   divider: 'Section Dividers',
+  frame: 'Face Frame',
 };
 
 export default function TreePanel({
