@@ -248,13 +248,18 @@ Each parameter should describe:
 The web version currently contains roughly 110 starters, including the standard
 kitchen recipe catalog.
 
-- [ ] define standalone starter format
-- [ ] port general starters
-- [ ] port standard kitchen configurations
-- [ ] starter browser with search/categories
-- [ ] preview metadata
-- [ ] apply starter as one undoable operation
-- [ ] tests validating every starter produces a valid model
+- [x] define standalone starter format
+- [x] port general starters
+- [x] port standard kitchen configurations
+- [x] family/example starter browser with categories
+- [x] preview/family metadata
+- [x] apply starter as one undoable operation
+- [x] tests validating every starter produces a valid model
+
+**v0.13 status:** all 7 legacy families and all 110 shipped starters are retained and
+loadable. Schema v3 stores family/starter identity plus the resolved original recipe.
+The native Properties schema remains shared; legacy family-only fields without a
+redesigned control are recipe-backed rather than falsely presented as fully ported UI.
 
 **Reference:** web schemas and `catalog/kitchen-standard-recipes.json`
 
@@ -737,6 +742,36 @@ from nominal DXF alone.
 
 ---
 
+# v0.13 — Cross-family parity milestone
+
+**Status: implemented**
+
+- [x] Shop Cart family
+- [x] Utility Cabinet family
+- [x] Benchtop Drawers family
+- [x] Stackable Cabinet family
+- [x] Kitchen Cabinet family
+- [x] Standalone Drawer family
+- [x] Equipment Stand family
+- [x] all 110 shipped Cabinet Workshop starter/example recipes
+- [x] schema-v3 family/starter/recipe persistence
+- [x] Cabinet Workshop import for all seven family IDs
+- [x] family + example browser
+- [x] native semantic documents for every starter
+- [x] regression test over the complete starter catalog
+
+Shop Cart, Utility, Benchtop, Stackable, and Kitchen use family adapters over the
+shared native cabinet construction model. Standalone Drawer and Equipment Stand have
+dedicated native semantic generators. No family uses the old OpenSCAD engine as the
+Standalone runtime authority.
+
+The milestone intentionally does not claim that the entire legacy 99–310-field
+family-specific settings UI has been reproduced. Original family recipe values are
+retained in schema v3 and shared native parameters remain editable; family-specific
+property surfaces can be expanded where future workflows justify them.
+
+---
+
 # Phase 13 — Advanced cabinet/furniture CAD
 
 Only pursue after the production cabinet workflow is strong.
@@ -783,8 +818,8 @@ and furniture workflows genuinely require it.
 
 | Web capability | Standalone destination | Migration approach |
 | --- | --- | --- |
-| Seven cabinet families | Cabinet document/component generators | Port behavior and validate geometry |
-| 110 starters | Starter catalog | Port data, redesign browser |
+| Seven cabinet families | Cabinet document/component generators | **Ported in v0.13**; native family adapters/generators |
+| 110 starters | Starter catalog | **Ported in v0.13**; resolved family recipes + family/example browser |
 | `lib/settings.ts` dependency rules | Typed parameter schema | Port rules, simplify where possible |
 | Approximate schematic | Three.js CAD viewport | Do not port |
 | OpenSCAD exact browser render | GeometryKernel/B-Rep | Replace |
