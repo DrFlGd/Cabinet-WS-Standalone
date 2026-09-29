@@ -367,12 +367,13 @@ function featureCylinder(position: Vec3, size: Vec3, axis: 'x' | 'y' | 'z') {
 
 function collectSemanticFaces(part: CadPart, shape: any) {
   const faces = shape.faces as any[];
-  return faces.map((face, rawFaceId) => {
+  return faces.map(face => {
     try {
       const centerVector = face.center;
       const normalVector = face.normalAt();
       const center = centerVector.toTuple() as [number, number, number];
       const normal = normalVector.normalize().toTuple() as [number, number, number];
+      const rawFaceId = Number(face.hashCode);
       safeDelete(centerVector);
       safeDelete(normalVector);
       return semanticFaceId(part, rawFaceId, center, normal);
@@ -384,12 +385,13 @@ function collectSemanticFaces(part: CadPart, shape: any) {
 
 function collectSemanticEdges(part: CadPart, shape: any) {
   const edges = shape.edges as any[];
-  return edges.map((edge, rawEdgeId) => {
+  return edges.map(edge => {
     try {
       const startVector = edge.startPoint;
       const endVector = edge.endPoint;
       const start = startVector.toTuple() as [number, number, number];
       const end = endVector.toTuple() as [number, number, number];
+      const rawEdgeId = Number(edge.hashCode);
       safeDelete(startVector);
       safeDelete(endVector);
       return semanticEdgeId(part, rawEdgeId, start, end);
