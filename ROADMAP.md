@@ -393,7 +393,7 @@ taking down the editor.
 
 Utility Cabinet:
 
-- [x] exact panel B-Rep bodies
+- [x] exact fabricated panel/component B-Rep bodies *(purchased hardware remains reference geometry)*
 - [x] toe-kick side profile
 - [x] bottom/shelf/divider dado subtraction from registered joinery features
 - [x] applied-back rabbet proof on cabinet sides
