@@ -38,4 +38,22 @@ describe('v0.7 direct CAD interaction shell', () => {
     expect(toolbar).toContain('Camera projection');
     expect(toolbar).toContain('Clip');
   });
+
+  it('keeps v0.8 shelf/divider dragging and semantic measurement document-owned', () => {
+    const app = readFileSync('src/App.tsx', 'utf8');
+    const viewport = readFileSync('src/cad/CadViewport.tsx', 'utf8');
+    const measurement = readFileSync('src/cad/measurements.ts', 'utf8');
+
+    expect(viewport).toContain('onShelfPositionChange');
+    expect(viewport).toContain('onSectionDividerChange');
+    expect(viewport).toContain("directHandleKind = 'shelf'");
+    expect(viewport).toContain("directHandleKind = 'divider'");
+    expect(viewport).toContain('renderer.domElement.getBoundingClientRect()');
+    expect(viewport).not.toContain('const setPointerFromEvent = (event: PointerEvent | MouseEvent) => {\n      setPointerFromEvent(event);');
+    expect(app).toContain('updateShelfPosition');
+    expect(app).toContain('updateSectionDivider');
+    expect(app).toContain('computeMeasurement');
+    expect(measurement).toContain('semanticFaces');
+    expect(measurement).toContain('semanticEdges');
+  });
 });

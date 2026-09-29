@@ -248,6 +248,8 @@ export function buildCabinetDocument(
     addLegacyLayoutParts(parts, p, t, appliedBackThickness, carcassMaterial, carcassMeta);
   }
 
+  addFaceFrameParts(parts, p, t, base);
+
   if (p.includeWorktop) {
     parts.push(
       part(
@@ -320,7 +322,9 @@ function addLegacyLayoutParts(
   if (hasDoors && p.shelfCount > 0 && doorZoneHeight > t) {
     const shelfDepth = Math.max(20, p.depth - backDepth - 16);
     for (let i = 1; i <= p.shelfCount; i += 1) {
-      const z = interiorBottom + (doorZoneHeight * i) / (p.shelfCount + 1) - t / 2;
+      const normalized = p.shelfPositions[i - 1] ?? i / (p.shelfCount + 1);
+      const centerZ = interiorBottom + doorZoneHeight * normalized;
+      const z = centerZ - t / 2;
       parts.push(
         part(
           `shelf:${i}`,
@@ -330,7 +334,15 @@ function addLegacyLayoutParts(
           { x: p.width - 2 * t - 4, y: shelfDepth, z: t },
           lightWood,
           carcassMaterial,
-          { shelfStyle: p.shelfStyle, adjustable: p.shelfStyle === 'adjustable', ...carcassMeta },
+          {
+            shelfStyle: p.shelfStyle,
+            adjustable: p.shelfStyle === 'adjustable',
+            shelfIndex: i,
+            sectionId: 0,
+            shelfMinZ: interiorBottom,
+            shelfMaxZ: interiorBottom + doorZoneHeight,
+            ...carcassMeta,
+          },
         ),
       );
     }
@@ -338,36 +350,54 @@ function addLegacyLayoutParts(
 
   const openingWidth = Math.max(1, p.width - 2 * t);
   if (hasDrawers && p.drawerCount > 0 && drawerZoneHeight > 0) {
-    const availableHeight = Math.max(1, drawerZoneHeight - p.frontEdgeReveal * 2 - p.drawerGap * (p.drawerCount - 1));
-    const rowHeight = availableHeight / p.drawerCount;
+    const rawDrawerOpening = {
+      x: t,
+      z: interiorTop - drawerZoneHeight,
+      width: openingWidth,
+      height: drawerZoneHeight,
+    };
+    const drawerOpening = faceFrameOpening(p, rawDrawerOpening);
+    const availableHeight = Math.max(1, drawerOpening.height - p.frontEdgeReveal * 2 - p.drawerGap * (p.drawerCount - 1));
+    const weights = Array.from({ length: p.drawerCount }, (_, index) =>
+      p.drawerHeightMode === 'graduated'
+        ? 1 + index * p.drawerGraduatedStep
+        : p.drawerHeightMode === 'custom_weights'
+          ? p.drawerCustomWeights[index] ?? 1
+          : 1,
+    );
+    const totalWeight = Math.max(0.001, weights.reduce((sum, weight) => sum + weight, 0));
     const frontDepth = p.drawerFrontThickness;
-    const frontY = p.frontMountStyle === 'overlay' ? -frontDepth : 0;
+    const frontY = frontPlaneY(p, frontDepth);
+    let top = drawerOpening.z + drawerOpening.height - p.frontEdgeReveal;
 
     for (let i = 0; i < p.drawerCount; i += 1) {
-      const z = interiorTop - p.frontEdgeReveal - (i + 1) * rowHeight - i * p.drawerGap;
+      const rowHeight = availableHeight * weights[i] / totalWeight;
+      top -= rowHeight;
+      const z = top;
       parts.push(
         part(
           `drawer:${i + 1}:front`,
           `Drawer Front ${i + 1}`,
           'front',
-          { x: t + p.frontEdgeReveal, y: frontY, z },
-          { x: openingWidth - 2 * p.frontEdgeReveal, y: frontDepth, z: rowHeight },
+          { x: drawerOpening.x + p.frontEdgeReveal, y: frontY, z },
+          { x: Math.max(1, drawerOpening.width - 2 * p.frontEdgeReveal), y: frontDepth, z: rowHeight },
           lightWood,
           `Drawer front stock (${round(frontDepth)} mm)`,
-          { drawer: i + 1, frontMountStyle: p.frontMountStyle },
+          { drawer: i + 1, drawerHeightMode: p.drawerHeightMode, frontMountStyle: p.frontMountStyle },
         ),
       );
       addDrawerBox(parts, p, {
         idPrefix: `drawer:${i + 1}`,
         namePrefix: `Drawer ${i + 1}`,
-        x: t,
+        x: drawerOpening.x,
         z,
-        width: openingWidth,
+        width: drawerOpening.width,
         frontHeight: rowHeight,
         depth: interiorDepth,
         sectionId: 0,
         drawerIndex: i + 1,
       });
+      top -= p.drawerGap;
     }
   }
 
@@ -418,6 +448,14 @@ function addSectionLayoutParts(
           sectionFeature: true,
           divider: panel.divider,
           shelfStyle: p.shelfStyle,
+          sectionDivider: !shelf,
+          dividerParentId: panel.sourceParentId ?? -1,
+          dividerOrder: panel.sourceOrder ?? -1,
+          dividerAxis: panel.axis ?? '',
+          sectionId: shelf ? (panel.sourceSectionId ?? 0) + 1 : 0,
+          shelfIndex: shelf ? panel.shelfIndex ?? 0 : 0,
+          shelfMinZ: shelf && panel.sourceSectionId !== undefined ? rects[panel.sourceSectionId]?.z ?? 0 : 0,
+          shelfMaxZ: shelf && panel.sourceSectionId !== undefined ? (rects[panel.sourceSectionId]?.z ?? 0) + (rects[panel.sourceSectionId]?.h ?? 0) : 0,
           ...carcassMeta,
         },
       ),
@@ -429,6 +467,12 @@ function addSectionLayoutParts(
     if (node[2] !== 'leaf') continue;
 
     if (node[5] === 'drawers' && node[6] > 0) {
+      const frontRect = faceFrameOpening(p, {
+        x: rect.x,
+        z: rect.z,
+        width: rect.w,
+        height: rect.h,
+      });
       const weights = Array.from({ length: node[6] }, (_, index) =>
         node[7] === 'graduated'
           ? 1 + index * node[8]
@@ -439,10 +483,10 @@ function addSectionLayoutParts(
       const total = weights.reduce((sum, weight) => sum + weight, 0);
       const available = Math.max(
         1,
-        rect.h - 2 * p.frontEdgeReveal - p.drawerGap * Math.max(0, node[6] - 1),
+        frontRect.height - 2 * p.frontEdgeReveal - p.drawerGap * Math.max(0, node[6] - 1),
       );
-      const frontY = p.frontMountStyle === 'overlay' ? -p.drawerFrontThickness : 0;
-      let top = rect.z + rect.h - p.frontEdgeReveal;
+      const frontY = frontPlaneY(p, p.drawerFrontThickness);
+      let top = frontRect.z + frontRect.height - p.frontEdgeReveal;
 
       weights.forEach((weight, index) => {
         const height = available * weight / total;
@@ -452,8 +496,8 @@ function addSectionLayoutParts(
             `section:${rect.id + 1}:drawer:${index + 1}:front`,
             `Section ${rect.id + 1} Drawer Front ${index + 1}`,
             'front',
-            { x: rect.x + p.frontEdgeReveal, y: frontY, z: top },
-            { x: Math.max(1, rect.w - 2 * p.frontEdgeReveal), y: p.drawerFrontThickness, z: height },
+            { x: frontRect.x + p.frontEdgeReveal, y: frontY, z: top },
+            { x: Math.max(1, frontRect.width - 2 * p.frontEdgeReveal), y: p.drawerFrontThickness, z: height },
             lightWood,
             `Drawer front stock (${round(p.drawerFrontThickness)} mm)`,
             {
@@ -467,9 +511,9 @@ function addSectionLayoutParts(
         addDrawerBox(parts, p, {
           idPrefix: `section:${rect.id + 1}:drawer:${index + 1}`,
           namePrefix: `Section ${rect.id + 1} Drawer ${index + 1}`,
-          x: rect.x,
+          x: frontRect.x,
           z: top,
-          width: rect.w,
+          width: frontRect.width,
           frontHeight: height,
           depth: interiorDepth,
           sectionId: rect.id + 1,
@@ -506,14 +550,16 @@ function addDoorFronts(
     sectionId: number;
   },
 ) {
+  const opening = faceFrameOpening(p, area);
   const count = Math.max(1, Math.min(2, area.count));
+  const centerFrame = p.faceFrameStyle === 'full' && count > 1 ? p.faceFrameCenterStileWidth : 0;
   const availableWidth = Math.max(
     1,
-    area.width - 2 * p.frontEdgeReveal - p.doorGap * (count - 1),
+    opening.width - 2 * p.frontEdgeReveal - p.doorGap * (count - 1) - centerFrame,
   );
   const doorWidth = availableWidth / count;
-  const doorHeight = Math.max(1, area.height - 2 * p.frontEdgeReveal);
-  const frontY = p.frontMountStyle === 'overlay' ? -p.doorThickness : 0;
+  const doorHeight = Math.max(1, opening.height - 2 * p.frontEdgeReveal);
+  const frontY = frontPlaneY(p, p.doorThickness);
 
   for (let index = 0; index < count; index += 1) {
     parts.push(
@@ -522,9 +568,9 @@ function addDoorFronts(
         `Section ${area.sectionId || 1} Door ${index + 1}`,
         'front',
         {
-          x: area.x + p.frontEdgeReveal + index * (doorWidth + p.doorGap),
+          x: opening.x + p.frontEdgeReveal + index * (doorWidth + p.doorGap + (index > 0 ? centerFrame : 0)),
           y: frontY,
-          z: area.z + p.frontEdgeReveal,
+          z: opening.z + p.frontEdgeReveal,
         },
         { x: doorWidth, y: p.doorThickness, z: doorHeight },
         lightWood,
@@ -563,73 +609,179 @@ function addDrawerBox(
   const depth = p.drawerMount === 'metal_slides'
     ? Math.max(60, Math.min(availableDepth, p.metalSlideLength))
     : availableDepth;
-  const height = Math.max(4, Math.min(area.frontHeight - 8, 180));
+  const height = Math.max(18, Math.min(area.frontHeight - 8, 180));
   const bottom = Math.min(p.drawerBottomThickness, Math.max(2, height / 3));
   const x = area.x + sideClearance;
   const y = 12;
-  const z = area.z + Math.max(8, Math.min(16, (area.frontHeight - height) / 2));
+  const centeredZ = area.z + Math.max(4, (area.frontHeight - height) / 2);
+  const boxZ = p.drawerFrontRegistration === 'flush_top'
+    ? area.z + Math.max(4, area.frontHeight - height - 4)
+    : p.drawerFrontRegistration === 'flush_bottom'
+      ? area.z + 4
+      : centeredZ;
+  const sideZ = p.drawerBottomStyle === 'applied' ? boxZ + bottom : boxZ;
+  const sideHeight = Math.max(12, height - (p.drawerBottomStyle === 'applied' ? bottom : 0));
   const insideWidth = Math.max(12, width - 2 * wall);
   const material = `Drawer box stock (${round(wall)} mm)`;
   const metadata = {
     drawer: area.drawerIndex,
     sectionId: area.sectionId,
     drawerBox: true,
+    drawerJoinery: p.drawerJoineryStyle,
+    drawerBottomStyle: p.drawerBottomStyle,
+    frontRegistration: p.drawerFrontRegistration,
   };
 
-  parts.push(
-    part(
-      `${area.idPrefix}:box:left`,
-      `${area.namePrefix} Left Side`,
-      'drawer',
-      { x, y, z },
-      { x: wall, y: depth, z: height },
-      darkWood,
-      material,
-      metadata,
-    ),
-    part(
-      `${area.idPrefix}:box:right`,
-      `${area.namePrefix} Right Side`,
-      'drawer',
-      { x: x + width - wall, y, z },
-      { x: wall, y: depth, z: height },
-      darkWood,
-      material,
-      metadata,
-    ),
-    part(
-      `${area.idPrefix}:box:front`,
-      `${area.namePrefix} Box Front`,
-      'drawer',
-      { x: x + wall, y, z },
-      { x: insideWidth, y: wall, z: height },
-      darkWood,
-      material,
-      metadata,
-    ),
-    part(
-      `${area.idPrefix}:box:back`,
-      `${area.namePrefix} Box Back`,
-      'drawer',
-      { x: x + wall, y: y + depth - wall, z },
-      { x: insideWidth, y: wall, z: height },
-      darkWood,
-      material,
-      metadata,
-    ),
-    part(
-      `${area.idPrefix}:box:bottom`,
-      `${area.namePrefix} Bottom`,
-      'drawer',
-      { x: x + wall, y: y + wall, z: z + Math.min(10, height / 4) },
-      { x: insideWidth, y: Math.max(20, depth - 2 * wall), z: bottom },
-      lightWood,
-      `Drawer bottom stock (${round(bottom)} mm)`,
-      metadata,
-    ),
+  const left = part(
+    `${area.idPrefix}:box:left`, `${area.namePrefix} Left Side`, 'drawer',
+    { x, y, z: sideZ }, { x: wall, y: depth, z: sideHeight }, darkWood, material, metadata,
   );
+  const right = part(
+    `${area.idPrefix}:box:right`, `${area.namePrefix} Right Side`, 'drawer',
+    { x: x + width - wall, y, z: sideZ }, { x: wall, y: depth, z: sideHeight }, darkWood, material, metadata,
+  );
+  const front = part(
+    `${area.idPrefix}:box:front`, `${area.namePrefix} Box Front`, 'drawer',
+    { x: x + wall, y, z: sideZ }, { x: insideWidth, y: wall, z: sideHeight }, darkWood, material, metadata,
+  );
+  const back = part(
+    `${area.idPrefix}:box:back`, `${area.namePrefix} Box Back`, 'drawer',
+    { x: x + wall, y: y + depth - wall, z: sideZ }, { x: insideWidth, y: wall, z: sideHeight }, darkWood, material, metadata,
+  );
+
+  if (p.drawerBottomStyle === 'captured') {
+    const grooveDepth = Math.min(Math.max(1, p.drawerBottomGrooveDepth), Math.max(1, wall - 1));
+    const grooveZ = Math.min(sideHeight - bottom - 2, Math.max(4, sideHeight * 0.12));
+    left.renderFeatures = [{ kind: 'slot', sourcePartId: `${area.idPrefix}:box:bottom`, position: { x: Math.max(0, wall - grooveDepth), y: wall, z: grooveZ }, size: { x: grooveDepth, y: Math.max(5, depth - 2 * wall), z: bottom + 0.4 } }];
+    right.renderFeatures = [{ kind: 'slot', sourcePartId: `${area.idPrefix}:box:bottom`, position: { x: 0, y: wall, z: grooveZ }, size: { x: grooveDepth, y: Math.max(5, depth - 2 * wall), z: bottom + 0.4 } }];
+    front.renderFeatures = [{ kind: 'slot', sourcePartId: `${area.idPrefix}:box:bottom`, position: { x: 0, y: Math.max(0, wall - grooveDepth), z: grooveZ }, size: { x: insideWidth, y: grooveDepth, z: bottom + 0.4 } }];
+    back.renderFeatures = [{ kind: 'slot', sourcePartId: `${area.idPrefix}:box:bottom`, position: { x: 0, y: 0, z: grooveZ }, size: { x: insideWidth, y: grooveDepth, z: bottom + 0.4 } }];
+  }
+
+  if (p.drawerJoineryStyle !== 'butt') {
+    const rabbetDepth = Math.min(Math.max(2, wall * 0.45), Math.max(2, wall - 1));
+    const ends = [left, right];
+    ends.forEach(side => {
+      side.renderFeatures = [
+        ...(side.renderFeatures ?? []),
+        { kind: 'rabbet', sourcePartId: front.id, position: { x: 0, y: 0, z: 0 }, size: { x: side.size.x, y: rabbetDepth, z: side.size.z } },
+        { kind: 'rabbet', sourcePartId: back.id, position: { x: 0, y: side.size.y - rabbetDepth, z: 0 }, size: { x: side.size.x, y: rabbetDepth, z: side.size.z } },
+      ];
+      if (p.drawerJoineryStyle === 'lock_rabbet') {
+        side.renderFeatures.push({ kind: 'slot', sourcePartId: front.id, position: { x: 0, y: rabbetDepth, z: side.size.z * 0.25 }, size: { x: side.size.x, y: Math.min(wall, 4), z: Math.max(3, wall * 0.5) } });
+      }
+    });
+  }
+
+  parts.push(left, right, front, back);
+
+  const bottomPart = p.drawerBottomStyle === 'applied'
+    ? part(
+        `${area.idPrefix}:box:bottom`, `${area.namePrefix} Applied Bottom`, 'drawer',
+        { x, y, z: boxZ }, { x: width, y: depth, z: bottom }, lightWood,
+        `Drawer bottom stock (${round(bottom)} mm)`, metadata,
+      )
+    : part(
+        `${area.idPrefix}:box:bottom`, `${area.namePrefix} Captured Bottom`, 'drawer',
+        { x: x + wall - Math.min(p.drawerBottomGrooveDepth, wall - 1), y: y + wall - Math.min(p.drawerBottomGrooveDepth, wall - 1), z: sideZ + Math.min(sideHeight - bottom - 2, Math.max(4, sideHeight * 0.12)) },
+        { x: Math.max(12, insideWidth + 2 * Math.min(p.drawerBottomGrooveDepth, wall - 1)), y: Math.max(20, depth - 2 * wall + 2 * Math.min(p.drawerBottomGrooveDepth, wall - 1)), z: bottom },
+        lightWood, `Drawer bottom stock (${round(bottom)} mm)`, metadata,
+      );
+  parts.push(bottomPart);
+
+  const organizerThickness = Math.min(9, Math.max(4, wall * 0.65));
+  const organizerHeight = Math.max(12, sideHeight * 0.55);
+  for (let index = 1; index <= p.drawerDividerCount; index += 1) {
+    const dx = insideWidth * index / (p.drawerDividerCount + 1);
+    parts.push(part(
+      `${area.idPrefix}:organizer:column:${index}`, `${area.namePrefix} Organizer Column ${index}`, 'drawer',
+      { x: x + wall + dx - organizerThickness / 2, y: y + wall, z: sideZ + Math.max(2, sideHeight - organizerHeight) },
+      { x: organizerThickness, y: Math.max(20, depth - 2 * wall), z: organizerHeight }, lightWood, material,
+      { ...metadata, organizer: true, organizerAxis: 'x' },
+    ));
+  }
+  for (let index = 1; index <= p.drawerDividerRows; index += 1) {
+    const dy = Math.max(20, depth - 2 * wall) * index / (p.drawerDividerRows + 1);
+    parts.push(part(
+      `${area.idPrefix}:organizer:row:${index}`, `${area.namePrefix} Organizer Row ${index}`, 'drawer',
+      { x: x + wall, y: y + wall + dy - organizerThickness / 2, z: sideZ + Math.max(2, sideHeight - organizerHeight) },
+      { x: insideWidth, y: organizerThickness, z: organizerHeight }, lightWood, material,
+      { ...metadata, organizer: true, organizerAxis: 'y' },
+    ));
+  }
 }
 
+function faceFrameOpening(
+  p: CabinetParameters,
+  area: { x: number; z: number; width: number; height: number },
+) {
+  if (p.faceFrameStyle !== 'full') return { ...area };
+  const insetX = Math.min(area.width * 0.2, p.faceFrameCenterStileWidth / 2);
+  const insetZ = Math.min(area.height * 0.2, p.faceFrameRailWidth / 2);
+  return {
+    x: area.x + insetX,
+    z: area.z + insetZ,
+    width: Math.max(1, area.width - 2 * insetX),
+    height: Math.max(1, area.height - 2 * insetZ),
+  };
+}
+
+function frontPlaneY(p: CabinetParameters, thickness: number) {
+  if (p.faceFrameStyle !== 'full') return p.frontMountStyle === 'overlay' ? -thickness : 0;
+  return p.frontMountStyle === 'overlay'
+    ? -(p.faceFrameThickness + thickness)
+    : -p.faceFrameThickness;
+}
+
+function addFaceFrameParts(parts: CadPart[], p: CabinetParameters, thickness: number, base: number) {
+  if (p.faceFrameStyle !== 'full') return;
+  const frameT = p.faceFrameThickness;
+  const stile = Math.min(p.faceFrameStileWidth, p.width / 3);
+  const rail = Math.min(p.faceFrameRailWidth, Math.max(20, (p.height - base) / 3));
+  const center = Math.min(p.faceFrameCenterStileWidth, p.width / 3);
+  const y = -frameT;
+  const height = Math.max(1, p.height - base);
+  const material = `Face-frame stock (${round(frameT)} mm)`;
+  const meta = { faceFrame: true, frameThickness: frameT };
+
+  parts.push(
+    part('frame:left-stile', 'Face Frame Left Stile', 'frame', { x: 0, y, z: base }, { x: stile, y: frameT, z: height }, darkWood, material, { ...meta, frameRole: 'stile' }),
+    part('frame:right-stile', 'Face Frame Right Stile', 'frame', { x: p.width - stile, y, z: base }, { x: stile, y: frameT, z: height }, darkWood, material, { ...meta, frameRole: 'stile' }),
+    part('frame:bottom-rail', 'Face Frame Bottom Rail', 'frame', { x: stile, y, z: base }, { x: Math.max(1, p.width - 2 * stile), y: frameT, z: rail }, darkWood, material, { ...meta, frameRole: 'rail' }),
+    part('frame:top-rail', 'Face Frame Top Rail', 'frame', { x: stile, y, z: p.height - rail }, { x: Math.max(1, p.width - 2 * stile), y: frameT, z: rail }, darkWood, material, { ...meta, frameRole: 'rail' }),
+  );
+
+  const verticals = new Set<number>();
+  const horizontals = new Set<number>();
+  if (p.layoutMode === 'sections' && !sectionLayoutErrors(p, thickness).length) {
+    const rects = sectionRects(p.sectionNodes, sectionRoot(p, thickness), thickness);
+    for (const panel of sectionPanels(p.sectionNodes, rects, thickness, p.depth)) {
+      if (panel.sourceParentId === undefined || panel.sourceOrder === undefined || !panel.axis) continue;
+      if (panel.axis === 'x') verticals.add(round(panel.x + panel.w / 2));
+      else horizontals.add(round(panel.z + panel.h / 2));
+    }
+  } else {
+    const interiorBottom = base + thickness;
+    const interiorTop = p.height - thickness;
+    const interiorHeight = Math.max(0, interiorTop - interiorBottom);
+    const hasDrawers = p.cabinetContents === 'drawers' || p.cabinetContents === 'combo';
+    const hasDoors = p.cabinetContents === 'doors' || p.cabinetContents === 'combo';
+    const drawerZoneHeight = hasDrawers ? (p.cabinetContents === 'drawers' ? interiorHeight : Math.min(interiorHeight * 0.42, 330)) : 0;
+    if (hasDrawers && hasDoors) horizontals.add(round(interiorTop - drawerZoneHeight));
+    if (hasDoors && p.doorCount === 2) verticals.add(round(p.width / 2));
+  }
+
+  [...verticals].forEach((x, index) => parts.push(part(
+    `frame:center-stile:${index + 1}`, `Face Frame Center Stile ${index + 1}`, 'frame',
+    { x: x - center / 2, y, z: base + rail }, { x: center, y: frameT, z: Math.max(1, height - 2 * rail) },
+    darkWood, material, { ...meta, frameRole: 'center-stile', openingBoundary: x },
+  )));
+  [...horizontals].forEach((z, index) => parts.push(part(
+    `frame:center-rail:${index + 1}`, `Face Frame Center Rail ${index + 1}`, 'frame',
+    { x: stile, y, z: z - rail / 2 }, { x: Math.max(1, p.width - 2 * stile), y: frameT, z: rail },
+    darkWood, material, { ...meta, frameRole: 'center-rail', openingBoundary: z },
+  )));
+}
 function sidePanelGeometry(
   p: CabinetParameters,
   base: number,
@@ -784,6 +936,10 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
     drawerCount: clampInteger(source.drawerCount, 0, 8, defaults.drawerCount),
     doorCount: clampInteger(source.doorCount, 0, 4, defaults.doorCount),
     shelfCount: clampInteger(source.shelfCount, 0, 6, defaults.shelfCount),
+    drawerHeightMode: oneOf(source.drawerHeightMode, ['equal', 'graduated', 'custom_weights'] as const, defaults.drawerHeightMode),
+    drawerGraduatedStep: clampNumber(source.drawerGraduatedStep, 0.05, 2, defaults.drawerGraduatedStep),
+    drawerCustomWeights: numberArray(source.drawerCustomWeights, defaults.drawerCustomWeights, 0.05, 20),
+    shelfPositions: numberArray(source.shelfPositions, defaults.shelfPositions, 0.03, 0.97),
 
     topStyle: oneOf(source.topStyle, ['full', 'stretchers'] as const, defaults.topStyle),
     topStretcherDepth: clampNumber(source.topStretcherDepth, 30, Math.max(30, depth / 2), defaults.topStretcherDepth),
@@ -814,6 +970,18 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
     doorGap: clampNumber(source.doorGap, 0.5, 20, defaults.doorGap),
     drawerGap: clampNumber(source.drawerGap, 0.5, 20, defaults.drawerGap),
     shelfStyle: oneOf(source.shelfStyle, ['fixed', 'adjustable'] as const, defaults.shelfStyle),
+    drawerJoineryStyle: oneOf(source.drawerJoineryStyle, ['butt', 'rabbet', 'lock_rabbet'] as const, defaults.drawerJoineryStyle),
+    drawerBottomStyle: oneOf(source.drawerBottomStyle, ['captured', 'applied'] as const, defaults.drawerBottomStyle),
+    drawerBottomGrooveDepth: clampNumber(source.drawerBottomGrooveDepth, 1, 10, defaults.drawerBottomGrooveDepth),
+    drawerDividerCount: clampInteger(source.drawerDividerCount, 0, 4, defaults.drawerDividerCount),
+    drawerDividerRows: clampInteger(source.drawerDividerRows, 0, 4, defaults.drawerDividerRows),
+    drawerFrontRegistration: oneOf(source.drawerFrontRegistration, ['centered', 'flush_top', 'flush_bottom'] as const, defaults.drawerFrontRegistration),
+
+    faceFrameStyle: oneOf(source.faceFrameStyle, ['none', 'full'] as const, defaults.faceFrameStyle),
+    faceFrameThickness: clampNumber(source.faceFrameThickness, 8, 40, defaults.faceFrameThickness),
+    faceFrameStileWidth: clampNumber(source.faceFrameStileWidth, 20, 120, defaults.faceFrameStileWidth),
+    faceFrameRailWidth: clampNumber(source.faceFrameRailWidth, 20, 120, defaults.faceFrameRailWidth),
+    faceFrameCenterStileWidth: clampNumber(source.faceFrameCenterStileWidth, 20, 120, defaults.faceFrameCenterStileWidth),
 
     drawerMount: oneOf(source.drawerMount, ['wood_rails', 'metal_slides'] as const, defaults.drawerMount),
     drawerSlideId: safeString(source.drawerSlideId, defaults.drawerSlideId),

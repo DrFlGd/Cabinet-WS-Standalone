@@ -138,7 +138,7 @@ function validateKnownStandaloneTypes(source: Record<string, unknown>) {
   if ('sectionNodes' in source && treeErrors(source.sectionNodes).length) {
     throw new Error(`Invalid cabinet parameter: sectionNodes (${treeErrors(source.sectionNodes)[0]})`);
   }
-  for (const key of ['metalSlideCabinetHolesX', 'metalSlideDrawerHolesX']) {
+  for (const key of ['metalSlideCabinetHolesX', 'metalSlideDrawerHolesX', 'drawerCustomWeights', 'shelfPositions']) {
     if (!(key in source)) continue;
     const value = source[key];
     if (!Array.isArray(value) || value.some(item => typeof item !== 'number' || !Number.isFinite(item))) {

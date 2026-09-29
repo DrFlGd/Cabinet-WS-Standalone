@@ -1,7 +1,20 @@
 import type { CabinetParameters, SectionNode } from './types';
 
 export type SectionRect = { id: number; x: number; z: number; w: number; h: number };
-export type SectionPanel = { id: string; x: number; z: number; w: number; h: number; d: number; divider: 'panel' | 'rail' };
+export type SectionPanel = {
+  id: string;
+  x: number;
+  z: number;
+  w: number;
+  h: number;
+  d: number;
+  divider: 'panel' | 'rail';
+  sourceParentId?: number;
+  sourceOrder?: number;
+  axis?: 'x' | 'z';
+  sourceSectionId?: number;
+  shelfIndex?: number;
+};
 
 export const sectionLeaf = (
   parent = -1,
@@ -21,13 +34,22 @@ export const sectionLeaf = (
   Array(Math.max(1, count)).fill(1),
   'panel',
   0,
+  [],
 ];
 
 export function cloneSectionNodes(nodes: SectionNode[]) {
-  return nodes.map(node => [
-    node[0], node[1], node[2], node[3], node[4], node[5], node[6],
-    node[7], node[8], [...node[9]], node[10], node[11],
-  ] as SectionNode);
+  return nodes.map(node => {
+    if (node[12] === undefined) {
+      return [
+        node[0], node[1], node[2], node[3], node[4], node[5], node[6],
+        node[7], node[8], [...node[9]], node[10], node[11],
+      ] as SectionNode;
+    }
+    return [
+      node[0], node[1], node[2], node[3], node[4], node[5], node[6],
+      node[7], node[8], [...node[9]], node[10], node[11], [...node[12]],
+    ] as SectionNode;
+  });
 }
 
 export function treeErrors(value: unknown): string[] {
@@ -36,8 +58,8 @@ export function treeErrors(value: unknown): string[] {
   }
 
   const nodes = value as SectionNode[];
-  if (nodes.some(node => !Array.isArray(node) || node.length !== 12)) {
-    return ['Each section must contain twelve fields.'];
+  if (nodes.some(node => !Array.isArray(node) || (node.length !== 12 && node.length !== 13))) {
+    return ['Each section must contain twelve legacy fields plus an optional shelf-position field.'];
   }
 
   for (let i = 0; i < nodes.length; i += 1) {
@@ -64,7 +86,12 @@ export function treeErrors(value: unknown): string[] {
       !['panel', 'rail', 'none'].includes(node[10]) ||
       !Number.isInteger(node[11]) ||
       node[11] < 0 ||
-      node[11] > 8
+      node[11] > 8 ||
+      (node[12] !== undefined && (
+        !Array.isArray(node[12]) ||
+        node[12].length > 8 ||
+        node[12].some(position => !Number.isFinite(position) || position <= 0.03 || position >= 0.97)
+      ))
     ) {
       return [`Invalid section ${i + 1}.`];
     }
@@ -186,6 +213,9 @@ export function sectionPanels(
             h: parentRect.h,
             d: depth,
             divider: 'panel',
+            sourceParentId: node[0],
+            sourceOrder: node[1],
+            axis: 'x',
           });
         } else {
           panels.push({
@@ -196,6 +226,9 @@ export function sectionPanels(
             h: thickness,
             d: parentNode[10] === 'rail' ? Math.min(80, depth) : depth,
             divider: parentNode[10] === 'rail' ? 'rail' : 'panel',
+            sourceParentId: node[0],
+            sourceOrder: node[1],
+            axis: 'z',
           });
         }
       }
@@ -204,14 +237,17 @@ export function sectionPanels(
     if (node[2] === 'leaf' && node[5] !== 'drawers') {
       const count = node[5] === 'open' ? node[6] : node[11];
       for (let shelf = 1; shelf <= count; shelf += 1) {
+        const normalized = node[12]?.[shelf - 1] ?? shelf / (count + 1);
         panels.push({
           id: `SEC-${id + 1}-SH-${shelf}`,
           x: rect.x,
-          z: rect.z + rect.h * shelf / (count + 1) - thickness / 2,
+          z: rect.z + rect.h * normalized - thickness / 2,
           w: rect.w,
           h: thickness,
           d: Math.max(20, depth - 10),
           divider: 'panel',
+          sourceSectionId: id,
+          shelfIndex: shelf,
         });
       }
     }

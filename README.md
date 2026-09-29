@@ -7,15 +7,27 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with Manual Layout, collapsible Hardware/Parts drawers, realtime 3D viewport, searchable Properties panel, and toolbar.
-- Utility Cabinet v0.7 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, and direct viewport editing.
+- Utility Cabinet v0.8 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, drawer construction depth, and face frames.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
-- Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, Ctrl-click multi-selection, contextual part actions, and editable cabinet dimensions.
-- Hide/show/isolate parts, exploded view, clipping, shaded/edge/wireframe display modes, perspective/orthographic cameras, and iso/front/right/top views.
+- Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, Ctrl-click multi-selection, semantic distance/face/angle measurements, movable shelves/section dividers, contextual part actions, and editable cabinet dimensions.
+- Hide/show/isolate parts, exploded view, clipping, shaded/edge/wireframe display modes, perspective/orthographic cameras, iso/front/right/top views, persistent shelf handles, and 3D section-divider handles.
 - Versioned schema-v2 cabinet projects with automatic v1 migration and runtime validation.
 - Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Exact STEP assembly export from the toolbar, plus browser development mode and an Electron desktop wrapper.
+
+## v0.8 Cabinet depth and interaction completion
+
+v0.8 folds the unfinished direct-interaction work from v0.7 into the practical-cabinetry milestone. Adjustable/fixed shelf positions are now persistent semantic parameters, so gold shelf handles edit the document instead of moving a Three.js mesh independently. Blue section-divider handles update the bounded section tree through the same undo/history path used by Manual Layout. The v0.7 pointer-coordinate regression in the direct manipulation path is also corrected.
+
+The viewport adds semantic **Distance**, **Face**, and **Angle** measurement modes. Measurements bind to exact-kernel semantic faces and edges: distance uses semantic reference centers, face size is calculated from the selected exact tessellation face group, and angle uses exact semantic face normals. Measurement state remains editor state; cabinet geometry remains owned by the document and exact worker kernel.
+
+Drawer construction now supports equal, graduated, and custom-weighted fronts in both Simple and section-driven layouts, configurable box/front registration, butt/rabbet/lock-rabbet construction intent, captured or applied bottoms, slide clearances/drilling, and internal divider grids. Captured-bottom grooves and drawer rabbets are registered feature operations so the exact kernel receives machining intent rather than reverse-engineering it from display meshes.
+
+Face frames are first-class fabricated parts with semantic stiles, rails, center stiles/rails, stock thickness/width controls, frame-aware front placement, paired-door center-stile allowance, and frame-clear dimensions in Manual Layout. Existing overlay/inset fronts, door counts, reveals/gaps, hinge cup/plate drilling, paired doors, and purchased-hardware references remain integrated. Manufacturer-specific face-frame hinge classifications are not invented where the hardware catalog does not provide them.
+
+Saved projects remain schema-v2 JSON. New v0.8 parameter fields default during load, and legacy 12-field section nodes remain valid while new nodes may carry an optional persistent shelf-position field.
 
 ## v0.7 Direct CAD interaction
 
@@ -25,7 +37,7 @@ Selection is now additive with **Ctrl-click**. The viewport and Parts browser sh
 
 Viewport inspection now includes a Z clipping plane, **Shaded**, **Shaded + edges**, and **Wireframe** display modes, plus **Perspective** and **Orthographic** camera projection. These are presentation/inspection state only; they are not persisted as cabinet geometry and do not alter the exact B-Rep model.
 
-v0.7 does not invent per-shelf placement parameters that the Utility document does not yet own. Direct shelf-position dragging, viewport-native section-divider dragging, and measurement tools remain explicit follow-on work rather than being simulated with renderer-only transforms.
+v0.8 subsequently adds persistent shelf placement, viewport-native section-divider dragging, and semantic measurements without changing this document/kernel ownership rule.
 
 ## v0.6.1 Workspace organization
 
@@ -75,7 +87,7 @@ Face-frame-specific hardware rules remain deferred until face frames exist in th
 
 ## Geometry status
 
-v0.7 retains the exact B-Rep path introduced in v0.6 for the Utility Cabinet using Replicad/OpenCascade in a worker. Three.js continues to provide the interactive analytical preview while exact work is rebuilding or when a specific exact part reports an error.
+v0.8 retains the exact B-Rep path introduced in v0.6 for the Utility Cabinet using Replicad/OpenCascade in a worker. Three.js continues to provide the interactive analytical preview while exact work is rebuilding or when a specific exact part reports an error.
 
 The architecture is:
 
@@ -158,7 +170,7 @@ npm run desktop:dist
 The packaged application is written to `release/` with a name similar to:
 
 ```text
-Cabinet-WS-Standalone-0.7.0-Windows-x64.exe
+Cabinet-WS-Standalone-0.8.0-Windows-x64.exe
 ```
 
 The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
@@ -182,18 +194,18 @@ This is useful for testing development builds without setting up a local Windows
 
 Named releases are published by `.github/workflows/release.yml`. The workflow supports explicit `v*` tags and a `release-request.json` file on `main`.
 
-The requested version must exactly match `package.json`. For example, to publish `0.7.0`:
+The requested version must exactly match `package.json`. For example, to publish `0.8.0`:
 
-1. Set `"version": "0.7.0"` in `package.json` and push that change.
-2. Set `"version": "0.7.0"` in `release-request.json` and push it to `main`.
-3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.7.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
+1. Set `"version": "0.8.0"` in `package.json` and push that change.
+2. Set `"version": "0.8.0"` in `release-request.json` and push it to `main`.
+3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.8.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
 
-An explicit matching `v0.7.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
+An explicit matching `v0.8.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
 
 The release assets are:
 
-- `Cabinet-WS-Standalone-0.7.0-Windows-x64.exe`
-- `Cabinet-WS-Standalone-0.7.0-Windows-x64.zip`
+- `Cabinet-WS-Standalone-0.8.0-Windows-x64.exe`
+- `Cabinet-WS-Standalone-0.8.0-Windows-x64.zip`
 - `SHA256SUMS.txt`
 
 ## Build verification
@@ -204,11 +216,10 @@ The normal build workflow and Windows packaging workflow remain in the repositor
 
 ## Recommended next milestones
 
-1. Finish the remaining v0.7 interaction work: semantic measurement tools, direct movable-shelf placement, and viewport-native section-divider editing.
-2. Build Phase 8 drawer, door, and face-frame depth on top of the existing semantic document and hardware model.
-3. Add native Design Health and fit-solving from document/features rather than OpenSCAD report parsing.
-4. Expand BOM/cut-list and assembly documentation from stable semantic parts.
-5. Produce feature-driven DXF/SVG/drilling outputs and manufacturing review.
-6. Port the remaining six cabinet families using the Utility family as the reference implementation.
-7. Add sheet-goods nesting and CNC operation planning.
-8. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.
+1. Build Phase 9 Design Health and fit solving directly from semantic document/features.
+2. Expand BOM/cut-list and assembly documentation from stable semantic parts and the new drawer/frame construction.
+3. Produce feature-driven DXF/SVG/drilling outputs and manufacturing review.
+4. Port the remaining six cabinet families using the Utility family as the reference implementation.
+5. Extend the hardware catalog with explicit manufacturer-verified face-frame hinge/mounting metadata.
+6. Add sheet-goods nesting and CNC operation planning.
+7. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.
