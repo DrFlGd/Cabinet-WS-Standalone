@@ -2,6 +2,18 @@ import type { DisplayUnits } from './units';
 
 export type PartCategory = 'carcass' | 'back' | 'shelf' | 'front' | 'drawer' | 'hardware' | 'worktop' | 'divider' | 'frame';
 
+export type CabinetFamily =
+  | 'shop_cart'
+  | 'utility'
+  | 'benchtop'
+  | 'stackable'
+  | 'kitchen'
+  | 'drawer'
+  | 'equipment_stand';
+
+export type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+export type FamilyRecipeValues = Record<string, JsonValue>;
+
 export type Vec3 = { x: number; y: number; z: number };
 
 export type CadProfilePoint = { u: number; v: number };
@@ -262,9 +274,11 @@ export type CabinetParameters = {
 };
 
 export type CabinetDocument = {
-  version: 2;
+  version: 3;
   id: string;
-  family: 'utility';
+  family: CabinetFamily;
+  starterId: string | null;
+  familyValues: FamilyRecipeValues;
   name: string;
   units: 'mm';
   displayUnits: DisplayUnits;
