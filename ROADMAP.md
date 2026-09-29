@@ -440,33 +440,35 @@ worker rebuilds and exact-kernel errors.**
 
 # Phase 7 — Direct CAD interaction
 
+**Status: v0.7 viewport-editing baseline implemented**
+
 Purpose: make the standalone product materially better than the web configurator.
 
-- [ ] editable dimension overlays
-- [ ] drag overall width/height/depth handles
-- [ ] drag shelf positions
-- [ ] drag section dividers
-- [ ] direct selection of parts/faces/features
-- [ ] isolate selected
-- [ ] hide/show selected
-- [ ] multi-select
-- [ ] selection breadcrumb
-- [ ] context menu
+- [x] editable width/height/depth overlays
+- [x] drag overall width/height/depth handles
+- [ ] drag shelf positions *(requires a persistent shelf-position model; renderer-only offsets are intentionally avoided)*
+- [ ] drag section dividers directly in the 3D viewport *(the dedicated Manual Layout editor already supports undoable divider dragging)*
+- [x] direct selection of parts and semantic faces/edges
+- [x] isolate selected
+- [x] hide/show selected
+- [x] multi-select with Ctrl-click
+- [x] selection breadcrumb
+- [x] part context menu
 - [ ] measure distance
 - [ ] measure face size
 - [ ] measure angle
-- [ ] section/clipping plane
-- [ ] wireframe / shaded / shaded-with-edges modes
-- [ ] orthographic/perspective camera switch
-- [ ] view cube or equivalent orientation control
+- [x] section/clipping plane
+- [x] wireframe / shaded / shaded-with-edges modes
+- [x] orthographic/perspective camera switch
+- [x] iso/front/right/top orientation controls
 
-Expensive exact rebuilds should happen in a worker. Dragging may use a cheap preview
-and commit exact geometry when necessary.
+Direct envelope edits continue to update `CabinetParameters` through the editor history layer. The analytical model responds immediately, then the worker-owned Replicad/OpenCascade kernel replaces it with matching exact tessellation. View modes, clipping, and isolation remain inspection state rather than cabinet truth.
+
+The remaining unchecked items deliberately require domain support rather than renderer-only transforms. In particular, shelf dragging will be added when shelf positions become persistent semantic parameters, and measurement tools will bind to semantic topology rather than raw Three.js indices.
 
 ### Definition of done
 
-Routine cabinet editing can be performed primarily from the viewport rather than
-through a long settings form.
+The v0.7 baseline supports routine envelope editing, selection, isolation, clipping, and inspection from the viewport while preserving the CAD-document/kernel boundary. Semantic measurement and movable-shelf/divider workflows remain tracked follow-on work.
 
 ---
 
