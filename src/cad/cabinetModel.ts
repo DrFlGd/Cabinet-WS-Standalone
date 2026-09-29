@@ -733,6 +733,7 @@ function applyJoineryRenderFeatures(
     const h = Math.max(1, candidate.size.z + clearance);
     const feature = {
       kind: 'dado' as const,
+      sourcePartId: candidate.id,
       position: { x: Math.max(0, thickness - depth - 0.4), y: Math.max(0, candidate.position.y), z },
       size: { x: depth + 0.8, y: featureDepth, z: h },
       color: '#51351f',
