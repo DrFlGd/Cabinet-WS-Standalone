@@ -692,23 +692,48 @@ features with no OpenSCAD worker or report-text parsing in the production path.
 
 # Phase 12 — Sheet nesting and CNC workflow
 
+**Status: production-planning baseline implemented for the Utility Cabinet reference family in v0.12; verified CNC post output remains**
+
 Purpose: turn Standalone into cabinet-production software rather than only cabinet
 CAD.
 
-- [ ] sheet stock definitions
-- [ ] grain-aware nesting
-- [ ] kerf/tool diameter
-- [ ] part rotation rules
-- [ ] margins
-- [ ] remnant handling
-- [ ] multi-sheet optimization
-- [ ] labels/part IDs
-- [ ] operation registration between sheet and machining files
-- [ ] machine/postprocessor abstraction
+- [x] sheet stock definitions
+- [x] grain-aware nesting
+- [x] kerf/tool diameter
+- [x] part rotation rules
+- [x] margins
+- [x] remnant handling
+- [x] multi-sheet optimization
+- [x] labels/part IDs
+- [x] operation registration between sheet and machining files
+- [x] machine/postprocessor abstraction
 - [ ] G-code/post output only after explicit machine/profile support
 
-This phase should use manufacturing intent recorded on features, not reverse-engineer
-operations from meshes.
+v0.12 adds an editable production-planning surface with material/thickness-specific
+sheet stock, grain direction, margins, optional quantity limits, and user-entered
+remnants. Nesting uses a deterministic largest-first free-rectangle heuristic with
+grain-aware 0°/90° orientation. It is intentionally reproducible rather than claimed
+as a global optimizer.
+
+The effective inter-part clearance is the maximum configured part spacing, kerf, or
+primary tool diameter. Sheet-level DXF/SVG preserves Phase 11 operations after the
+placement transform and adds stable part-number labels. Registration JSON carries
+part ID, part number, sheet ID, placement transform, rotation, and source operation
+IDs so manufacturing files remain traceable to cabinet semantics.
+
+Typed tool-library, machine-profile, postprocessor, tool-assignment, and compensation
+intent are now downstream planning concepts. The default postprocessor explicitly
+cannot emit machine motion. G-code remains disabled until a real compensated-path
+generator and verified machine/postprocessor profile are implemented.
+
+This phase continues to use manufacturing intent recorded on features rather than
+reverse-engineering operations from meshes.
+
+### Remaining definition of done
+
+Implement compensated toolpath geometry plus at least one explicit verified machine
+profile/postprocessor before enabling G-code/post output. Do not infer CNC motion
+from nominal DXF alone.
 
 ---
 
