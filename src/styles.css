@@ -2208,3 +2208,22 @@ button { color: inherit; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* v0.13 family parity */
+.family-starter-panel {
+  display: grid;
+  gap: 7px;
+}
+.family-starter-panel .family-starter-eyebrow {
+  margin-top: 4px;
+}
+.family-starter-panel .select-control {
+  width: 100%;
+}
+.family-starter-panel p {
+  margin: 2px 0 0;
+  color: #788890;
+  font-size: 8px;
+  line-height: 1.45;
+}
