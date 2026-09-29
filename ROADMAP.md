@@ -64,8 +64,10 @@ application smoke test that verifies a real project workflow.
 
 ## Then: verified family parity
 
-Create a capability matrix linking each setting to its owning subsystem and status:
-geometry-driving, manufacturing-driving, compatibility-only, or unsupported.
+The initial audit is recorded in [FAMILY_PARITY.md](FAMILY_PARITY.md), with a
+machine-readable 1,678-setting capability matrix and frozen Cabinet Workshop
+reference fixtures. The matrix distinguishes current ownership from verified parity;
+known behavioral gaps remain implementation work.
 
 Prioritize:
 
