@@ -1,5 +1,6 @@
 import { sanitizeParameters } from './cabinetModel';
 import { familyDefinition, familyStarters, parametersFromFamilyValues } from './familyCatalog';
+import { completeFamilyValues, syncFamilyValuesFromParameters } from './familySettings';
 import { buildFamilyCabinetDocument } from './familyModel';
 import { cloneSectionNodes, treeErrors } from './sections';
 import { makeUtilityDefaults } from './utilityStarters';
@@ -103,10 +104,15 @@ function importStandaloneProject(raw: unknown): ParsedProject {
   const starterId = record.version === 3 && (typeof record.starterId === 'string' || record.starterId === null)
     ? record.starterId
     : null;
-  const familyValues = record.version === 3
+  const storedFamilyValues = record.version === 3
     ? jsonObjectOr(record.familyValues, {})
     : {};
   const parameters = migrateStandaloneParameters(record.parameters);
+  const familyValues = syncFamilyValuesFromParameters(
+    family,
+    completeFamilyValues(family, storedFamilyValues),
+    parameters,
+  );
 
   const warnings: string[] = [];
   if (record.version === 1) {
