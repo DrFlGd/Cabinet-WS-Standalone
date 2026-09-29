@@ -48,21 +48,33 @@ export function classifyFaceRole(
   const axis = dominant === 0 ? 'x' : dominant === 1 ? 'y' : 'z';
   const positive = normal[dominant] >= 0;
 
-  if (axis === 'y') return positive ? 'back' : 'front';
-  if (axis === 'z') return positive ? 'top' : 'bottom';
-
-  if (part.id === 'carcass:left') return positive ? 'inside' : 'outside';
-  if (part.id === 'carcass:right') return positive ? 'outside' : 'inside';
-
-  if (part.category === 'divider') {
-    return positive ? 'right' : 'left';
+  if (axis === 'y') {
+    if (near(center[1], 0)) return 'front';
+    if (near(center[1], part.size.y)) return 'back';
+    return machiningRole('y', positive, center[1]);
   }
 
-  const xMid = part.size.x / 2;
-  if (Math.abs(center[0] - xMid) < EPSILON && abs[0] < 0.7) {
-    return positive ? 'side-positive' : 'side-negative';
+  if (axis === 'z') {
+    if (near(center[2], 0)) return 'bottom';
+    if (near(center[2], part.size.z)) return 'top';
+    return machiningRole('z', positive, center[2]);
   }
-  return positive ? 'right' : 'left';
+
+  if (near(center[0], 0)) {
+    if (part.id === 'carcass:right') return 'inside';
+    if (part.id === 'carcass:left') return 'outside';
+    if (part.category === 'divider') return 'left';
+    return 'left';
+  }
+
+  if (near(center[0], part.size.x)) {
+    if (part.id === 'carcass:right') return 'outside';
+    if (part.id === 'carcass:left') return 'inside';
+    if (part.category === 'divider') return 'right';
+    return 'right';
+  }
+
+  return machiningRole('x', positive, center[0]);
 }
 
 export function classifyEdgeRole(
@@ -114,6 +126,11 @@ function rawCoordinateRole(point: [number, number, number], part: CadPart) {
     part.size.z ? point[2] / part.size.z : 0,
   ].map(value => Math.round(value * 20) / 20);
   return normalized.join('-').replaceAll('.', '_');
+}
+
+function machiningRole(axis: 'x' | 'y' | 'z', positive: boolean, coordinate: number) {
+  const token = (Math.round(coordinate * 10) / 10).toFixed(1).replace('.', '_').replace('-', 'n');
+  return `machining-${axis}-${positive ? 'positive' : 'negative'}-${token}`;
 }
 
 function near(value: number, target: number) {
