@@ -4,6 +4,38 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.8.0] - 2026-09-28
+
+### Added
+
+- Persistent shelf-position data for Simple and section-driven layouts, with gold 3D shelf handles that edit the semantic document through undoable history.
+- Blue 3D section-divider handles that rewrite adjacent bounded-section sizing rather than applying renderer-only transforms.
+- Semantic exact-topology measurement modes for distance, face size, and face angle.
+- Equal, graduated, and custom-weighted drawer-front heights in Simple layout, complementing the existing section-layout modes.
+- Drawer-box registration controls plus butt, rabbet, and lock-rabbet construction intent.
+- Captured drawer bottoms with registered groove operations and applied-bottom construction.
+- Internal drawer organizer column/row grids as fabricated semantic parts.
+- First-class face-frame stiles, top/bottom rails, center stiles/rails, stock controls, frame-aware front placement, and frame-clear Manual Layout dimensions.
+- Regression suites for v0.8 cabinet construction, semantic measurements, backward defaults, shelf persistence, and direct interaction ownership.
+
+### Fixed
+
+- Corrected the v0.7 viewport pointer-coordinate helper, which recursively called itself and could overflow the stack when direct pointer interaction began.
+
+### Changed
+
+- Application/package version advanced to 0.8.0.
+- Drawer/front/frame settings are exposed through the typed Properties schema and selected-part contextual settings.
+- Captured-bottom grooves and drawer rabbets flow through the existing feature graph so exact OpenCascade geometry receives the machining intent.
+- Legacy 12-field section nodes remain accepted; new nodes may include an optional 13th shelf-position array.
+- Phase 7's remaining direct-interaction work is folded into v0.8 and the roadmap advances to Phase 9 Design Health/fitting.
+
+### Compatibility
+
+- No standalone project schema-version bump: schema-v2 JSON remains the save format and all new parameters default during migration/load.
+- Existing v0.7 and older schema-v2 projects open with frameless construction, equal drawer heights, centered drawer-box registration, and default captured-bottom settings unless explicitly changed.
+- Manufacturer-specific face-frame hinge classifications are not inferred when the hardware catalog does not provide them; existing hinge cup/plate drilling remains semantic/exact intent.
+
 ## [0.7.0] - 2026-09-28
 
 ### Added
