@@ -57,7 +57,11 @@ export function partSettingsContext(
     title = 'Drawer-box settings';
     description = 'Stock and mounting settings that generate this drawer box.';
     hardwareCategory = 'drawer_slide';
-    add('drawerMaterialThickness', 'drawerBottomThickness', 'depth', ...slideKeys);
+    add(
+      'drawerMaterialThickness', 'drawerBottomThickness', 'depth', 'drawerJoineryStyle',
+      'drawerBottomStyle', 'drawerBottomGrooveDepth', 'drawerDividerCount', 'drawerDividerRows',
+      'drawerFrontRegistration', ...slideKeys,
+    );
   } else if (part.category === 'front') {
     const isDoor = typeof part.metadata?.door === 'number' || part.id.includes(':door:') || part.id.startsWith('door:');
     const isDrawer = typeof part.metadata?.drawer === 'number' || part.id.includes(':drawer:');
@@ -66,12 +70,20 @@ export function partSettingsContext(
       title = 'Door settings';
       description = 'Door stock, reveal/gap, mounting style, and hinge settings for this selected door.';
       hardwareCategory = 'hinge';
-      add('width', 'height', 'doorThickness', 'frontMountStyle', 'frontEdgeReveal', 'doorGap', 'doorCount', ...hingeKeys);
+      add(
+        'width', 'height', 'doorThickness', 'frontMountStyle', 'frontEdgeReveal', 'doorGap', 'doorCount',
+        'faceFrameStyle', 'faceFrameThickness', 'faceFrameStileWidth', 'faceFrameRailWidth', 'faceFrameCenterStileWidth',
+        ...hingeKeys,
+      );
     } else if (isDrawer) {
       title = 'Drawer-front settings';
       description = 'Front stock, reveal/gap, and drawer-slide settings that affect this drawer.';
       hardwareCategory = 'drawer_slide';
-      add('width', 'height', 'drawerFrontThickness', 'frontMountStyle', 'frontEdgeReveal', 'drawerGap', 'drawerCount', ...slideKeys);
+      add(
+        'width', 'height', 'drawerFrontThickness', 'frontMountStyle', 'frontEdgeReveal', 'drawerGap', 'drawerCount',
+        'drawerHeightMode', 'drawerGraduatedStep', 'drawerFrontRegistration', 'faceFrameStyle',
+        ...slideKeys,
+      );
     } else {
       add('width', 'height', 'frontMountStyle', 'frontEdgeReveal', 'doorGap', 'drawerGap');
     }
@@ -91,6 +103,10 @@ export function partSettingsContext(
     title = 'Worktop settings';
     description = 'Worktop stock and overhang parameters for the selected work surface.';
     add('width', 'depth', 'includeWorktop', 'worktopThickness', 'worktopSideOverhang', 'worktopFrontOverhang', 'worktopBackOverhang');
+  } else if (part.category === 'frame') {
+    title = 'Face-frame settings';
+    description = 'Frame stock and opening relationships that generate the selected stile or rail.';
+    add('faceFrameStyle', 'faceFrameThickness', 'faceFrameStileWidth', 'faceFrameRailWidth', 'faceFrameCenterStileWidth', 'frontMountStyle', 'frontEdgeReveal');
   } else if (part.category === 'carcass') {
     title = 'Carcass settings';
     description = 'Carcass stock, cabinet envelope, construction, and joinery settings related to this panel.';
