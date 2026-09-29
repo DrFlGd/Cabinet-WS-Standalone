@@ -79,6 +79,7 @@ describe('Phase 11 manufacturing geometry', () => {
     expect(drilled.svg).toContain('data-units="mm"');
     expect(drilled.svg).toContain('data-scale="1"');
     expect(drilled.svg).toContain('mm" height="');
+    expect(drilled.svg).toContain('<polygon');
     expect(drilled.drillingCsv).toContain('DIAMETER_MM');
     expect(drilled.drillingCsv).toContain('FACE');
     expect(drilled.drillingCsv.split('\r\n').length).toBeGreaterThan(2);
