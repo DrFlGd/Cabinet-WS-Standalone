@@ -20,6 +20,12 @@ import { computeMeasurement, requiredMeasurementSelections, type MeasurementMode
 import { analyzeDesignHealth } from './cad/designHealth';
 import type { FitSolution } from './cad/fitSolver';
 import {
+  buildManufacturingModel,
+  operationLayerDxf,
+  reviewedManufacturingZip,
+  type ManufacturingOperationKind,
+} from './cad/manufacturing';
+import {
   buildAssemblyPacketHtml,
   buildCutListReportHtml,
   buildShopDocumentation,
@@ -119,6 +125,10 @@ export default function App() {
   const shopDocs = useMemo(
     () => buildShopDocumentation(cadDocument, designHealth),
     [cadDocument, designHealth],
+  );
+  const manufacturing = useMemo(
+    () => buildManufacturingModel(cadDocument, shopDocs, designHealth),
+    [cadDocument, shopDocs, designHealth],
   );
 
   async function refreshRecent() {
@@ -537,7 +547,7 @@ export default function App() {
     }
   }
 
-  async function saveTextExport(content: string, suggestedName: string, kind: 'csv' | 'html') {
+  async function saveTextExport(content: string, suggestedName: string, kind: 'csv' | 'html' | 'dxf' | 'svg' | 'json') {
     const desktop = desktopApi();
     if (desktop) {
       const result = await desktop.saveText({ content, suggestedName, kind });
@@ -549,7 +559,14 @@ export default function App() {
       return;
     }
 
-    const blob = new Blob([content], { type: kind === 'csv' ? 'text/csv;charset=utf-8' : 'text/html;charset=utf-8' });
+    const mime = {
+      csv: 'text/csv;charset=utf-8',
+      html: 'text/html;charset=utf-8',
+      dxf: 'application/dxf;charset=utf-8',
+      svg: 'image/svg+xml;charset=utf-8',
+      json: 'application/json;charset=utf-8',
+    }[kind];
+    const blob = new Blob([content], { type: mime });
     const href = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
     anchor.href = href;
@@ -583,6 +600,75 @@ export default function App() {
       `${safeBaseName(editor.name)}-assembly-packet.html`,
       'html',
     );
+  }
+
+  function exportManufacturingPart(partId: string, kind: 'dxf' | 'svg' | 'drilling' | 'metadata') {
+    const part = manufacturing.parts.find(candidate => candidate.partId === partId);
+    if (!part) return;
+    const base = safeBaseName(part.partNumber);
+    if (kind === 'dxf') {
+      void saveTextExport(part.dxf, base + '.dxf', 'dxf');
+      return;
+    }
+    if (kind === 'svg') {
+      void saveTextExport(part.svg, base + '.svg', 'svg');
+      return;
+    }
+    if (kind === 'drilling') {
+      void saveTextExport(part.drillingCsv, base + '-drilling.csv', 'csv');
+      return;
+    }
+    void saveTextExport(JSON.stringify({
+      partId: part.partId,
+      partNumber: part.partNumber,
+      name: part.name,
+      material: part.material,
+      plane: part.plane,
+      metadata: part.metadata,
+      operations: part.operations,
+    }, null, 2), base + '-manufacturing.json', 'json');
+  }
+
+  function exportManufacturingLayer(partId: string, kind: ManufacturingOperationKind) {
+    const part = manufacturing.parts.find(candidate => candidate.partId === partId);
+    if (!part) return;
+    void saveTextExport(
+      operationLayerDxf(part, kind),
+      safeBaseName(part.partNumber) + '-' + kind.toLowerCase().replace('_', '-') + '.dxf',
+      'dxf',
+    );
+  }
+
+  async function exportManufacturingPackage(reviewedAt: string) {
+    try {
+      const bytes = reviewedManufacturingZip(manufacturing, reviewedAt);
+      const suggestedName = safeBaseName(editor.name) + '-manufacturing-v0.11.zip';
+      const desktop = desktopApi();
+      const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+
+      if (desktop) {
+        const result = await desktop.saveBinary({ bytes: arrayBuffer, suggestedName, kind: 'zip' });
+        if (result.canceled) {
+          setNotice('Manufacturing package export canceled');
+          return;
+        }
+        setNotice(`Exported reviewed manufacturing package · ${result.name ?? suggestedName}`);
+        return;
+      }
+
+      const blob = new Blob([arrayBuffer], { type: 'application/zip' });
+      const href = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = href;
+      anchor.download = suggestedName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(href);
+      setNotice(`Downloaded reviewed manufacturing package · ${suggestedName}`);
+    } catch (error) {
+      setNotice(error instanceof Error ? `Manufacturing export failed: ${error.message}` : 'Manufacturing export failed');
+    }
   }
 
   function openSection(sectionNodeId: number) {
@@ -737,7 +823,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.10.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.11.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -895,6 +981,7 @@ export default function App() {
     {shopDocsOpen && <ShopDocsPanel
       document={cadDocument}
       docs={shopDocs}
+      manufacturing={manufacturing}
       units={editor.displayUnits}
       selectedId={selectedId}
       onClose={() => setShopDocsOpen(false)}
@@ -906,6 +993,9 @@ export default function App() {
       onExportHardwareCsv={exportHardwareCsv}
       onExportCutListReport={exportCutListReport}
       onExportAssemblyPacket={exportAssemblyPacket}
+      onExportManufacturingPart={exportManufacturingPart}
+      onExportManufacturingLayer={exportManufacturingLayer}
+      onExportManufacturingPackage={exportManufacturingPackage}
     />}
   </main>;
 }
@@ -959,7 +1049,7 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
 }
 
 function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.10.0 · exact B-Rep · ${featureCount} semantic features · Shop Docs · STEP`;
-  if (status === 'error') return `Utility v0.10.0 · exact kernel diagnostics: ${diagnosticCount} · Shop Docs review`;
-  return 'Utility v0.10.0 · OpenCascade worker initializing…';
+  if (status === 'ready') return `Utility v0.11.0 · exact B-Rep · ${featureCount} semantic features · Manufacturing · STEP`;
+  if (status === 'error') return `Utility v0.11.0 · exact kernel diagnostics: ${diagnosticCount} · manufacturing review`;
+  return 'Utility v0.11.0 · OpenCascade worker initializing…';
 }
