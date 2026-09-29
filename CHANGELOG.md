@@ -4,6 +4,35 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.10.0] - 2026-09-28
+
+### Added
+
+- Native Shop Docs workspace with BOM/Cut List and Assembly views.
+- Deterministic shop part numbers derived from stable semantic part IDs.
+- Fabricated-part cut-list rows with material, finished/body envelope, rectangular blank envelope, panel thickness axis, grain direction, inferred exposed-edge banding requirements, and registered machining summaries.
+- Material grouping by stock/material/thickness with part counts and aggregate rectangular blank area.
+- Purchased-hardware grouping with quantities, manufacturer/model, verification status, mounting members, instance IDs, and drilling notes.
+- Millimeter-native cut-list and purchased-hardware CSV exports.
+- Printable BOM/cut-list HTML with material summary, part dimensions, hardware, machining summary, and Design Health/readiness status.
+- Semantic assembly groups, stable callouts, purchased-hardware checklist, and live step highlighting in the existing exploded CAD viewport.
+- Printable assembly packet with a generated schematic isometric exploded SVG and the same stable part callouts.
+- Bidirectional semantic selection between CAD parts and BOM rows, including automatic BOM-row scrolling for a selected CAD part.
+- Native Electron CSV/HTML save dialogs with browser-download fallback.
+- Phase 10 regression coverage for part-number stability, cut-list semantics, material/hardware grouping, assembly order, printable output, CAD/BOM linking, exploded review, and desktop report export.
+
+### Changed
+
+- Application/package version advanced to 0.10.0.
+- The roadmap marks Phase 10 complete for the Utility Cabinet reference family and advances the next major milestone to Phase 11 manufacturing geometry.
+- Shop documentation is generated directly from Standalone semantic parts/features and Design Health; the old web OpenSCAD BOM/assembly report pipeline is reference behavior only.
+
+### Compatibility
+
+- No saved-project schema change. Shop Docs search, checklist, selection, and exploded-review state are editor/report state.
+- Existing schema-v2 projects generate Phase 10 reports from their migrated semantic cabinet document without rewriting the saved file.
+- Phase 10 blank/finished dimensions are semantic rectangular/body envelopes; exact operation-layer profile/drilling geometry remains explicitly deferred to Phase 11.
+
 ## [0.9.0] - 2026-09-28
 
 ### Added
