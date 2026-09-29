@@ -4,6 +4,36 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.11.0] - 2026-09-29
+
+### Added
+
+- Native feature-driven manufacturing model for fabricated Utility Cabinet parts.
+- Normalized CUT, POCKET, DADO/GROOVE, DRILL, ENGRAVE, and EDGE operation vocabulary with stable part/feature identity.
+- Part-local machining planes with explicit U/V/thickness axes, millimeter units, scale 1, machining-face semantic IDs, and depth/through metadata.
+- Per-part DXF export and individual operation-layer DXF export with `$INSUNITS=4`.
+- True-scale millimeter SVG manufacturing previews and operation-layer SVGs.
+- Drilling-map CSV export with semantic IDs, U/V centers, diameter, face, depth, and through state.
+- Per-part manufacturing metadata JSON.
+- Manufacturing review tab inside Shop Docs with part/layer selection, operation preview, face/depth inspection, and Design Health warning/error display.
+- Snapshot-specific explicit review gate; blocking Design Health errors prevent reviewed package export.
+- Reviewed manufacturing ZIP containing manifest, issue/manufacturing reports, per-part DXF/SVG/drilling/metadata, and per-layer DXF/SVG files.
+- Native Electron save dialogs for DXF, SVG, JSON, and manufacturing ZIP outputs with browser fallbacks.
+- Regression coverage for machining-plane projection, operation classification, unit/scale metadata, drilling maps, layer isolation, ZIP packaging, readiness gating, and desktop integration.
+
+### Changed
+
+- Application/package version advanced to 0.11.0.
+- Shop Docs now includes BOM/Cut List, Assembly, and Manufacturing views.
+- The roadmap marks Phase 11 complete for the Utility Cabinet reference family and advances the production workflow to Phase 12 nesting/CNC.
+- Manufacturing outputs are generated directly from semantic parts/features and Design Health instead of the old web OpenSCAD SVG/report pipeline.
+
+### Compatibility
+
+- No saved-project schema change. Manufacturing review selection and review state are derived/editor state.
+- Existing schema-v2 projects generate Phase 11 manufacturing output after normal migration into the current semantic cabinet model.
+- DXF/SVG files are manufacturing geometry, not CNC toolpaths; no kerf/tool compensation, nesting, postprocessor, or G-code is implied.
+
 ## [0.10.0] - 2026-09-28
 
 ### Added
