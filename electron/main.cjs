@@ -6,6 +6,7 @@ const path = require('node:path');
 const MAX_DOCUMENT_BYTES = 2_000_000;
 const MAX_STEP_BYTES = 250_000_000;
 const MAX_TEXT_EXPORT_BYTES = 20_000_000;
+const MAX_BINARY_EXPORT_BYTES = 250_000_000;
 const approvedPaths = new Set();
 
 function userFile(name) {
@@ -147,20 +148,50 @@ function registerIpc() {
     if (!content || Buffer.byteLength(content, 'utf8') > MAX_TEXT_EXPORT_BYTES) {
       throw new Error('Text export is empty or too large.');
     }
-    const kind = options?.kind === 'csv' ? 'csv' : 'html';
-    const suggestedName = String(options?.suggestedName || (kind === 'csv' ? 'cabinet.csv' : 'cabinet.html'));
+    const kinds = {
+      csv: { title: 'Export CSV report', extension: '.csv', filter: { name: 'CSV spreadsheet', extensions: ['csv'] } },
+      html: { title: 'Export printable report', extension: '.html', filter: { name: 'Printable HTML report', extensions: ['html'] } },
+      dxf: { title: 'Export DXF manufacturing geometry', extension: '.dxf', filter: { name: 'DXF manufacturing geometry', extensions: ['dxf'] } },
+      svg: { title: 'Export SVG manufacturing preview', extension: '.svg', filter: { name: 'SVG manufacturing geometry', extensions: ['svg'] } },
+      json: { title: 'Export manufacturing metadata', extension: '.json', filter: { name: 'JSON metadata', extensions: ['json'] } },
+    };
+    const kind = Object.prototype.hasOwnProperty.call(kinds, options?.kind) ? options.kind : 'html';
+    const config = kinds[kind];
+    const suggestedName = String(options?.suggestedName || ('cabinet' + config.extension));
     const result = await dialog.showSaveDialog({
-      title: kind === 'csv' ? 'Export CSV report' : 'Export printable report',
+      title: config.title,
       defaultPath: suggestedName,
-      filters: kind === 'csv'
-        ? [{ name: 'CSV spreadsheet', extensions: ['csv'] }]
-        : [{ name: 'Printable HTML report', extensions: ['html'] }],
+      filters: [config.filter],
     });
     if (result.canceled || !result.filePath) return { canceled: true };
     let filePath = result.filePath;
-    const extension = kind === 'csv' ? '.csv' : '.html';
-    if (!filePath.toLowerCase().endsWith(extension)) filePath += extension;
+    if (!filePath.toLowerCase().endsWith(config.extension)) filePath += config.extension;
     await fs.writeFile(filePath, content, 'utf8');
+    return { canceled: false, path: filePath, name: path.basename(filePath) };
+  });
+
+  ipcMain.handle('export:binary', async (_event, options) => {
+    const bytes = options?.bytes;
+    const buffer = bytes instanceof ArrayBuffer
+      ? Buffer.from(bytes)
+      : ArrayBuffer.isView(bytes)
+        ? Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+        : null;
+    if (!buffer || buffer.byteLength <= 0 || buffer.byteLength > MAX_BINARY_EXPORT_BYTES) {
+      throw new Error('Binary export is empty or too large.');
+    }
+
+    const kind = options?.kind === 'zip' ? 'zip' : null;
+    if (!kind) throw new Error('Unsupported binary export kind.');
+    const result = await dialog.showSaveDialog({
+      title: 'Export reviewed manufacturing package',
+      defaultPath: String(options?.suggestedName || 'cabinet-manufacturing.zip'),
+      filters: [{ name: 'ZIP manufacturing package', extensions: ['zip'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    let filePath = result.filePath;
+    if (!filePath.toLowerCase().endsWith('.zip')) filePath += '.zip';
+    await fs.writeFile(filePath, buffer);
     return { canceled: false, path: filePath, name: path.basename(filePath) };
   });
 
