@@ -54,7 +54,8 @@ available for interactive inspection; it does not make a failed export successfu
 ## Known limits
 
 - Family schemas and starters are ported, but full dimensional/construction and
-  machining parity still needs independent comparison with Cabinet Workshop.
+  machining parity is not established. See [FAMILY_PARITY.md](FAMILY_PARITY.md)
+  for the independent capability audit, frozen reference fixtures, and prioritized gaps.
 - Equipment Stand cleat angles are currently metadata on rectangular rails;
   exact bevels and purchased slide/runner hardware integration remain incomplete.
 - The applied-back rabbet remains a proof operation; back-panel construction needs
