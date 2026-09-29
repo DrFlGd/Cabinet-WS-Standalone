@@ -234,6 +234,23 @@ export default function SectionLayoutPanel({
                 />
               </label>
             )}
+
+            {parameters.cabinetContents !== 'drawers' && (
+              <label>
+                Shelf panels
+                <input
+                  type="number"
+                  min={0}
+                  max={6}
+                  step={1}
+                  value={parameters.shelfCount}
+                  onChange={event => {
+                    const value = event.currentTarget.valueAsNumber;
+                    if (Number.isFinite(value)) onParameterChange('shelfCount', value);
+                  }}
+                />
+              </label>
+            )}
           </div>
 
           <p className="section-layout-helper">
