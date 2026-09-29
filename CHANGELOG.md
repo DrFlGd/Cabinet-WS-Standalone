@@ -4,6 +4,51 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.6.0] - 2026-09-28
+
+### Added
+
+- Worker-based `GeometryKernel` implementation using Replicad and OpenCascade WebAssembly.
+- Asynchronous exact rebuild requests with monotonically increasing request IDs and stale-result cancellation.
+- Dirty-part signature tracking plus a per-part exact tessellation cache.
+- Cabinet-native feature graph generated from semantic parts instead of reverse-engineering manufacturing intent from Three.js meshes.
+- First-class feature records for panel blanks, dadoes, rabbets, grooves, pockets, holes, hole patterns, hardware references, and assembly transforms.
+- Exact B-Rep bodies for the Utility Cabinet reference family.
+- Exact extrusion of side profiles, including toe-kick side cutouts.
+- Exact subtraction of registered dado/pocket and drilling features.
+- Applied-back rabbet proof geometry on cabinet side B-Reps.
+- Exact adjustable-shelf line boring and other registered hole patterns.
+- Semantic face and edge identity mapped from transient OpenCascade topology, including IDs such as `face:carcass:left:inside` and `edge:carcass:left:front-top`.
+- Three.js rendering from exact OpenCascade tessellations while retaining the analytical geometry as a responsive/failure fallback.
+- Exact face selection by normal click and semantic edge selection by Shift-click.
+- Kernel diagnostics surfaced in the Properties panel instead of allowing a failed exact part to take down the editor.
+- STEP assembly export with stable part names and millimeter units.
+- Native Electron STEP Save dialog plus browser-download fallback.
+- Regression coverage for feature-graph generation, toe-kick/dado/rabbet/line-boring intent, hardware-reference features, and semantic topology classification.
+- Source-level integration guards covering the worker WASM path, STEP export, tessellation cache, and desktop save bridge.
+
+### Changed
+
+- Application/package version advanced to 0.6.0.
+- Editing remains realtime by immediately displaying the analytical cabinet model after a parameter change; the matching exact B-Rep result replaces it after the worker rebuild completes.
+- The viewport status now reports exact-kernel state/body count and semantic-feature count.
+- The right Properties panel can display the selected semantic face/edge identity alongside the selected part's editable settings.
+- `ARCHITECTURE.md` now describes the implemented worker/kernel boundary rather than a future-only proposal.
+- The roadmap marks the Utility Cabinet Phase 6 exact-CAD proof of concept complete and advances the next milestone to v0.7 Direct CAD Interaction.
+
+### Compatibility
+
+- No saved-project schema change. Feature history/topology is regenerated from schema-v2 cabinet semantics and is not persisted as raw OpenCascade state.
+- Raw OpenCascade face/edge indexes are never stored as user-facing identity.
+- Existing v0.5.x and earlier schema-v2 projects continue to open through the same migration/default path.
+
+### Notes / Deferred
+
+- The applied-back rabbet in v0.6 is an exact side-panel proof operation; the existing analytical back-panel construction recipe has not yet been widened/repositioned into a full production rabbet assembly.
+- Chamfer/bevel and edge-treatment feature kinds are reserved in the feature vocabulary but their exact operations are deferred.
+- Exact failures intentionally retain the existing per-part analytical preview and report diagnostics.
+- DXF, machining review, CNC output, and full manufacturing registration remain later roadmap milestones.
+
 ## [0.5.2] - 2026-09-28
 
 ### Changed
