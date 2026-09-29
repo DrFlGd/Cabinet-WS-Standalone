@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('cabinetDesktop', {
   saveDocument: (options) => ipcRenderer.invoke('document:save', options),
   saveStep: (options) => ipcRenderer.invoke('export:step', options),
   saveText: (options) => ipcRenderer.invoke('export:text', options),
+  saveBinary: (options) => ipcRenderer.invoke('export:binary', options),
   listRecent: () => ipcRenderer.invoke('recent:list'),
   readRecovery: () => ipcRenderer.invoke('recovery:read'),
   writeRecovery: (content) => ipcRenderer.invoke('recovery:write', content),
