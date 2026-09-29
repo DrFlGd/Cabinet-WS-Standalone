@@ -3,19 +3,23 @@ import { Columns3, Search, SlidersHorizontal, X } from 'lucide-react';
 import { PARAMETER_SECTIONS, UTILITY_PARAMETER_SCHEMA, type ParameterDefinition } from '../cad/parameterSchema';
 import { partSettingsContext } from '../cad/partContext';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
-import type { CabinetParameters, CadPart } from '../cad/types';
+import type { CabinetFamily, CabinetParameters, CadPart, FamilyRecipeValues, JsonValue } from '../cad/types';
 import type { KernelDiagnostic, KernelSelection } from '../cad/kernel/types';
 import DimensionInput from './DimensionInput';
 import SelectControl from './SelectControl';
+import FamilySettingsPanel from './FamilySettingsPanel';
 
 type ParameterValue = CabinetParameters[keyof CabinetParameters];
 
 type Props = {
   parameters: CabinetParameters;
+  family: CabinetFamily;
+  familyValues: FamilyRecipeValues;
   familyLabel?: string;
   selected: CadPart | null;
   displayUnits: DisplayUnits;
   onChange: (key: keyof CabinetParameters, value: ParameterValue) => void;
+  onFamilyValueChange: (key: string, value: JsonValue) => void;
   topologySelection: KernelSelection | null;
   kernelDiagnostics: KernelDiagnostic[];
   onShowCabinetSettings: () => void;
@@ -24,16 +28,20 @@ type Props = {
 
 export default function PropertiesPanel({
   parameters,
+  family,
+  familyValues,
   familyLabel = 'Utility Cabinet',
   selected,
   displayUnits,
   onChange,
+  onFamilyValueChange,
   topologySelection,
   kernelDiagnostics,
   onShowCabinetSettings,
   onOpenSection,
 }: Props) {
   const [query, setQuery] = useState('');
+  const [settingsMode, setSettingsMode] = useState<'family' | 'model'>('family');
   const context = selected ? partSettingsContext(selected, parameters) : null;
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -94,7 +102,42 @@ export default function PropertiesPanel({
         )}
       </label>
 
-      {normalizedQuery ? (
+      {!selected && (
+        <div className="property-mode-tabs" role="tablist" aria-label="Property surface">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={settingsMode === 'family'}
+            className={settingsMode === 'family' ? 'active' : ''}
+            onClick={() => setSettingsMode('family')}
+          >
+            Family settings
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={settingsMode === 'model'}
+            className={settingsMode === 'model' ? 'active' : ''}
+            onClick={() => setSettingsMode('model')}
+          >
+            Native model
+          </button>
+        </div>
+      )}
+
+      {!selected && settingsMode === 'family' ? (
+        <div className="properties-scroll family-properties-scroll">
+          <KernelDiagnostics diagnostics={kernelDiagnostics} />
+          <FamilySettingsPanel
+            family={family}
+            familyValues={familyValues}
+            displayUnits={displayUnits}
+            query={query}
+            onChange={onFamilyValueChange}
+            onOpenManualLayout={() => onOpenSection(0)}
+          />
+        </div>
+      ) : normalizedQuery ? (
         <div className="properties-scroll">
           <KernelDiagnostics diagnostics={kernelDiagnostics} />
           {selected && topologySelection?.partId === selected.id && (
