@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
 import { DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
 import { buildFamilyCabinetDocument } from './cad/familyModel';
-import { FAMILY_DEFINITIONS, familyDefinition, familyStarter, familyStarters } from './cad/familyCatalog';
+import { FAMILY_DEFINITIONS, familyDefinition, familyStarter, familyStarters, parametersFromFamilyValues } from './cad/familyCatalog';
+import { applyFamilyFieldChange, syncFamilyValuesFromParameters } from './cad/familySettings';
 import CadViewport, {
   type CadViewportHandle,
   type ViewportDisplayMode,
@@ -38,7 +39,7 @@ import { hardwareDefinition } from './cad/hardwareCatalog';
 import { useGeometryKernel } from './cad/kernel/useGeometryKernel';
 import type { KernelSelection } from './cad/kernel/types';
 import { utilityStarter } from './cad/utilityStarters';
-import type { CabinetDocument, CabinetFamily, CabinetParameters, CadPart, SectionNode } from './cad/types';
+import type { CabinetDocument, CabinetFamily, CabinetParameters, CadPart, JsonValue, SectionNode } from './cad/types';
 import HardwareDrawer from './components/HardwareDrawer';
 import PropertiesPanel from './components/PropertiesPanel';
 import SectionLayoutPanel from './components/SectionLayoutPanel';
@@ -266,16 +267,26 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   });
 
+  function canonicalDocumentEdit(
+    current: EditorDocument,
+    nextParameters: Partial<CabinetParameters>,
+  ): EditorDocument {
+    const parameters = sanitizeParameters(nextParameters);
+    return {
+      ...current,
+      starterId: null,
+      familyValues: syncFamilyValuesFromParameters(current.family, current.familyValues, parameters),
+      parameters,
+    };
+  }
+
   function updateParameter(key: keyof CabinetParameters, value: ParameterValue) {
     history.edit(current => {
       const next = { ...current.parameters, [key]: value } as Partial<CabinetParameters>;
       if (key === 'layoutMode' && value === 'sections' && current.parameters.layoutMode !== 'sections') {
         next.sectionNodes = simpleLayoutToSections(current.parameters);
       }
-      return {
-        ...current,
-        parameters: sanitizeParameters(next),
-      };
+      return canonicalDocumentEdit(current, next);
     }, `parameter:${String(key)}`);
 
     if (key === 'layoutMode' && value === 'sections') {
@@ -284,27 +295,38 @@ export default function App() {
     setNotice(`Updated ${humanize(String(key))}`);
   }
 
+  function updateFamilyValue(key: string, value: JsonValue) {
+    history.edit(current => {
+      const familyValues = applyFamilyFieldChange(current.family, current.familyValues, key, value);
+      const parameters = parametersFromFamilyValues(current.family, familyValues);
+      return {
+        ...current,
+        starterId: null,
+        familyValues,
+        parameters,
+        ...(key === 'design_name' && typeof value === 'string' && value.trim()
+          ? { name: value.trim().slice(0, 120) }
+          : {}),
+      };
+    }, `family:${key}`);
+    setNotice(`Updated ${humanize(key.replaceAll('_', ' '))}`);
+  }
+
   function applyHardware(profileId: string) {
     const profile = hardwareDefinition(profileId);
     if (!profile) return;
-    history.edit(current => ({
-      ...current,
-      parameters: sanitizeParameters({
-        ...current.parameters,
-        ...profile.parameterPatch,
-      }),
+    history.edit(current => canonicalDocumentEdit(current, {
+      ...current.parameters,
+      ...profile.parameterPatch,
     }), `hardware:${profile.category}`);
     setNotice(`Applied ${profile.label}`);
   }
 
   function updateSections(nodes: SectionNode[]) {
-    history.edit(current => ({
-      ...current,
-      parameters: sanitizeParameters({
-        ...current.parameters,
-        layoutMode: 'sections',
-        sectionNodes: nodes,
-      }),
+    history.edit(current => canonicalDocumentEdit(current, {
+      ...current.parameters,
+      layoutMode: 'sections',
+      sectionNodes: nodes,
     }), 'sections');
     setNotice('Updated section layout');
   }
@@ -470,12 +492,9 @@ export default function App() {
 
   function applyFitSolution(solution: FitSolution) {
     if (!solution.feasible) return;
-    history.edit(current => ({
-      ...current,
-      parameters: sanitizeParameters({
-        ...current.parameters,
-        ...solution.patch,
-      }),
+    history.edit(current => canonicalDocumentEdit(current, {
+      ...current.parameters,
+      ...solution.patch,
     }));
     setNotice(`Applied ${solution.title} · Undo restores the previous cabinet`);
     requestAnimationFrame(() => viewport.current?.fit());
@@ -501,13 +520,13 @@ export default function App() {
         const positions = Array.from({ length: count }, (_, index) => node[12]?.[index] ?? (index + 1) / (count + 1));
         positions[shelfIndex] = normalized;
         node[12] = positions;
-        return { ...current, parameters: sanitizeParameters({ ...current.parameters, sectionNodes: nodes }) };
+        return canonicalDocumentEdit(current, { ...current.parameters, sectionNodes: nodes });
       }
 
       const count = current.parameters.shelfCount;
       const positions = Array.from({ length: count }, (_, index) => current.parameters.shelfPositions[index] ?? (index + 1) / (count + 1));
       positions[shelfIndex] = normalized;
-      return { ...current, parameters: sanitizeParameters({ ...current.parameters, shelfPositions: positions }) };
+      return canonicalDocumentEdit(current, { ...current.parameters, shelfPositions: positions });
     }, `shelf-position:${partId}`);
     setNotice(`Moved ${part.name}`);
   }
@@ -545,7 +564,7 @@ export default function App() {
       currentChild.node[3] = 'weight';
       previous.node[4] = nextPrevious;
       currentChild.node[4] = nextCurrent;
-      return { ...current, parameters: sanitizeParameters({ ...current.parameters, sectionNodes: nodes }) };
+      return canonicalDocumentEdit(current, { ...current.parameters, sectionNodes: nodes });
     }, `section-divider:${parentId}:${order}`);
     setSectionSelectedId(parentId);
     setNotice('Moved section divider from 3D viewport');
@@ -1018,10 +1037,13 @@ export default function App() {
 
       <PropertiesPanel
         parameters={editor.parameters}
+        family={editor.family}
+        familyValues={editor.familyValues}
         familyLabel={familyDefinition(editor.family).name}
         selected={selected}
         displayUnits={editor.displayUnits}
         onChange={updateParameter}
+        onFamilyValueChange={updateFamilyValue}
         topologySelection={kernelSelection}
         kernelDiagnostics={kernel.diagnostics}
         onShowCabinetSettings={() => select(null)}
