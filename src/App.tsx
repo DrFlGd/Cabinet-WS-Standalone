@@ -593,6 +593,7 @@ export default function App() {
           <TreePanel
             document={cadDocument}
             selectedId={selectedId}
+            selectedIds={selectedIds}
             hiddenIds={hiddenIds}
             expanded={partBrowserExpanded}
             onToggle={() => setPartBrowserExpanded(current => !current)}
