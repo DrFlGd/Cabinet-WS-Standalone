@@ -459,6 +459,138 @@ function effectiveMaterialThickness(values: FamilyRecipeValues) {
   return custom;
 }
 
+
+export function syncFamilyValuesFromParameters(
+  family: CabinetFamily,
+  values: FamilyRecipeValues,
+  parameters: import('./types').CabinetParameters,
+): FamilyRecipeValues {
+  const next: FamilyRecipeValues = JSON.parse(JSON.stringify(values)) as FamilyRecipeValues;
+  const set = (key: string, value: JsonValue) => {
+    if (familyFieldDefinitions(family).some(field => field.key === key)) next[key] = value;
+  };
+
+  if (family === 'equipment_stand') {
+    set('overall_width', parameters.width);
+    set('overall_height', parameters.height);
+    set('overall_depth', parameters.depth);
+    set('material_thickness', parameters.materialThickness);
+  } else if (family === 'drawer') {
+    const basis = typeof next.drawer_design_basis === 'string' ? next.drawer_design_basis : 'outside_box';
+    if (basis === 'outside_box') {
+      set('target_box_outside_width', parameters.width);
+      set('target_box_outside_height', parameters.height);
+      set('target_box_outside_depth', parameters.depth);
+    } else if (basis === 'enclosure') {
+      const clearance = parameters.drawerMount === 'metal_slides'
+        ? parameters.metalSlideClearancePerSide
+        : 0;
+      set('enclosure_opening_width', parameters.width + 2 * clearance);
+      set('enclosure_target_box_height', parameters.height);
+      set('enclosure_usable_depth', parameters.depth + parameters.metalSlideFrontSetback);
+    }
+  } else {
+    set('cabinet_width', parameters.width);
+    set('cabinet_height', parameters.height);
+    if (family === 'kitchen') set('cabinet_nominal_depth', parameters.depth + (parameters.faceFrameStyle === 'full' ? parameters.faceFrameThickness : 0));
+    else set('cabinet_depth', parameters.depth);
+  }
+
+  set('carcass_stock', parameters.carcassStock);
+  set('back_stock', parameters.backStock);
+  set('custom_carcass_thickness', parameters.materialThickness);
+  set('custom_back_thickness', parameters.backThickness);
+  set('custom_drawer_material_thickness', parameters.drawerMaterialThickness);
+  set('custom_drawer_bottom_thickness', parameters.drawerBottomThickness);
+  set('custom_drawer_front_thickness', parameters.drawerFrontThickness);
+  set('custom_door_thickness', parameters.doorThickness);
+
+  set('cabinet_contents', parameters.cabinetContents);
+  set('drawer_count', parameters.drawerCount);
+  set('door_count', parameters.doorCount);
+  set('door_shelf_count', parameters.shelfCount);
+  set('drawer_height_mode', parameters.drawerHeightMode);
+  set('drawer_graduated_step', parameters.drawerGraduatedStep);
+  set('drawer_height_weights', [...parameters.drawerCustomWeights]);
+
+  set('top_style', parameters.topStyle);
+  set('top_stretcher_depth', parameters.topStretcherDepth);
+  set('back_style', parameters.backStyle);
+  set('back_inset', parameters.backInset);
+  set('back_stretcher_count', parameters.backStretcherCount);
+  set('back_stretcher_height', parameters.backStretcherHeight);
+
+  set('cabinet_mount_style', parameters.mountStyle);
+  if (family === 'equipment_stand') set('mount_mode', parameters.mountStyle === 'wall' ? 'wall_mount_french_cleat' : 'freestanding');
+  set('base_style', parameters.baseStyle);
+  set('custom_toe_kick_height', parameters.toeKickHeight);
+  set('custom_toe_kick_setback', parameters.toeKickDepth);
+  set('custom_side_toe_kick_cutout', parameters.sideToeKickCutout);
+  set('bottom_width_style', parameters.bottomWidthStyle);
+
+  set('include_worktop', parameters.includeWorktop);
+  set('worktop_thickness', parameters.worktopThickness);
+  set('worktop_side_overhang', parameters.worktopSideOverhang);
+  set('worktop_front_overhang', parameters.worktopFrontOverhang);
+  set('worktop_back_overhang', parameters.worktopBackOverhang);
+
+  set('joinery_style', parameters.joineryStyle);
+  set('dado_depth', parameters.dadoDepth);
+  set('custom_dado_depth', parameters.dadoDepth);
+  set('dado_fit_clearance', parameters.dadoFitClearance);
+
+  set('front_mount_style', parameters.frontMountStyle);
+  set('front_edge_reveal', parameters.frontEdgeReveal);
+  set('door_gap', parameters.doorGap);
+  set('drawer_gap', parameters.drawerGap);
+  set('shelf_style', parameters.shelfStyle);
+
+  set('drawer_joinery_style', parameters.drawerJoineryStyle);
+  set('drawer_bottom_joinery', parameters.drawerBottomStyle === 'captured' ? 'dado' : 'applied');
+  set('drawer_bottom_dado_depth', parameters.drawerBottomGrooveDepth);
+  set('drawer_divider_columns', parameters.drawerDividerCount);
+  set('drawer_divider_rows', parameters.drawerDividerRows);
+
+  set('front_facing_style', parameters.faceFrameStyle === 'full' ? 'face_frame' : 'none');
+  set('custom_face_frame_thickness', parameters.faceFrameThickness);
+  set('face_frame_side_stile_width', parameters.faceFrameStileWidth);
+  set('face_frame_top_rail_width', parameters.faceFrameRailWidth);
+  set('face_frame_center_stile_width', parameters.faceFrameCenterStileWidth);
+
+  set('drawer_mount', parameters.drawerMount);
+  set('metal_slide_clearance_per_side', parameters.metalSlideClearancePerSide);
+  set('metal_slide_length', parameters.metalSlideLength);
+  set('metal_slide_front_setback', parameters.metalSlideFrontSetback);
+  set('metal_slide_envelope_height', parameters.metalSlideEnvelopeHeight);
+  set('include_metal_slide_holes', parameters.includeMetalSlideHoles);
+  set('hardware_drilling_mode', parameters.hardwareDrillingMode);
+  set('metal_slide_cabinet_holes_x', [...parameters.metalSlideCabinetHolesX]);
+  set('metal_slide_drawer_holes_x', [...parameters.metalSlideDrawerHolesX]);
+  set('metal_slide_cabinet_hole_diameter', parameters.metalSlideCabinetHoleDiameter);
+  set('metal_slide_drawer_hole_diameter', parameters.metalSlideDrawerHoleDiameter);
+  set('metal_slide_cabinet_hole_z_from_drawer_bottom', parameters.metalSlideCabinetHoleZFromDrawerBottom);
+  set('metal_slide_drawer_hole_z_from_drawer_bottom', parameters.metalSlideDrawerHoleZFromDrawerBottom);
+
+  set('hinge_style', parameters.hingeStyle);
+  set('hinge_cup_diameter', parameters.hingeCupDiameter);
+  set('hinge_cup_depth', parameters.hingeCupDepth);
+  set('hinge_cup_center_from_door_edge', parameters.hingeCupCenterFromDoorEdge);
+  set('hinge_door_fixing_enabled', parameters.hingeDoorFixingEnabled);
+  set('hinge_door_fixing_hole_diameter', parameters.hingeDoorFixingHoleDiameter);
+  set('hinge_door_fixing_hole_spacing', parameters.hingeDoorFixingHoleSpacing);
+  set('hinge_plate_holes_enabled', parameters.hingePlateHolesEnabled);
+  set('hinge_plate_hole_diameter', parameters.hingePlateHoleDiameter);
+  set('hinge_plate_center_from_front', parameters.hingePlateCenterFromFront);
+  set('hinge_plate_hole_spacing', parameters.hingePlateHoleSpacing);
+
+  if (parameters.layoutMode === 'sections') {
+    set('cabinet_layout_mode', 'sections');
+    set('section_nodes', JSON.parse(JSON.stringify(parameters.sectionNodes)) as JsonValue);
+  }
+
+  return recomputeFamilyExpressions(family, next);
+}
+
 export function activeFamilyFieldCount(family: CabinetFamily, values: FamilyRecipeValues) {
   return familyFieldDefinitions(family)
     .filter(field => !familyFieldInactiveReason(family, field, values))
