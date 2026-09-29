@@ -368,62 +368,73 @@ clearances and BOM data—not merely UI values. **Met for Utility Cabinet in v0.
 
 # Phase 6 — Real CAD kernel and feature history
 
+**Status: implemented for the Utility Cabinet reference family in v0.6**
+
 Purpose: cross the line from analytical display solids into exact CAD.
 
 This is the pivotal architecture phase.
 
 ## 6.1 GeometryKernel abstraction
 
-- [ ] worker-based geometry service
-- [ ] asynchronous rebuild requests
-- [ ] cancellation/stale-result handling
-- [ ] tessellation cache
-- [ ] dirty-part rebuild support
-- [ ] error diagnostics surfaced in UI
+- [x] worker-based geometry service
+- [x] asynchronous rebuild requests
+- [x] cancellation/stale-result handling
+- [x] tessellation cache
+- [x] dirty-part rebuild support
+- [x] error diagnostics surfaced in UI
+
+The analytical cabinet generator remains the immediate interaction preview. A parameter
+edit invalidates the displayed exact result, then the worker replaces preview parts
+with the matching OpenCascade tessellation when the rebuild completes. A failed exact
+part remains usable through the preview path and reports a diagnostic instead of
+taking down the editor.
 
 ## 6.2 Replicad / OpenCascade proof of concept
 
-Start only with the Utility Cabinet:
+Utility Cabinet:
 
-- [ ] exact panel B-Rep bodies
-- [ ] toe-kick side profile
-- [ ] bottom dado
-- [ ] back rabbet
-- [ ] shelf line boring
-- [ ] STEP export
-- [ ] Three.js tessellation
-- [ ] face/edge selection
+- [x] exact panel B-Rep bodies
+- [x] toe-kick side profile
+- [x] bottom/shelf/divider dado subtraction from registered joinery features
+- [x] applied-back rabbet proof on cabinet sides
+- [x] shelf line boring
+- [x] STEP assembly export
+- [x] Three.js tessellation
+- [x] face/edge selection
 
 ## 6.3 Semantic topology
 
-- [ ] `part:carcass:left`
-- [ ] `face:carcass:left:inside`
-- [ ] `face:carcass:left:front`
-- [ ] `edge:carcass:left:front-top`
-- [ ] `feature:carcass:left:bottom-dado`
+- [x] stable part identity such as `carcass:left`
+- [x] `face:carcass:left:inside`
+- [x] `face:carcass:left:front`
+- [x] `edge:carcass:left:front-top`
+- [x] semantic feature IDs generated from cabinet operations
 
-Never persist raw kernel topology indices as user-facing identity.
+Raw OpenCascade face/edge indices are transient worker data only. User-facing
+selection stores domain IDs derived from part role and geometric orientation.
 
 ## 6.4 Cabinet feature vocabulary
 
-Implement first-class features:
+First-class feature graph:
 
-- [ ] panel blank
-- [ ] dado
-- [ ] rabbet
-- [ ] groove
-- [ ] pocket
-- [ ] hole
-- [ ] hole pattern
-- [ ] chamfer/bevel
-- [ ] edge treatment
-- [ ] hardware reference
-- [ ] assembly transform
+- [x] panel blank
+- [x] dado
+- [x] rabbet
+- [x] groove operation support
+- [x] pocket
+- [x] hole
+- [x] hole pattern
+- [ ] chamfer/bevel *(reserved in the feature type; geometry operation deferred)*
+- [ ] edge treatment *(reserved in the feature type; manufacturing behavior deferred)*
+- [x] hardware reference
+- [x] assembly transform
 
 ### Definition of done
 
 At least one complete cabinet family is generated as exact B-Rep geometry,
 selectable by semantic face/part identity, and exportable as STEP.
+**Met for the Utility Cabinet in v0.6, with analytical preview fallback during
+worker rebuilds and exact-kernel errors.**
 
 ---
 
@@ -828,4 +839,4 @@ being built.
 
 # Next task
 
-Start **v0.6 / Real CAD kernel and feature history** with the Utility Cabinet proof of concept: introduce a worker-based GeometryKernel abstraction, exact panel B-Rep bodies, machining features, tessellation back to Three.js, and STEP export while preserving semantic part/feature identity.
+Start **v0.7 / Direct CAD interaction** on top of the exact Utility kernel: expose direct semantic face/feature selection more visibly, add editable dimensions/handles and isolate/hide/measurement tools, and keep expensive B-Rep rebuilds in the worker behind responsive interaction previews.
