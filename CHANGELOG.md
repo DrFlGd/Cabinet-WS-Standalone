@@ -4,6 +4,38 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.13.0] - 2026-09-29
+
+### Added
+
+- Native family identity for all seven Cabinet Workshop families: Shop Cart, Utility Cabinet, Benchtop Drawers, Stackable Cabinet, Kitchen Cabinet, Standalone Drawer, and Equipment Stand.
+- Complete retained starter/example catalog with all 110 shipped legacy recipes resolved against their original family defaults.
+- Family + example selectors in the main editor, including grouped Kitchen recipe labels and per-family example counts.
+- Schema-v3 project fields for durable `family`, optional `starterId`, and retained `familyValues` recipe data alongside canonical Standalone parameters.
+- Native family adapter layer for Shop Cart, Utility, Benchtop, Stackable, and Kitchen over the existing semantic cabinet generator.
+- Stackable semantic interface/base parts.
+- Dedicated native Standalone Drawer generator with enclosure/outside/inside/modular-grid sizing, semantic box parts, captured-bottom machining intent, optional divider grids, decorative fronts, and slide references.
+- Dedicated native Equipment Stand generator with trays, cheeks/lips, upper bays, panel/structural/stretcher backs, skeletonized side cutouts, and French-cleat rails.
+- Cabinet Workshop import support for all seven numeric/string family identifiers.
+- Full-catalog regression coverage that builds all 110 examples as semantic documents and validates representative family construction.
+- Shared envelope support for compact Benchtop and Standalone Drawer dimensions below the previous Utility-only sanitizer minimums.
+
+### Changed
+
+- Application/package version advanced to 0.13.0.
+- Standalone project persistence advanced from schema v2 to schema v3; existing v1/v2 projects migrate as Utility documents.
+- Properties identify the active cabinet family instead of labeling every model as Utility.
+- Manual section layout is hidden for dedicated Standalone Drawer and Equipment Stand family generators.
+- Legacy starter recipes are retained as source data even when a family-only field does not yet have a redesigned native Properties control.
+- The roadmap marks all seven families and all 110 shipped examples ported.
+
+### Compatibility
+
+- Existing Standalone schema-v1/v2 projects remain loadable through migration to schema v3.
+- Legacy Cabinet Workshop family projects retain their resolved source recipe in `familyValues` instead of discarding unsupported presentation fields.
+- The exact OpenCascade, Design Health, BOM/shop-doc, manufacturing, and production-planning pipelines continue to consume native semantic parts/features; OpenSCAD is not restored as a runtime dependency.
+- This milestone provides family/example parity, not a wholesale recreation of the web application's 99–310-field family-specific UI. Shared native controls remain editable and additional family-specific property surfaces can be added incrementally.
+
 ## [0.12.0] - 2026-09-29
 
 ### Added

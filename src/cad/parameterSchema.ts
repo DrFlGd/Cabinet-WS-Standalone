@@ -89,9 +89,9 @@ const stockOptions = [
 ] as const;
 
 export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
-  { key: 'width', kind: 'dimension', label: 'Cabinet width', description: 'Outside cabinet width.', section: 'Envelope', min: 300, max: 2400, step: 1 },
-  { key: 'height', kind: 'dimension', label: 'Cabinet height', description: 'Outside cabinet height.', section: 'Envelope', min: 300, max: 3000, step: 1 },
-  { key: 'depth', kind: 'dimension', label: 'Cabinet depth', description: 'Outside cabinet depth.', section: 'Envelope', min: 200, max: 1200, step: 1 },
+  { key: 'width', kind: 'dimension', label: 'Envelope width', description: 'Outside family/model width.', section: 'Envelope', min: 40, max: 3000, step: 1 },
+  { key: 'height', kind: 'dimension', label: 'Envelope height', description: 'Outside family/model height.', section: 'Envelope', min: 30, max: 3000, step: 1 },
+  { key: 'depth', kind: 'dimension', label: 'Envelope depth', description: 'Outside family/model depth.', section: 'Envelope', min: 40, max: 1600, step: 1 },
 
   { key: 'carcassStock', kind: 'select', label: 'Carcass stock', description: 'Nominal or measured carcass sheet thickness.', section: 'Materials', options: stockOptions },
   { key: 'materialThickness', kind: 'dimension', label: 'Measured carcass', description: 'Used when carcass stock is Measured stock.', section: 'Materials', min: 6, max: 50, step: 0.01, visibleWhen: p => p.carcassStock === 'custom_mm' },
@@ -102,7 +102,7 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   { key: 'drawerFrontThickness', kind: 'dimension', label: 'Drawer front stock', description: 'Decorative drawer-front thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
   { key: 'doorThickness', kind: 'dimension', label: 'Door stock', description: 'Decorative door thickness.', section: 'Materials', min: 6, max: 40, step: 0.01 },
 
-  { key: 'cabinetContents', kind: 'select', label: 'Contents', description: 'Primary Utility Cabinet front layout.', section: 'Layout', visibleWhen: p => p.layoutMode === 'legacy', options: [
+  { key: 'cabinetContents', kind: 'select', label: 'Contents', description: 'Primary front layout for the active family adapter.', section: 'Layout', visibleWhen: p => p.layoutMode === 'legacy', options: [
     { value: 'drawers', label: 'Drawers' },
     { value: 'doors', label: 'Doors' },
     { value: 'combo', label: 'Drawers + doors' },

@@ -1,7 +1,10 @@
-import type { CabinetParameters } from '../cad/types';
+import type { CabinetFamily, CabinetParameters, FamilyRecipeValues } from '../cad/types';
 import type { DisplayUnits } from '../cad/units';
 
 export type EditorDocument = {
+  family: CabinetFamily;
+  starterId: string | null;
+  familyValues: FamilyRecipeValues;
   name: string;
   displayUnits: DisplayUnits;
   parameters: CabinetParameters;
@@ -26,6 +29,9 @@ const GROUP_WINDOW_MS = 750;
 
 export function cloneEditorDocument(document: EditorDocument): EditorDocument {
   return {
+    family: document.family,
+    starterId: document.starterId,
+    familyValues: JSON.parse(JSON.stringify(document.familyValues)) as FamilyRecipeValues,
     name: document.name,
     displayUnits: document.displayUnits,
     parameters: { ...document.parameters },

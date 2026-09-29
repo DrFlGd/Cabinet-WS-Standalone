@@ -3,6 +3,9 @@ import { DEFAULT_PARAMETERS } from '../cad/cabinetModel';
 import { createHistoryState, historyReducer, type EditorDocument } from './history';
 
 const initial: EditorDocument = {
+  family: 'utility',
+  starterId: 'default',
+  familyValues: {},
   name: 'Cabinet',
   displayUnits: 'mm',
   parameters: { ...DEFAULT_PARAMETERS },

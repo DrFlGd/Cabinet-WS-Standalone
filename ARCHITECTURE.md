@@ -270,6 +270,63 @@ A future completion of Phase 12 must generate actual compensated tool-center pat
 and bind them to an explicit verified machine/postprocessor profile before machine
 motion can be exported. Nominal DXF/SVG must never be treated as safe CNC motion.
 
+## v0.13 family-adapter and schema-v3 boundary
+
+v0.13 generalizes `CabinetDocument` identity from a Utility-only literal to seven
+explicit `CabinetFamily` values. Schema v3 persists three related but distinct
+surfaces:
+
+- `family` — durable family identity;
+- `starterId` — optional identity of the shipped example used to seed the design;
+- `familyValues` — the resolved legacy family recipe retained as JSON data;
+- `parameters` — the canonical native Standalone parameter model used by current
+  shared editing and geometry paths.
+
+The recipe and canonical parameter model are deliberately separate. A legacy family
+can contain settings that have no redesigned Standalone property control yet without
+losing provenance or silently discarding the source recipe. Native edits continue to
+change canonical parameters; family-specific controls can be added later without
+requiring another import from the web project.
+
+`familyCatalog.ts` resolves every shipped Cabinet Workshop starter against the
+original family field defaults and adapts that resolved recipe into canonical
+Standalone parameters. The imported catalog contains 110 starters across Shop Cart,
+Utility, Benchtop Drawers, Stackable Cabinet, Kitchen Cabinet, Standalone Drawer,
+and Equipment Stand.
+
+`buildFamilyCabinetDocument()` is the family dispatch boundary. Shop Cart, Utility,
+Benchtop, Stackable, and Kitchen intentionally reuse the mature semantic cabinet
+generator after family adaptation so they inherit the same exact B-Rep, section,
+hardware, documentation, manufacturing, and nesting pipelines. Stackable adds
+semantic stack-interface/base parts after shared construction.
+
+Standalone Drawer and Equipment Stand are not forced into a false carcass
+abstraction. They have dedicated semantic generators. Drawer parts still use stable
+drawer IDs and registered groove/drilling intent. Equipment stands generate stable
+side/base/top/back/tray/cleat identities and use exact extruded-profile holes for
+skeletonized side cutouts.
+
+Legacy Cabinet Workshop import maps both numeric and string family identifiers into
+the same dispatch boundary. Old Standalone schema-v1/v2 documents migrate to schema
+v3 as Utility documents. OpenSCAD is not called by any family adapter or generator;
+the old repository remains a source of recipes and regression expectations only.
+
+The widened canonical envelope sanitizer is intentional: compact Benchtop and
+Standalone Drawer examples can be smaller than the old Utility-only minimums. It
+does not change Utility defaults.
+
+This milestone is family/example parity, not a claim that every legacy settings
+widget has been reimplemented. The stable architecture remains:
+
+```text
+family recipe
+    -> family adapter
+    -> canonical semantic parameters / dedicated family generator
+    -> CabinetDocument / stable CadPart IDs
+    -> feature graph
+    -> exact OpenCascade + downstream shop/manufacturing/production layers
+```
+
 ## Three.js responsibilities
 
 Three.js remains responsible for:
