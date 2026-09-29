@@ -12,6 +12,7 @@ type ParameterValue = CabinetParameters[keyof CabinetParameters];
 
 type Props = {
   parameters: CabinetParameters;
+  familyLabel?: string;
   selected: CadPart | null;
   displayUnits: DisplayUnits;
   onChange: (key: keyof CabinetParameters, value: ParameterValue) => void;
@@ -23,6 +24,7 @@ type Props = {
 
 export default function PropertiesPanel({
   parameters,
+  familyLabel = 'Utility Cabinet',
   selected,
   displayUnits,
   onChange,
@@ -68,7 +70,7 @@ export default function PropertiesPanel({
     <aside className="panel properties-panel">
       <div className="panel-heading">
         <SlidersHorizontal size={17} />
-        <div><strong>Properties</strong><span>{selected ? selected.name : 'Utility Cabinet parameters'}</span></div>
+        <div><strong>Properties</strong><span>{selected ? selected.name : familyLabel + ' parameters'}</span></div>
       </div>
 
       <label className="property-search">
