@@ -4,7 +4,7 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
-## [Unreleased]
+## [0.14.1] - 2026-09-29
 
 ### Fixed
 
@@ -32,7 +32,7 @@ The project follows milestone versions while the standalone CAD architecture is 
 ### Compatibility
 
 - Project schema remains v3; existing v1/v2 migrations remain supported.
-- No named release or package-version change in this stabilization patch.
+- Application/package version advanced to 0.14.1; Windows release includes the portable EXE, ZIP and SHA-256 checksums.
 - Production-settings persistence, lockfile/CI hardening, and full geometry parity remain follow-on work.
 
 ## [0.14.0] - 2026-09-29

@@ -2,7 +2,7 @@
 
 This file describes current status and upcoming work. Historical releases and
 implementation details belong in [CHANGELOG.md](CHANGELOG.md) and
-[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.0.
+[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.1.
 
 ## Migration rules
 
@@ -33,7 +33,7 @@ implementation details belong in [CHANGELOG.md](CHANGELOG.md) and
 The v0.7 interaction work, v0.13 family/catalog port, and v0.14 native controls are
 already implemented. They are not upcoming milestones.
 
-## Stabilization work in this change (unreleased)
+## Stabilization completed in v0.14.1
 
 - [x] preserve unrelated native settings when family controls regenerate parameters
 - [x] preserve family-only recipe choices during synchronization/save/reopen

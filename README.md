@@ -4,7 +4,7 @@ A desktop cabinet-design application built with React, Electron, Three.js, and a
 worker-based Replicad/OpenCascade geometry kernel. Cabinet Workshop is the reference
 for migrated behavior; OpenSCAD is not a runtime dependency.
 
-The package version is **0.14.0**. Unreleased fixes are listed in [CHANGELOG.md](CHANGELOG.md).
+The package version is **0.14.1**. Release history is listed in [CHANGELOG.md](CHANGELOG.md).
 This is a development application: controls/catalog coverage does not imply that
 every legacy construction or machining option has verified native geometry parity.
 
@@ -115,7 +115,7 @@ items; the current `std-env` override addresses the known dependency-resolution 
 
 On Windows, `npm run desktop:dist` creates a portable x64 executable in `release/`.
 Its filename uses the version in `package.json`, for example
-`Cabinet-WS-Standalone-0.14.0-Windows-x64.exe`.
+`Cabinet-WS-Standalone-0.14.1-Windows-x64.exe`.
 
 The Build and Windows Package workflows run tests and production builds for pushes
 to `main` and pull requests. Windows Package also uploads the executable as the

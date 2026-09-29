@@ -1,5 +1,5 @@
 {
-  "version": "0.11.0",
-  "milestone": "Native manufacturing geometry and reviewed exports",
+  "version": "0.14.1",
+  "milestone": "Edit/save reliability, complete STEP exports and documentation cleanup",
   "requestedFrom": "main"
 }
