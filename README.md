@@ -21,9 +21,9 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 
 v0.6 introduces the first production-oriented geometry boundary. The Utility Cabinet document is converted into a cabinet-native feature graph and rebuilt asynchronously in a Web Worker using **Replicad + OpenCascade**. The existing analytical geometry remains the immediate interaction preview; once the matching exact rebuild completes, its tessellation replaces the preview in Three.js.
 
-The kernel currently creates exact B-Rep bodies for modeled Utility parts and applies registered profile/cutting features such as toe-kick side profiles, dado/pocket subtraction, an applied-back rabbet proof operation, and shelf/drilling patterns. Unchanged part tessellations are cached, edits identify dirty parts, stale worker rebuilds are discarded, and exact failures fall back per-part to preview geometry with diagnostics shown in Properties.
+The kernel currently creates exact B-Rep bodies for fabricated Utility cabinet parts and applies registered profile/cutting features such as toe-kick side profiles, dado/pocket subtraction, an applied-back rabbet proof operation, and shelf/drilling patterns. Unchanged part tessellations are cached, edits identify dirty parts, stale worker rebuilds are discarded, and exact failures fall back per-part to preview geometry with diagnostics shown in Properties.
 
-Exact topology is mapped back to cabinet-semantic identities rather than exposing raw OpenCascade indexes. Clicking exact geometry selects a semantic face; **Shift-click** targets semantic edges. IDs follow forms such as `face:carcass:left:inside` and `edge:carcass:left:front-top`.
+Purchased slide/hinge envelopes remain semantic preview references in v0.6; they are not promoted to exact manufacturer B-Reps. Exact topology is mapped back to cabinet-semantic identities rather than exposing raw OpenCascade indexes. Clicking exact geometry selects a semantic face; **Shift-click** targets semantic edges. IDs follow forms such as `face:carcass:left:inside` and `edge:carcass:left:front-top`.
 
 The toolbar now includes **STEP**, which exports the exact cabinet assembly in millimeters. In Electron this opens a native Save dialog. STEP generation occurs inside the geometry worker; the renderer receives only the resulting bytes.
 
