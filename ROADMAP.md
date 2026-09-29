@@ -629,47 +629,64 @@ reference family in v0.10.**
 
 # Phase 11 — Manufacturing geometry
 
+**Status: implemented for the Utility Cabinet reference family in v0.11**
+
 Purpose: replace web operation SVG generation with feature-driven manufacturing
 output.
 
 ## 11.1 Operation model
 
-Each part exposes registered operations:
+Each fabricated part exposes normalized operations:
 
-- [ ] CUT profile
-- [ ] POCKET
-- [ ] DADO/GROOVE
-- [ ] DRILL
-- [ ] ENGRAVE
-- [ ] EDGE treatment
+- [x] CUT profile
+- [x] POCKET
+- [x] DADO/GROOVE
+- [x] DRILL
+- [x] ENGRAVE
+- [x] EDGE treatment
+
+The operation model is derived from stable semantic parts and the registered feature
+graph. Each operation retains its source feature ID where applicable, stable part
+number, machining face, depth/through state, and part-local 2D geometry. ENGRAVE
+provides part-identification/registration intent; EDGE records semantic exposed-edge
+requirements without inventing edge-band stock or CAM settings.
 
 ## 11.2 2D exports
 
-- [ ] per-part DXF
-- [ ] operation-layer DXF
-- [ ] SVG preview
-- [ ] drilling maps
-- [ ] machining-face metadata
-- [ ] true scale/unit metadata
+- [x] per-part DXF
+- [x] operation-layer DXF
+- [x] SVG preview
+- [x] drilling maps
+- [x] machining-face metadata
+- [x] true scale/unit metadata
+
+DXF uses millimeter `$INSUNITS=4`. SVG uses millimeter width/height and scale 1.
+Drilling maps are CSV with semantic part/operation IDs, coordinates, diameter, face,
+depth, and through state.
 
 ## 11.3 Manufacturing review
 
-Port the useful UI concepts from web `ManufacturingExport.tsx`:
+- [x] material summary
+- [x] part dimensions
+- [x] operation preview
+- [x] warnings/errors
+- [x] manufacturing readiness gate
+- [x] reviewed export package
 
-- [ ] material summary
-- [ ] part dimensions
-- [ ] operation preview
-- [ ] warnings/errors
-- [ ] manufacturing readiness gate
-- [ ] reviewed export package
+Manufacturing review is integrated into Shop Docs. It reuses the Phase 10 material
+and part model, displays registered operation layers, consumes Phase 9 Design Health,
+blocks package export on errors, and requires explicit review of the current
+manufacturing signature before producing a ZIP. The package contains manifests,
+reports, per-part DXF/SVG/drilling/metadata, and per-operation-layer DXF/SVG.
 
-The old browser SVGs were explicitly not CNC toolpaths. Preserve that distinction
-until a real CAM/postprocessor layer exists.
+These files are manufacturing geometry, not CNC toolpaths. Nesting, kerf/tool
+diameter, machine profiles, postprocessors, and G-code remain Phase 12.
 
 ### Definition of done
 
 A user can inspect and export registered manufacturing geometry directly from CAD
-features with no OpenSCAD worker in the production path.
+features with no OpenSCAD worker or report-text parsing in the production path.
+**Met for the Utility Cabinet reference family in v0.11.**
 
 ---
 
