@@ -116,7 +116,7 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
     features.push({
       id: `feature:${part.id}:${feature.kind}:${index + 1}`,
       partId: part.id,
-      kind: feature.kind === 'slot' ? 'pocket' : feature.kind,
+      kind: feature.kind === 'slot' ? 'pocket' : feature.kind === 'drill' ? 'hole' : feature.kind,
       label: renderFeatureLabel(feature.kind),
       semanticRole: feature.kind,
       position: { ...feature.position },
