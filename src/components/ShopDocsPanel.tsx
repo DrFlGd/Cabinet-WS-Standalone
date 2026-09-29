@@ -135,7 +135,7 @@ export default function ShopDocsPanel({
         <div className="assembly-step-list">{docs.assemblySteps.map(step => <article key={step.id}>
           <div className="assembly-step-number">{step.order}</div>
           <div><strong>{step.title}</strong><p>{step.instruction}</p><div className="assembly-callouts">{step.partNumbers.map(number => <span key={number}>{number}</span>)}</div></div>
-          <button type="button" onClick={() => { onSelectParts(step.partIds); onExplodeAssembly(); }}>Highlight step</button>
+          <button type="button" onClick={() => { onSelectParts([...step.partIds, ...step.hardwareIds]); onExplodeAssembly(); }}>Highlight step</button>
         </article>)}</div>
         <section className="assembly-hardware-checklist"><h3>Hardware checklist</h3>{docs.hardware.map(row => <label key={row.key}><input type="checkbox" /> <span><strong>{row.quantity} × {row.partNumber}</strong>{row.label} · {row.manufacturer} {row.model}</span></label>)}</section>
       </div>}
