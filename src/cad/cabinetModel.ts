@@ -467,7 +467,12 @@ function addSectionLayoutParts(
     if (node[2] !== 'leaf') continue;
 
     if (node[5] === 'drawers' && node[6] > 0) {
-      const frontRect = faceFrameOpening(p, rect);
+      const frontRect = faceFrameOpening(p, {
+        x: rect.x,
+        z: rect.z,
+        width: rect.w,
+        height: rect.h,
+      });
       const weights = Array.from({ length: node[6] }, (_, index) =>
         node[7] === 'graduated'
           ? 1 + index * node[8]
