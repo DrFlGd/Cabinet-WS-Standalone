@@ -227,13 +227,14 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       const id = hit?.object.userData.partId as string | undefined;
       latest.current.onSelect(id ? latest.current.cadDocument.parts.find(part => part.id === id) ?? null : null);
 
-      if (!id || hit?.faceIndex === undefined) {
+      const faceIndex = hit?.faceIndex;
+      if (!id || faceIndex == null) {
         latest.current.onTopologySelect?.(null);
         return;
       }
 
       const groups = hit.object.userData.kernelFaceGroups as KernelFaceGroup[] | undefined;
-      const indexOffset = hit.faceIndex * 3;
+      const indexOffset = faceIndex * 3;
       const semanticFace = groups?.find(group => indexOffset >= group.start && indexOffset < group.start + group.count);
       latest.current.onTopologySelect?.(
         semanticFace
