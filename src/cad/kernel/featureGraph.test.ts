@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildCabinetDocument } from '../cabinetModel';
 import type { CadPart } from '../types';
@@ -39,6 +40,7 @@ describe('v0.6 exact CAD feature graph', () => {
       const features = graph.partFeatures[id];
       expect(features.some(feature => feature.semanticRole === 'toe-kick'), id).toBe(true);
       expect(features.some(feature => feature.kind === 'dado'), id).toBe(true);
+      expect(features.some(feature => feature.id === `feature:${id}:bottom-dado`), id).toBe(true);
       expect(features.some(feature => feature.semanticRole === 'line-boring'), id).toBe(true);
       expect(features.some(feature => feature.kind === 'rabbet' && feature.semanticRole === 'back-rabbet'), id).toBe(true);
     }
@@ -57,6 +59,19 @@ describe('v0.6 exact CAD feature graph', () => {
     expect(hardware).toBeTruthy();
     expect(graph.partFeatures[hardware!.id].some(feature => feature.kind === 'hardware-reference')).toBe(true);
     expect(graph.partFeatures[hardware!.id].some(feature => feature.kind === 'panel-blank')).toBe(false);
+  });
+
+  it('maps Replicad mesh groups using OpenCascade shape hashes, not array indices', () => {
+    const source = readFileSync('src/cad/kernel/geometry.worker.ts', 'utf8');
+    expect(source).toContain('Number(face.hashCode)');
+    expect(source).toContain('Number(edge.hashCode)');
+    expect(source).not.toContain('faces.map((face, rawFaceId)');
+    expect(source).not.toContain('edges.map((edge, rawEdgeId)');
+  });
+
+  it('does not promote simplified purchased-hardware envelopes to exact B-Rep bodies', () => {
+    const source = readFileSync('src/cad/kernel/types.ts', 'utf8');
+    expect(source).toContain("part.category !== 'hardware'");
   });
 });
 
@@ -77,6 +92,7 @@ describe('v0.6 semantic topology', () => {
     expect(classifyFaceRole(left, [0, 300, 450], [-1, 0, 0])).toBe('outside');
     expect(classifyFaceRole(left, [9.5, 0, 450], [0, -1, 0])).toBe('front');
     expect(classifyFaceRole(left, [9.5, 300, 900], [0, 0, 1])).toBe('top');
+    expect(classifyFaceRole(left, [13, 300, 450], [-1, 0, 0])).toMatch(/^machining-x-negative-/);
 
     const face = semanticFaceId(left, 37, [19, 300, 450], [1, 0, 0]);
     expect(face.id).toBe('face:carcass:left:inside');
