@@ -20,6 +20,9 @@ import type {
 } from './types';
 import { isKernelEligiblePart } from './types';
 
+type ReplicadFaceGroup = { start: number; count: number; faceId: number };
+type ReplicadEdgeGroup = { start: number; count: number; edgeId: number };
+
 type WorkerScope = {
   onmessage: ((event: MessageEvent<KernelRequest>) => void) | null;
   postMessage(message: KernelResponse, transfer?: Transferable[]): void;
@@ -193,13 +196,13 @@ function tessellatePart(
       vertices: faces.vertices,
       normals: faces.normals,
       triangles: faces.triangles,
-      faceGroups: faces.faceGroups.map(group => ({
+      faceGroups: faces.faceGroups.map((group: ReplicadFaceGroup) => ({
         ...group,
         rawFaceId: group.faceId,
         semanticId: faceMap.get(group.faceId) ?? `face:${part.id}:kernel-${group.faceId}`,
       })),
       lines: edges.lines,
-      edgeGroups: edges.edgeGroups.map(group => ({
+      edgeGroups: edges.edgeGroups.map((group: ReplicadEdgeGroup) => ({
         ...group,
         rawEdgeId: group.edgeId,
         semanticId: edgeMap.get(group.edgeId) ?? `edge:${part.id}:kernel-${group.edgeId}`,
