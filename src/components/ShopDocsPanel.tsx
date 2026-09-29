@@ -6,6 +6,7 @@ import type { ShopDocumentation } from '../cad/shopDocs';
 import type { CabinetDocument } from '../cad/types';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import SelectControl from './SelectControl';
+import ProductionPlanningPanel from './ProductionPlanningPanel';
 
 type Props = {
   document: CabinetDocument;
@@ -25,9 +26,10 @@ type Props = {
   onExportManufacturingPart: (partId: string, kind: 'dxf' | 'svg' | 'drilling' | 'metadata') => void;
   onExportManufacturingLayer: (partId: string, kind: ManufacturingOperationKind) => void;
   onExportManufacturingPackage: (reviewedAt: string) => void;
+  onExportProductionText: (content: string, suggestedName: string, kind: 'csv' | 'html' | 'dxf' | 'svg' | 'json') => void;
 };
 
-type Tab = 'bom' | 'assembly' | 'manufacturing';
+type Tab = 'bom' | 'assembly' | 'manufacturing' | 'production';
 type LayerChoice = 'all' | ManufacturingOperationKind;
 
 const layerChoices: LayerChoice[] = ['all', 'CUT', 'POCKET', 'DADO_GROOVE', 'DRILL', 'ENGRAVE', 'EDGE'];
@@ -50,6 +52,7 @@ export default function ShopDocsPanel({
   onExportManufacturingPart,
   onExportManufacturingLayer,
   onExportManufacturingPackage,
+  onExportProductionText,
 }: Props) {
   const [tab, setTab] = useState<Tab>('bom');
   const [query, setQuery] = useState('');
@@ -96,7 +99,7 @@ export default function ShopDocsPanel({
     <section className="shop-docs-dialog" role="dialog" aria-modal="true" aria-label="Shop documentation">
       <header className="shop-docs-header">
         <ClipboardList size={18} />
-        <div><strong>Shop Documentation</strong><span>{document.name} · Phase 11 semantic manufacturing</span></div>
+        <div><strong>Shop Documentation</strong><span>{document.name} · Phase 12 production planning</span></div>
         <div className={'shop-readiness ' + manufacturing.readiness}>{manufacturing.readiness}</div>
         <button type="button" onClick={onClose} aria-label="Close shop documentation"><X size={17} /></button>
       </header>
@@ -112,6 +115,7 @@ export default function ShopDocsPanel({
         <button type="button" className={tab === 'bom' ? 'active' : ''} onClick={() => setTab('bom')}>BOM / Cut List</button>
         <button type="button" className={tab === 'assembly' ? 'active' : ''} onClick={() => setTab('assembly')}>Assembly</button>
         <button type="button" className={tab === 'manufacturing' ? 'active' : ''} onClick={() => setTab('manufacturing')}>Manufacturing</button>
+        <button type="button" className={tab === 'production' ? 'active' : ''} onClick={() => setTab('production')}>Production</button>
       </nav>
 
       {tab === 'bom' && <div className="shop-docs-body bom-view">
@@ -254,6 +258,16 @@ export default function ShopDocsPanel({
             <button type="button" className="primary" disabled={packageBlocked || !reviewed} onClick={() => onExportManufacturingPackage(new Date().toISOString())}><PackageCheck size={13} /> Export reviewed ZIP</button>
           </div>
         </section>
+      </div>}
+
+      {tab === 'production' && <div className="shop-docs-body">
+        <ProductionPlanningPanel
+          docs={docs}
+          manufacturing={manufacturing}
+          units={units}
+          onSelectPart={onSelectPart}
+          onExportText={onExportProductionText}
+        />
       </div>}
     </section>
   </div>;

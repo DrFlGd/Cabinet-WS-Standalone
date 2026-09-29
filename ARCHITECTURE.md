@@ -234,6 +234,42 @@ speeds, nesting, work offset, machine profile, postprocessor, or G-code generati
 Those concerns belong to Phase 12 and must consume these registered operations
 rather than reverse-engineer them from exported graphics.
 
+## v0.12 production-planning boundary
+
+Phase 12 production planning consumes the Phase 11 nominal manufacturing model; it
+does not modify or replace nominal part geometry. Sheet stock, nesting settings,
+remnants, tool assumptions, and machine/postprocessor contracts are downstream
+manufacturing configuration.
+
+The current planner groups compatible material/thickness parts and uses a
+deterministic free-rectangle heuristic. Grain direction is translated from the
+semantic BOM into each part's Phase 11 U/V machining plane. A 90-degree placement is
+allowed only when user rotation settings and stock/part grain constraints permit it.
+
+Every placement carries stable `partId`, Phase 10 `partNumber`, source
+manufacturing operation IDs, sheet ID, X/Y translation, and 0/90-degree rotation.
+Sheet DXF/SVG is produced by transforming Phase 11 operation geometry through that
+placement. Registration JSON preserves the same mapping so sheet output never needs
+to infer identity from filenames or drawing order.
+
+Inter-part nesting clearance is the maximum of configured spacing, kerf allowance,
+and primary tool diameter. This is a stock-planning safety envelope, not cutter
+compensation. Real tool-center compensation remains a separate downstream concern.
+
+Remnants are explicit user-entered stock pieces. The software does not silently
+invent available remnants. Full-sheet quantities may be finite or unlimited for
+planning.
+
+The code now defines tool-library, machine-profile, postprocessor, tool-assignment,
+and compensation-intent records. `buildToolpathPlan()` registers operations against
+nested placements and transforms nominal geometry into sheet coordinates, but the
+bundled postprocessor has `emitsMachineMotion: false` and `canPostprocess: false`.
+There is deliberately no G-code generator yet.
+
+A future completion of Phase 12 must generate actual compensated tool-center paths
+and bind them to an explicit verified machine/postprocessor profile before machine
+motion can be exported. Nominal DXF/SVG must never be treated as safe CNC motion.
+
 ## Three.js responsibilities
 
 Three.js remains responsible for:
@@ -249,7 +285,8 @@ It is not responsible for manufacturing truth or boolean geometry.
 
 ## Next architectural layer
 
-Phase 12 should consume the Phase 11 operation model for sheet stock, grain-aware
-nesting, rotation constraints, kerf/tool diameter, remnants, and machine/postprocessor
-profiles. Toolpaths must remain downstream of explicit machine/tool configuration;
-the project should not infer CNC motion from Three.js meshes or generic DXF alone.
+Complete Phase 12 by adding compensated tool-center path generation and at least one
+explicit verified machine/postprocessor implementation. G-code/post output should
+remain unavailable until all operations being posted are supported by the selected
+machine/tool profile. After that production workflow is strong, Phase 13 can expand
+the cabinet/furniture modeling surface.

@@ -7,7 +7,7 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with Manual Layout, collapsible Hardware/Parts drawers, realtime 3D viewport, searchable Properties panel, and toolbar.
-- Utility Cabinet v0.11 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, Design Health/fit solving, shop documentation, and feature-driven manufacturing geometry.
+- Utility Cabinet v0.12 model with bounded sections, first-class hardware, exact OpenCascade/Replicad B-Rep generation, direct semantic editing, Design Health/fit solving, shop documentation, feature-driven manufacturing geometry, and grain-aware sheet production planning.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, Ctrl-click multi-selection, semantic distance/face/angle measurements, movable shelves/section dividers, contextual part actions, and editable cabinet dimensions.
 - Hide/show/isolate parts, exploded view, clipping, shaded/edge/wireframe display modes, perspective/orthographic cameras, iso/front/right/top views, persistent shelf handles, and 3D section-divider handles.
@@ -15,7 +15,25 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Millimeter or inch display with millimeter-native geometry and precision-preserving conversion.
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts, including one-step undo for applied fit-solver results.
-- Exact STEP assembly export plus Shop Docs cut-list/assembly reports and Phase 11 DXF/SVG/drilling manufacturing exports, including reviewed ZIP packages.
+- Exact STEP assembly export plus Shop Docs cut-list/assembly reports, Phase 11 DXF/SVG/drilling manufacturing exports, and Phase 12 sheet-nesting/registration outputs.
+
+## v0.12 Sheet nesting and production planning
+
+v0.12 adds the first Phase 12 production-planning layer downstream of the Phase 11 manufacturing model. The new **Production** tab in Shop Docs defines sheet stock by material/thickness, editable sheet dimensions, grain direction, sheet margin, optional stock quantity, and explicitly entered remnants.
+
+The nesting engine uses a deterministic largest-first free-rectangle heuristic. It groups parts by compatible material/thickness, preserves semantic part IDs and Phase 10 part numbers, honors grain-required orientation, optionally permits 90° rotation when grain allows it, prefers remnants when requested, opens additional sheets when required, and reserves a clearance equal to the largest configured part spacing, kerf allowance, or primary tool diameter. The result is reproducible but is not presented as a globally optimal nesting solver.
+
+Every placement retains its source `partId`, stable `partNumber`, sheet ID, X/Y placement, rotation, grain relationship, and all source Phase 11 manufacturing operation IDs. Sheet-level SVG/DXF transforms the registered manufacturing operations into the nested sheet coordinate system and adds readable part-number labels. Registration JSON provides the trace:
+
+```text
+Cabinet part -> BOM part number -> manufacturing operation -> sheet placement
+```
+
+Stock remnants are never invented automatically. Users add available remnants explicitly; the planner can then consume them before full sheets. Default full-sheet dimensions are editable planning defaults and are not persisted into the cabinet project in this slice.
+
+v0.12 also introduces typed tool-library, machine-profile, postprocessor, tool-assignment, and compensation-intent contracts. Toolpath planning registers downstream tool and inside/outside/center compensation intent against nested semantic operations, but the bundled postprocessor deliberately has `emitsMachineMotion: false`.
+
+**No G-code is emitted in v0.12.** Actual compensated path generation plus a verified machine/postprocessor implementation remains the unfinished final Phase 12 step. This avoids presenting nominal DXF geometry as safe machine motion.
 
 ## v0.11 Manufacturing geometry
 
@@ -136,7 +154,7 @@ CabinetDocument
   -> OpenCascade / Replicad B-Rep bodies
   -> semantic topology + tessellation cache
   -> Three.js viewport
-  -> STEP + feature-driven DXF/SVG/drilling now / nesting and CNC in Phase 12
+  -> STEP + feature-driven DXF/SVG/drilling + sheet nesting now / verified postprocessed CNC motion later in Phase 12
 ```
 
 The editor talks in terms of persistent cabinet parts rather than Three.js mesh UUIDs, so the solid generator can be replaced without rewriting selection, the model tree, saved documents, or property editing. See [ARCHITECTURE.md](ARCHITECTURE.md).
@@ -208,7 +226,7 @@ npm run desktop:dist
 The packaged application is written to `release/` with a name similar to:
 
 ```text
-Cabinet-WS-Standalone-0.11.0-Windows-x64.exe
+Cabinet-WS-Standalone-0.12.0-Windows-x64.exe
 ```
 
 The executable is currently unsigned, so Windows SmartScreen may identify it as an unknown publisher during prototype development.
@@ -232,18 +250,18 @@ This is useful for testing development builds without setting up a local Windows
 
 Named releases are published by `.github/workflows/release.yml`. The workflow supports explicit `v*` tags and a `release-request.json` file on `main`.
 
-The requested version must exactly match `package.json`. For example, to publish `0.11.0`:
+The requested version must exactly match `package.json`. For example, to publish `0.12.0`:
 
-1. Set `"version": "0.11.0"` in `package.json` and push that change.
-2. Set `"version": "0.11.0"` in `release-request.json` and push it to `main`.
-3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.11.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
+1. Set `"version": "0.12.0"` in `package.json` and push that change.
+2. Set `"version": "0.12.0"` in `release-request.json` and push it to `main`.
+3. The **Publish Windows Release** workflow reruns tests, builds the Windows executable, creates the `v0.12.0` tag/release, and attaches the executable, ZIP, checksums, and generated release notes.
 
-An explicit matching `v0.11.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
+An explicit matching `v0.12.0` tag remains supported as an alternative. If the tag/request and `package.json` disagree, the workflow fails instead of publishing a mislabeled build.
 
 The release assets are:
 
-- `Cabinet-WS-Standalone-0.11.0-Windows-x64.exe`
-- `Cabinet-WS-Standalone-0.11.0-Windows-x64.zip`
+- `Cabinet-WS-Standalone-0.12.0-Windows-x64.exe`
+- `Cabinet-WS-Standalone-0.12.0-Windows-x64.zip`
 - `SHA256SUMS.txt`
 
 ## Build verification
@@ -254,7 +272,7 @@ The normal build workflow and Windows packaging workflow remain in the repositor
 
 ## Recommended next milestones
 
-1. Build Phase 12 sheet-stock definitions, grain-aware nesting, kerf/tool rules, machine profiles, and postprocessor abstraction.
+1. Complete the remaining Phase 12 CNC step with compensated path generation and a verified explicit machine/postprocessor profile before enabling G-code.
 2. Port the remaining six cabinet families using the Utility family as the reference implementation.
 3. Extend the hardware catalog with explicit manufacturer-verified face-frame hinge/mounting metadata.
 4. Add deterministic dependency installs, packaged-app smoke tests, error boundaries, and signed desktop packaging.

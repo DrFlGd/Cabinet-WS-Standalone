@@ -4,6 +4,37 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.12.0] - 2026-09-29
+
+### Added
+
+- Production tab in Shop Docs for Phase 12 sheet nesting and production planning.
+- Material/thickness-specific sheet-stock definitions with editable dimensions, grain axis, margins, optional quantity limits, and explicit user-entered remnants.
+- Deterministic largest-first free-rectangle nesting with multi-sheet allocation.
+- Grain-aware 0°/90° part orientation and optional rotation control.
+- Nesting clearance derived from the maximum configured part spacing, kerf allowance, or primary tool diameter.
+- Remnant-first planning mode without inventing remnant availability.
+- Stable nested-placement identity carrying semantic part ID, shop part number, sheet ID, X/Y transform, rotation, grain relationship, and Phase 11 operation IDs.
+- Sheet-level true-scale millimeter SVG and DXF with transformed manufacturing operations and stable part-number labels.
+- Sheet registration JSON linking nested geometry back to source manufacturing features/operations.
+- Compact production-plan JSON with stock definitions, sheet utilization, placement transforms, and unplaced-part reasons.
+- Typed tool-library, machine-profile, postprocessor, tool-assignment, and compensation-intent contracts.
+- Planning-only toolpath registration after sheet placement, including inside/outside/center compensation intent.
+- Regression coverage for grain constraints, remnant preference, multi-sheet packing, spacing/kerf/tool clearance, sheet export registration, and the no-G-code architecture boundary.
+
+### Changed
+
+- Application/package version advanced to 0.12.0.
+- The roadmap marks the Phase 12 production-planning baseline complete while leaving verified CNC post output explicitly unfinished.
+- Shop Docs now includes BOM/Cut List, Assembly, Manufacturing, and Production views.
+
+### Compatibility
+
+- No saved-project schema change. Stock/nesting/tool/machine planning configuration remains editor state in this slice.
+- Existing schema-v2 projects can generate a production plan from their Phase 11 manufacturing model after normal load/migration.
+- The nesting heuristic is deterministic but not claimed globally optimal.
+- No G-code is emitted. Phase 11 geometry remains nominal, and compensated tool-center paths plus a verified machine/postprocessor are still required.
+
 ## [0.11.0] - 2026-09-29
 
 ### Added
