@@ -315,3 +315,39 @@ export function buildCutListReportHtml(document: CabinetDocument, docs: ShopDocu
   const hardwareRows = docs.hardware.map(row => `<tr><td>${esc(row.partNumber)}</td><td>${row.quantity}</td><td>${esc(row.label)}</td><td>${esc(row.manufacturer)}</td><td>${esc(row.model)}</td><td>${esc(row.verificationStatus)}</td></tr>`).join('');
 
   return printableHtml(`${document.name} — BOM & cut list`, `<h1>${esc(document.name)} · BOM & cut list</h1>
+<p class="meta">Cabinet WS Standalone v0.10 · semantic CAD report · display units ${esc(unitLabel(units))}. All internal manufacturing dimensions remain millimeters.</p>
+<div class="summary"><div><strong>${docs.bom.length}</strong><span>fabricated parts</span></div><div><strong>${docs.hardware.reduce((sum, row) => sum + row.quantity, 0)}</strong><span>purchased hardware units</span></div><div><strong>${docs.operationCount}</strong><span>registered machining features</span></div><div><strong>${esc(docs.manufacturingReadiness)}</strong><span>manufacturing readiness</span></div></div>
+<h2>Material grouping</h2><table><thead><tr><th>Material</th><th>Thickness</th><th>Parts</th><th>Blank area</th><th>Part numbers</th></tr></thead><tbody>${materialRows}</tbody></table>
+<h2>Fabricated part cut list</h2><p class="note">Finished sizes are semantic body envelopes. Blank sizes come from registered panel-blank features. Profiled/cut parts may share the same rectangular envelope while machining/profile operations define the finished shape.</p>
+<table><thead><tr><th>Part</th><th>Name</th><th>Material</th><th>Finished L × W × T</th><th>Blank L × W × T</th><th>Grain axis</th><th>Edge band</th><th>Machining summary</th></tr></thead><tbody>${partRows}</tbody></table>
+<h2>Purchased hardware</h2><table><thead><tr><th>Part</th><th>Qty</th><th>Hardware</th><th>Manufacturer</th><th>Model</th><th>Verification</th></tr></thead><tbody>${hardwareRows || '<tr><td colspan="6">No purchased hardware instances are configured.</td></tr>'}</tbody></table>
+<h2>Manufacturing status</h2><p>Design Health: <strong>${esc(docs.designHealthStatus)}</strong> · readiness: <strong>${esc(docs.manufacturingReadiness)}</strong>. This report summarizes manufacturing intent; Phase 11 provides operation-layer DXF/SVG and drilling-map geometry.</p>`);
+}
+
+export function buildAssemblyPacketHtml(document: CabinetDocument, docs: ShopDocumentation, units: DisplayUnits) {
+  const stepHtml = docs.assemblySteps.map(step => `<section class="assembly-step"><h3>${step.order}. ${esc(step.title)}</h3><p>${esc(step.instruction)}</p><p class="callouts">${step.partNumbers.map(number => `<span>${esc(number)}</span>`).join(' ') || '<span>hardware-only</span>'}</p></section>`).join('');
+  const hardwareRows = docs.hardware.map(row => `<tr><td>□</td><td>${esc(row.partNumber)}</td><td>${row.quantity}</td><td>${esc(row.label)}</td><td>${esc(row.manufacturer)} ${esc(row.model)}</td><td>${esc(row.notes.join(' '))}</td></tr>`).join('');
+  return printableHtml(`${document.name} — assembly packet`, `<h1>${esc(document.name)} · assembly packet</h1>
+<p class="meta">Cabinet WS Standalone v0.10 · semantic assembly documentation · ${new Date().toISOString().slice(0, 10)} · display units ${esc(unitLabel(units))}</p>
+<p>Cabinet envelope: ${esc(formatDimension(document.parameters.width, units))} × ${esc(formatDimension(document.parameters.height, units))} × ${esc(formatDimension(document.parameters.depth, units))} ${esc(unitLabel(units))} (W × H × D).</p>
+<h2>Exploded assembly guide</h2>${explodedAssemblySvg(document, docs)}<p class="note">Schematic exploded guide for assembly sequencing, not a dimensioned machining drawing. Callouts match stable Phase 10 BOM part numbers.</p>
+<h2>Assembly order</h2>${stepHtml}
+<h2>Hardware checklist</h2><table><thead><tr><th>Check</th><th>Part</th><th>Qty</th><th>Hardware</th><th>Specification</th><th>Notes</th></tr></thead><tbody>${hardwareRows || '<tr><td colspan="6">No purchased hardware instances are configured.</td></tr>'}</tbody></table>
+<h2>Final verification</h2><ol><li>Confirm all labeled fabricated parts match the BOM and stock thickness.</li><li>Complete registered machining before final assembly; review Design Health until manufacturing readiness is acceptable.</li><li>Dry-fit carcass and verify square before permanent fastening.</li><li>Install hardware using manufacturer fastening requirements when the catalog profile does not encode a complete fastening specification.</li><li>Adjust fronts, slides, hinges, shelves, and worktop only after the structural cabinet is square.</li></ol>
+<p>Design Health: <strong>${esc(docs.designHealthStatus)}</strong> · manufacturing readiness: <strong>${esc(docs.manufacturingReadiness)}</strong>.</p>`);
+}
+
+function panelDimensions(dimensions: PartDimensions, thicknessAxis: 'x' | 'y' | 'z') {
+  const plane = axes.filter(axis => axis !== thicknessAxis).map(axis => dimensions[axis]).sort((a, b) => b - a);
+  return { length: plane[0], width: plane[1], thickness: dimensions[thicknessAxis] };
+}
+
+function explodedAssemblySvg(document: CabinetDocument, docs: ShopDocumentation) {
+  const bomById = new Map(docs.bom.map(row => [row.partId, row]));
+  const parts = document.parts.filter(part => part.category !== 'hardware').slice(0, 80);
+  if (!parts.length) return '<p>No fabricated parts are available for an exploded guide.</p>';
+  const center = { x: document.parameters.width / 2, y: document.parameters.depth / 2, z: document.parameters.height / 2 };
+  const shapes = parts.map((part, index) => {
+    const factor = explosionFactor(part, index);
+    const partCenter = { x: part.position.x + part.size.x / 2, y: part.position.y + part.size.y / 2, z: part.position.z + part.size.z / 2 };
+    const direction = normalizeVec({ x: partCenter.x - center.x, y: partCenter.y - center.y, z: partCenter.z - center.z });
