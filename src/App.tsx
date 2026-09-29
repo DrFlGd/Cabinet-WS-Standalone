@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
-import { buildCabinetDocument, DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
+import { DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
+import { buildFamilyCabinetDocument } from './cad/familyModel';
+import { FAMILY_DEFINITIONS, familyDefinition, familyStarter, familyStarters } from './cad/familyCatalog';
 import CadViewport, {
   type CadViewportHandle,
   type ViewportDisplayMode,
@@ -35,8 +37,8 @@ import {
 import { hardwareDefinition } from './cad/hardwareCatalog';
 import { useGeometryKernel } from './cad/kernel/useGeometryKernel';
 import type { KernelSelection } from './cad/kernel/types';
-import { UTILITY_STARTERS, utilityStarter } from './cad/utilityStarters';
-import type { CabinetDocument, CabinetParameters, CadPart, SectionNode } from './cad/types';
+import { utilityStarter } from './cad/utilityStarters';
+import type { CabinetDocument, CabinetFamily, CabinetParameters, CadPart, SectionNode } from './cad/types';
 import HardwareDrawer from './components/HardwareDrawer';
 import PropertiesPanel from './components/PropertiesPanel';
 import SectionLayoutPanel from './components/SectionLayoutPanel';
@@ -54,19 +56,29 @@ import { useDocumentHistory } from './editor/useDocumentHistory';
 
 type ParameterValue = CabinetParameters[keyof CabinetParameters];
 
-const defaultStarter = utilityStarter('default');
+const defaultStarter = familyStarter('utility', 'default');
 const INITIAL_EDITOR: EditorDocument = {
+  family: defaultStarter.family,
+  starterId: defaultStarter.id,
+  familyValues: defaultStarter.values,
   name: defaultStarter.name,
   displayUnits: 'mm',
   parameters: { ...defaultStarter.parameters },
 };
 
 function toCadDocument(editor: EditorDocument) {
-  return buildCabinetDocument(editor.parameters, editor.name, editor.displayUnits);
+  return buildFamilyCabinetDocument(editor.parameters, editor.name, editor.displayUnits, {
+    family: editor.family,
+    starterId: editor.starterId,
+    familyValues: editor.familyValues,
+  });
 }
 
 function fromCadDocument(document: CabinetDocument): EditorDocument {
   return {
+    family: document.family,
+    starterId: document.starterId,
+    familyValues: document.familyValues,
     name: document.name,
     displayUnits: document.displayUnits,
     parameters: { ...document.parameters },
@@ -307,8 +319,11 @@ export default function App() {
   }
 
   function applyStarter(starterId: string) {
-    const starter = utilityStarter(starterId);
+    const starter = familyStarter(editor.family, starterId);
     history.edit(current => ({
+      family: starter.family,
+      starterId: starter.id,
+      familyValues: starter.values,
       name: starter.name,
       displayUnits: current.displayUnits,
       parameters: { ...starter.parameters },
@@ -320,7 +335,28 @@ export default function App() {
     setHiddenIds(new Set());
     setExplode(0);
     setClipEnabled(false);
-    setNotice(`Loaded ${starter.name}`);
+    setNotice(`Loaded ${familyDefinition(starter.family).name} · ${starter.name}`);
+    requestAnimationFrame(() => viewport.current?.fit());
+  }
+
+  function applyFamily(family: CabinetFamily) {
+    const starter = familyStarter(family);
+    history.edit(current => ({
+      family: starter.family,
+      starterId: starter.id,
+      familyValues: starter.values,
+      name: starter.name,
+      displayUnits: current.displayUnits,
+      parameters: { ...starter.parameters },
+    }));
+
+    setSelectedId(null);
+    setSelectedIds(new Set());
+    setSectionSelectedId(0);
+    setHiddenIds(new Set());
+    setExplode(0);
+    setClipEnabled(false);
+    setNotice(`Switched to ${familyDefinition(family).name}`);
     requestAnimationFrame(() => viewport.current?.fit());
   }
 
@@ -642,7 +678,7 @@ export default function App() {
   async function exportManufacturingPackage(reviewedAt: string) {
     try {
       const bytes = reviewedManufacturingZip(manufacturing, reviewedAt);
-      const suggestedName = safeBaseName(editor.name) + '-manufacturing-v0.11.zip';
+      const suggestedName = safeBaseName(editor.name) + '-manufacturing-v0.13.zip';
       const desktop = desktopApi();
       const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
 
@@ -692,10 +728,14 @@ export default function App() {
   async function newDocument() {
     if (!allowDestructiveAction('create a new cabinet')) return;
 
+    const starter = familyStarter(editor.family);
     const next: EditorDocument = {
-      name: defaultStarter.name,
+      family: starter.family,
+      starterId: starter.id,
+      familyValues: starter.values,
+      name: starter.name,
       displayUnits: editor.displayUnits,
-      parameters: { ...DEFAULT_PARAMETERS },
+      parameters: { ...starter.parameters },
     };
     history.reset(next);
     setSavedContent(serializeDocument(toCadDocument(next)));
@@ -707,7 +747,7 @@ export default function App() {
     setExplode(0);
     setClipEnabled(false);
     await clearRecovery();
-    setNotice('New Utility Cabinet');
+    setNotice(`New ${familyDefinition(starter.family).name}`);
     requestAnimationFrame(() => viewport.current?.fit());
   }
 
@@ -733,7 +773,7 @@ export default function App() {
       const warningText = report.warnings.length
         ? ` · ${report.warnings.join(' ')}`
         : '';
-      setNotice(`Imported web Utility Cabinet · ${report.ignoredFieldCount} unsupported fields retained only in source file${warningText}`);
+      setNotice(`Imported web ${familyDefinition(document.family).name} · ${report.ignoredFieldCount} fields not mapped to current editable controls${warningText}`);
     } else if (report?.warnings.length) {
       setNotice(`${label} · ${report.warnings.join(' ')}`);
     } else {
@@ -823,7 +863,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.12.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>{familyDefinition(editor.family).shortCode} CAD · v0.13.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -869,16 +909,26 @@ export default function App() {
 
     <div className={`workspace ${hardwareCatalogExpanded ? 'hardware-browser-expanded' : ''} ${partBrowserExpanded ? 'parts-browser-expanded' : ''}`}>
       <div className="left-stack">
-        <section className="panel preset-panel">
-          <span className="eyebrow">UTILITY CABINET STARTERS</span>
+        <section className="panel preset-panel family-starter-panel">
+          <span className="eyebrow">CABINET FAMILY</span>
           <SelectControl
-            ariaLabel="Utility Cabinet starter"
-            value=""
-            placeholder="Choose a starter…"
-            options={UTILITY_STARTERS.map(starter => ({ value: starter.id, label: starter.name }))}
+            ariaLabel="Cabinet family"
+            value={editor.family}
+            options={FAMILY_DEFINITIONS.map(family => ({ value: family.id, label: family.shortCode + ' · ' + family.name }))}
+            onChange={value => applyFamily(value as CabinetFamily)}
+          />
+          <span className="eyebrow family-starter-eyebrow">EXAMPLE CABINET</span>
+          <SelectControl
+            ariaLabel={familyDefinition(editor.family).name + ' starter'}
+            value={editor.starterId ?? ''}
+            placeholder="Choose an example…"
+            options={familyStarters(editor.family).map(starter => ({
+              value: starter.id,
+              label: starter.group ? starter.group + ' · ' + starter.name : starter.name,
+            }))}
             onChange={applyStarter}
           />
-          <p>Starter recipes set cabinet construction and can seed either simple or manual section layouts.</p>
+          <p>{familyDefinition(editor.family).description} {familyStarters(editor.family).length} shipped examples are available for this family.</p>
         </section>
         <div className={`layout-navigation-row ${hardwareCatalogExpanded ? 'hardware-open' : 'hardware-collapsed'} ${partBrowserExpanded ? 'parts-open' : 'parts-collapsed'}`}>
           <HardwareDrawer
@@ -887,7 +937,7 @@ export default function App() {
             onToggle={() => setHardwareCatalogExpanded(current => !current)}
             onApply={applyHardware}
           />
-          <SectionLayoutPanel
+          {editor.family !== 'drawer' && editor.family !== 'equipment_stand' && <SectionLayoutPanel
             parameters={editor.parameters}
             thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
             units={editor.displayUnits}
@@ -895,7 +945,7 @@ export default function App() {
             onParameterChange={updateParameter}
             onSelectedSectionChange={setSectionSelectedId}
             onChange={updateSections}
-          />
+          />}
           <TreePanel
             document={cadDocument}
             selectedId={selectedId}
@@ -962,12 +1012,13 @@ export default function App() {
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
           <div><strong>{hardwareCount}</strong><small>hardware instances</small></div>
-          <p>{kernelFooter(kernel.status, kernel.result?.stats.featureCount ?? 0, kernel.diagnostics.length)}</p>
+          <p>{kernelFooter(kernel.status, kernel.result?.stats.featureCount ?? 0, kernel.diagnostics.length, familyDefinition(editor.family).name)}</p>
         </div>
       </section>
 
       <PropertiesPanel
         parameters={editor.parameters}
+        familyLabel={familyDefinition(editor.family).name}
         selected={selected}
         displayUnits={editor.displayUnits}
         onChange={updateParameter}
@@ -1049,8 +1100,13 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
   return 'Exact CAD idle';
 }
 
-function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.12.0 · exact B-Rep · ${featureCount} semantic features · Production planning · STEP`;
-  if (status === 'error') return `Utility v0.12.0 · exact kernel diagnostics: ${diagnosticCount} · production review`;
-  return 'Utility v0.12.0 · OpenCascade worker initializing…';
+function kernelFooter(
+  status: 'idle' | 'loading' | 'ready' | 'error',
+  featureCount: number,
+  diagnosticCount: number,
+  familyName: string,
+) {
+  if (status === 'ready') return `${familyName} · v0.13.0 · exact B-Rep · ${featureCount} semantic features · STEP`;
+  if (status === 'error') return `${familyName} · v0.13.0 · exact kernel diagnostics: ${diagnosticCount}`;
+  return `${familyName} · v0.13.0 · OpenCascade worker initializing…`;
 }
