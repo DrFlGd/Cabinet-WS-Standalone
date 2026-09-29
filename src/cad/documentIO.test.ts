@@ -118,7 +118,8 @@ describe('Cabinet WS project migrations', () => {
       joineryStyle: 'dado',
       dadoDepth: 6,
     });
-    expect(parsed.report.ignoredFieldCount).toBeGreaterThan(0);
+    expect(parsed.report.ignoredFieldCount).toBe(0);
+    expect(parsed.document.familyValues.output_mode).toBe('assembly');
   });
 
   it('converts Cabinet Workshop mixed bays into the v0.4 section tree', () => {
