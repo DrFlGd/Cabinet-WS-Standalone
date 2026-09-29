@@ -15,12 +15,13 @@ The project follows milestone versions while the standalone CAD architecture is 
 ### Tests
 
 - Add behavioral gap regressions that compare Standalone outcomes with independent reference expectations instead of treating starter construction alone as parity evidence.
+- Add behavioral ownership regressions for helper-resolved measured drawer stock/thickness and Kitchen `section_nodes`, preventing indirect runtime mappings from being mislabeled unsupported.
 - Lock the current Utility fit-target no-op, drawer joinery mode collapse, divider-mounting machining no-op, and rectangular French-cleat behavior so later fixes must update the audit explicitly.
 
 ### Compatibility
 
 - No project schema, package version, geometry implementation, or release-request change.
-- The capability matrix reports ownership and known gaps; unmarked settings remain unverified rather than implicitly parity-complete.
+- The capability matrix reports ownership and known gaps; unmarked settings remain unverified rather than implicitly parity-complete. Indirect helper/layout ownership is counted explicitly rather than inferred only from direct property syntax.
 
 ## [0.14.1] - 2026-09-29
 
