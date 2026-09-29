@@ -792,7 +792,7 @@ export default function App() {
       const warningText = report.warnings.length
         ? ` · ${report.warnings.join(' ')}`
         : '';
-      setNotice(`Imported web ${familyDefinition(document.family).name} · ${report.ignoredFieldCount} fields not mapped to current editable controls${warningText}`);
+      setNotice(`Imported web ${familyDefinition(document.family).name} · native family controls ready${warningText}`);
     } else if (report?.warnings.length) {
       setNotice(`${label} · ${report.warnings.join(' ')}`);
     } else {
