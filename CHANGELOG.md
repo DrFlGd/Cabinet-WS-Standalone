@@ -4,6 +4,37 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.14.0] - 2026-09-29
+
+### Added
+
+- Complete native family-settings metadata for all seven Cabinet Workshop families: 1,678 fields total.
+- Generated Family Settings controls for option lists, booleans, bounded numeric/dimensional values, text, flat arrays, and nested arrays.
+- Millimeter/inch display conversion for family-specific dimension controls.
+- Ported dependency-aware inactive rules from the legacy settings model, including joinery, hardware, worktop, face-frame, shelf, stackable, standalone-drawer, and Equipment Stand conditions.
+- Search across family setting labels, keys, descriptions, current values, and options.
+- Advanced-setting and inactive-setting reveal controls with inactive reasons.
+- Read-only expression-backed family controls with trusted built-in recomputation after source edits.
+- Recipe hydration for sparse and pre-v3 projects before family editing.
+- Reverse synchronization from existing Native model/contextual edits back into mapped `familyValues`.
+- Regression coverage for complete field counts, dependency rules, expression updates, representative family-to-model mappings, reverse synchronization, and Manual Layout ownership.
+
+### Changed
+
+- Application/package version advanced to 0.14.0.
+- Properties defaults to Family settings when no generated part is selected while retaining a Native model tab and selected-part contextual editing.
+- Family field edits now update schema-v3 `familyValues`, regenerate canonical parameters, and rebuild the semantic model as one undoable history operation.
+- `section_nodes` remains exclusively edited through Manual Layout rather than a raw array control.
+- Benchtop stock aliases such as `custom`, `same_as_carcass`, and `same_as_drawer` now resolve through the family adapter.
+- Legacy Output/System settings remain compatibility recipe state; Standalone-native file/export commands remain authoritative.
+
+### Compatibility
+
+- Schema version remains v3.
+- v1/v2 projects are hydrated into the Utility family recipe before synchronization, preserving saved canonical dimensions/settings.
+- Existing v0.13 schema-v3 projects with partial or stale family recipes are completed from family defaults and synchronized with their canonical parameter state on load.
+- OpenSCAD remains reference/oracle code only and is not used to evaluate family settings or generate production geometry.
+
 ## [0.13.0] - 2026-09-29
 
 ### Added
