@@ -85,6 +85,7 @@ export default function SectionLayoutPanel({
       child[8] = node[8];
       child[9] = [...node[9]];
       child[11] = node[11];
+      child[12] = [...(node[12] ?? [])];
       next.push(child);
     }
     commit(next);
@@ -155,6 +156,14 @@ export default function SectionLayoutPanel({
   }
 
   const format = (value: number) => `${formatDimension(value, units)} ${units}`;
+  const frameDeduction = (axis: 'x' | 'z') =>
+    parameters.faceFrameStyle === 'full'
+      ? axis === 'x'
+        ? parameters.faceFrameCenterStileWidth
+        : parameters.faceFrameRailWidth
+      : 0;
+  const frameClearSize = (value: number, axis: 'x' | 'z') =>
+    Math.max(1, value - frameDeduction(axis));
 
   return (
     <section className="panel section-layout-panel">
@@ -251,7 +260,62 @@ export default function SectionLayoutPanel({
                 />
               </label>
             )}
+
+            {parameters.cabinetContents !== 'doors' && parameters.drawerCount > 1 && (
+              <label>
+                Drawer heights
+                <SelectControl
+                  ariaLabel="Simple drawer height mode"
+                  value={parameters.drawerHeightMode}
+                  options={[
+                    { value: 'equal', label: 'Equal' },
+                    { value: 'graduated', label: 'Graduated' },
+                    { value: 'custom_weights', label: 'Custom weights' },
+                  ]}
+                  onChange={value => onParameterChange('drawerHeightMode', value as CabinetParameters['drawerHeightMode'])}
+                />
+              </label>
+            )}
+
+            {parameters.cabinetContents !== 'doors' && parameters.drawerHeightMode === 'graduated' && parameters.drawerCount > 1 && (
+              <label>
+                Growth
+                <input
+                  type="number"
+                  min={0.05}
+                  max={2}
+                  step={0.05}
+                  value={parameters.drawerGraduatedStep}
+                  onChange={event => {
+                    const value = event.currentTarget.valueAsNumber;
+                    if (Number.isFinite(value)) onParameterChange('drawerGraduatedStep', value);
+                  }}
+                />
+              </label>
+            )}
           </div>
+
+          {parameters.cabinetContents !== 'doors' && parameters.drawerHeightMode === 'custom_weights' && parameters.drawerCount > 1 && (
+            <div className="section-weight-list">
+              {Array.from({ length: parameters.drawerCount }, (_, index) => parameters.drawerCustomWeights[index] ?? 1).map((weight, index) => (
+                <label key={index}>
+                  D{index + 1}
+                  <input
+                    type="number"
+                    min={0.1}
+                    max={20}
+                    step={0.1}
+                    value={weight}
+                    onChange={event => {
+                      const next = Array.from({ length: parameters.drawerCount }, (_, item) => parameters.drawerCustomWeights[item] ?? 1);
+                      next[index] = Math.max(0.1, event.currentTarget.valueAsNumber || 0.1);
+                      onParameterChange('drawerCustomWeights', next);
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+          )}
 
           <p className="section-layout-helper">
             Switch to <b>Sections / bays</b> above for nested openings, divider construction, per-opening contents, and direct divider sizing.
@@ -298,7 +362,7 @@ export default function SectionLayoutPanel({
                   <rect x={x + 1} y={y + 1} width={Math.max(1, sectionRect.w - 2)} height={Math.max(1, sectionRect.h - 2)} />
                   <text x={x + sectionRect.w / 2} y={y + sectionRect.h / 2 - 7}>{label}</text>
                   <text className="section-size-text" x={x + sectionRect.w / 2} y={y + sectionRect.h / 2 + 12}>
-                    {Math.round(sectionRect.w)} × {Math.round(sectionRect.h)}
+                    {Math.round(frameClearSize(sectionRect.w, 'x'))} × {Math.round(frameClearSize(sectionRect.h, 'z'))}{parameters.faceFrameStyle === 'full' ? ' clear' : ''}
                   </text>
                 </g>
               );
@@ -355,7 +419,13 @@ export default function SectionLayoutPanel({
             />
           </label>
 
-          {rect && <p className="section-current-size">{format(rect.w)} wide × {format(rect.h)} high</p>}
+          {rect && (
+            <p className="section-current-size">
+              {parameters.faceFrameStyle === 'full'
+                ? `${format(frameClearSize(rect.w, 'x'))} frame-clear wide × ${format(frameClearSize(rect.h, 'z'))} high · carcass opening ${format(rect.w)} × ${format(rect.h)}`
+                : `${format(rect.w)} wide × ${format(rect.h)} high`}
+            </p>
+          )}
 
           {selectedId !== 0 && (
             <div className="section-control-grid">
@@ -384,11 +454,14 @@ export default function SectionLayoutPanel({
                 <label>
                   Clear size
                   <DimensionInput
-                    value={node[4]}
+                    value={Math.max(60, node[4] - frameDeduction((nodes[node[0]]?.[2] as 'x' | 'z') ?? 'x'))}
                     units={units}
                     min={60}
                     step={1}
-                    onChange={value => editField(4, Math.max(60, value))}
+                    onChange={value => {
+                      const axis = (nodes[node[0]]?.[2] as 'x' | 'z') ?? 'x';
+                      editField(4, Math.max(60, value + frameDeduction(axis)));
+                    }}
                   />
                 </label>
               ) : (
