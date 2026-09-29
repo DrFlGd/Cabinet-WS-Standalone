@@ -152,7 +152,9 @@ Electron owns native file access and renderer lifecycle. The renderer keeps a si
 recovery document in the Electron user-data directory (or localStorage in browser
 preview mode). Recovery is read before autosave is enabled. Dirty documents are
 debounced to recovery storage and are also flushed when the document becomes hidden
-and when an unload is attempted.
+and when an unload is attempted. Native text writes are serialized per destination
+and each write uses a unique staging filename before rename, preventing concurrent
+autosave/recovery requests from sharing and racing on one temporary path.
 
 The React root and modeling workspace are protected by error boundaries. A workspace
 render/lifecycle failure keeps the current recovery copy, attempts one last recovery
