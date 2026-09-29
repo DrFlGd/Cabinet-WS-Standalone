@@ -17,9 +17,12 @@ The audit deliberately makes no geometry changes.
 
 Every one of the 1,678 retained family setting definitions has one matrix row.
 
-- **geometry-driving** — consumed by the current recipe adapter or family generator
-  on a geometry/layout path. This means the control has native behavior; it does not
-  mean the behavior has been independently proven equivalent to Cabinet Workshop.
+- **geometry-driving** — consumed by the current recipe adapter, helper mapping, family
+  generator, or layout converter on a geometry/layout path. This includes indirect
+  ownership such as measured stock resolved through `thicknessFromValues` and
+  `section_nodes`/mixed-bay values resolved through `sectionsFromWebValues`. It means
+  the control has native behavior; it does not mean that behavior has been independently
+  proven equivalent to Cabinet Workshop.
 - **manufacturing-driving** — consumed on a machining or manufacturing-hardware
   path. Exact operation/depth parity is still separately verifiable.
 - **compatibility-only** — retained legacy Output/System recipe state. Standalone's
@@ -33,14 +36,14 @@ rows remain `unverified`; they are not implicitly marked verified.
 
 | Family | Fields | Geometry-driving | Manufacturing-driving | Compatibility-only | Unsupported | Known-gap rows |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Shop Cart | 310 | 63 | 22 | 45 | 180 | 41 |
-| Utility | 310 | 63 | 22 | 45 | 180 | 41 |
-| Benchtop | 222 | 46 | 10 | 37 | 129 | 37 |
-| Stackable | 277 | 51 | 22 | 46 | 158 | 41 |
-| Kitchen | 299 | 63 | 23 | 45 | 168 | 41 |
-| Standalone Drawer | 161 | 51 | 9 | 26 | 75 | 15 |
+| Shop Cart | 310 | 80 | 22 | 45 | 163 | 41 |
+| Utility | 310 | 80 | 22 | 45 | 163 | 41 |
+| Benchtop | 222 | 52 | 10 | 37 | 123 | 37 |
+| Stackable | 277 | 59 | 22 | 46 | 150 | 41 |
+| Kitchen | 299 | 83 | 23 | 45 | 148 | 41 |
+| Standalone Drawer | 161 | 57 | 9 | 26 | 69 | 15 |
 | Equipment Stand | 99 | 43 | 6 | 10 | 40 | 20 |
-| **Total** | **1,678** | **380** | **114** | **254** | **930** | — |
+| **Total** | **1,678** | **454** | **114** | **254** | **856** | — |
 
 These counts are control-ownership coverage, not construction-parity percentages.
 Many unsupported fields are intentionally presentation/export compatibility data,
@@ -118,8 +121,10 @@ controls.
 
 ## Verification boundaries
 
-The matrix is intentionally conservative. Static consumption identifies ownership,
-while the committed behavioral fixtures prove selected current outcomes. The audit
+The matrix is intentionally conservative. Direct references plus explicit indirect
+helper/layout ownership identify current behavior, while behavioral regressions cover
+representative indirect mappings such as measured drawer stock and Kitchen section
+nodes. The committed reference fixtures prove selected current outcomes. The audit
 does **not** establish exact OpenCascade parity, packaged Windows interaction,
 visual equivalence for all 110 starters, or manufacturer-correct Equipment Stand
 hardware.
