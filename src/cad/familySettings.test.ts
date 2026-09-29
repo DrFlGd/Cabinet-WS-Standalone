@@ -47,7 +47,7 @@ describe('v0.14 native family settings', () => {
 
     const drawer = familyStarter('drawer', 'default').values;
     const inside = familyFieldDefinitions('drawer').find(field => field.key === 'target_box_inside_width')!;
-    expect(familyFieldInactiveReason('drawer', inside, { ...drawer, drawer_design_basis: 'enclosure' })).toMatch(/inside-clear/i);
+    expect(familyFieldInactiveReason('drawer', inside, { ...drawer, drawer_design_basis: 'enclosure' })).toMatch(/inside[_ -]clear/i);
 
     const stand = familyStarter('equipment_stand', 'default').values;
     const overall = familyFieldDefinitions('equipment_stand').find(field => field.key === 'overall_width')!;
@@ -60,7 +60,8 @@ describe('v0.14 native family settings', () => {
     expect(toe.custom_bottom_above_toe).toBe(123);
 
     const benchtop = familyStarter('benchtop', 'default').values;
-    const thin = applyFamilyFieldChange('benchtop', benchtop, 'custom_carcass_thickness', 8);
+    const customStock = applyFamilyFieldChange('benchtop', benchtop, 'carcass_stock', 'custom');
+    const thin = applyFamilyFieldChange('benchtop', customStock, 'custom_carcass_thickness', 8);
     expect(thin.target_tab_spacing).toBe(64);
     expect(thin.joint_tab_width).toBeCloseTo(19.2);
   });
