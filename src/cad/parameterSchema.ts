@@ -37,6 +37,14 @@ export type CountDefinition<K extends keyof CabinetParameters = keyof CabinetPar
     max: number;
   };
 
+export type NumberDefinition<K extends keyof CabinetParameters = keyof CabinetParameters> =
+  BaseDefinition<K> & {
+    kind: 'number';
+    min: number;
+    max: number;
+    step: number;
+  };
+
 export type SelectDefinition<K extends keyof CabinetParameters = keyof CabinetParameters> =
   BaseDefinition<K> & {
     kind: 'select';
@@ -51,6 +59,7 @@ export type BooleanDefinition<K extends keyof CabinetParameters = keyof CabinetP
 export type ParameterDefinition =
   | DimensionDefinition
   | CountDefinition
+  | NumberDefinition
   | SelectDefinition
   | BooleanDefinition;
 
@@ -104,7 +113,7 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
     { value: 'graduated', label: 'Graduated' },
     { value: 'custom_weights', label: 'Custom weights' },
   ] },
-  { key: 'drawerGraduatedStep', kind: 'dimension', label: 'Graduated step', description: 'Relative growth per successive drawer row.', section: 'Layout', min: 0.05, max: 2, step: 0.05, visibleWhen: p => p.layoutMode === 'legacy' && p.drawerHeightMode === 'graduated' },
+  { key: 'drawerGraduatedStep', kind: 'number', label: 'Graduated step', description: 'Relative growth per successive drawer row.', section: 'Layout', min: 0.05, max: 2, step: 0.05, visibleWhen: p => p.layoutMode === 'legacy' && p.drawerHeightMode === 'graduated' },
   { key: 'doorCount', kind: 'count', label: 'Doors', description: 'Number of decorative doors.', section: 'Layout', min: 0, max: 4, visibleWhen: p => p.layoutMode === 'legacy' && p.cabinetContents !== 'drawers' },
 
   { key: 'topStyle', kind: 'select', label: 'Top construction', description: 'Full cabinet top or front/rear stretchers.', section: 'Carcass', options: [
