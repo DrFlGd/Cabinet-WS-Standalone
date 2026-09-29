@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const MAX_DOCUMENT_BYTES = 2_000_000;
 const MAX_STEP_BYTES = 250_000_000;
+const MAX_TEXT_EXPORT_BYTES = 20_000_000;
 const approvedPaths = new Set();
 
 function userFile(name) {
@@ -138,6 +139,28 @@ function registerIpc() {
     let filePath = result.filePath;
     if (!/\.(step|stp)$/i.test(filePath)) filePath += '.step';
     await fs.writeFile(filePath, buffer);
+    return { canceled: false, path: filePath, name: path.basename(filePath) };
+  });
+
+  ipcMain.handle('export:text', async (_event, options) => {
+    const content = typeof options?.content === 'string' ? options.content : '';
+    if (!content || Buffer.byteLength(content, 'utf8') > MAX_TEXT_EXPORT_BYTES) {
+      throw new Error('Text export is empty or too large.');
+    }
+    const kind = options?.kind === 'csv' ? 'csv' : 'html';
+    const suggestedName = String(options?.suggestedName || (kind === 'csv' ? 'cabinet.csv' : 'cabinet.html'));
+    const result = await dialog.showSaveDialog({
+      title: kind === 'csv' ? 'Export CSV report' : 'Export printable report',
+      defaultPath: suggestedName,
+      filters: kind === 'csv'
+        ? [{ name: 'CSV spreadsheet', extensions: ['csv'] }]
+        : [{ name: 'Printable HTML report', extensions: ['html'] }],
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    let filePath = result.filePath;
+    const extension = kind === 'csv' ? '.csv' : '.html';
+    if (!filePath.toLowerCase().endsWith(extension)) filePath += extension;
+    await fs.writeFile(filePath, content, 'utf8');
     return { canceled: false, path: filePath, name: path.basename(filePath) };
   });
 

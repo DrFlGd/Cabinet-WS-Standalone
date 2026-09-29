@@ -1,5 +1,6 @@
 import {
   Box,
+  ClipboardList,
   FileDown,
   FilePlus2,
   Focus,
@@ -41,6 +42,7 @@ type Props = {
   onSave: () => void;
   onSaveAs: () => void;
   onExportStep: () => void;
+  onOpenShopDocs: () => void;
   onOpen: () => void;
   onOpenRecent: (path: string) => void;
   onUndo: () => void;
@@ -75,6 +77,7 @@ export default function Toolbar({
   onSave,
   onSaveAs,
   onExportStep,
+  onOpenShopDocs,
   onOpen,
   onOpenRecent,
   onUndo,
@@ -108,6 +111,9 @@ export default function Toolbar({
       <button onClick={onSaveAs}><SaveAll size={15} /> Save As</button>
       <button onClick={onExportStep} disabled={!canExportStep} title="Export exact OpenCascade assembly as STEP">
         <FileDown size={15} /> STEP
+      </button>
+      <button onClick={onOpenShopDocs} title="Open BOM, cut list, and assembly documentation">
+        <ClipboardList size={15} /> Shop Docs
       </button>
     </div>
     <span className="toolbar-divider" />

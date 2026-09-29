@@ -177,6 +177,35 @@ preview -> exact worker rebuild -> Design Health reevaluation cycle. Infeasible
 drawer slide limits and unsupported cabinet envelope sizes are reported rather than
 silently clamped.
 
+## v0.10 shop-documentation boundary
+
+Shop documentation is a derived semantic view, not persisted document state. The
+Phase 10 generator consumes the current `CabinetDocument`, regenerates the registered
+feature graph, and receives the current Design Health/readiness result. It produces
+stable shop part numbers, BOM/cut-list rows, material groups, hardware checklists,
+assembly groups, CSV data, and printable HTML.
+
+Shop part numbers are deterministic projections of semantic part IDs. They do not
+depend on Three.js UUIDs, raw OpenCascade topology ordering, dimensions, or row
+position, so CAD selection and BOM selection can share the same `partId`.
+
+Finished and blank sizes in Phase 10 are body/panel-blank **envelopes**. A toe-kick
+profile, hole pattern, dado, rabbet, groove, or pocket remains registered feature
+intent summarized alongside the part; Phase 10 does not pretend those envelopes are
+operation-layer manufacturing geometry. Phase 11 owns per-operation DXF/SVG,
+machining-face metadata, and profile/drilling maps.
+
+Grain direction and edge-banding requirements are semantic shop-documentation
+inference from panel orientation and exposed cabinet role. No hidden edge-band stock,
+thickness, or manufacturer data is invented. When those become explicit cabinet
+parameters later, the report layer should consume them instead of inference.
+
+Assembly steps and checklist state are editor/report concerns. The interactive
+assembly review reuses semantic part selection and the existing exploded viewport;
+the printable packet generates a separate schematic isometric SVG with stable part
+callouts. Native Electron text export only receives already-generated CSV/HTML and
+writes it through a save dialog.
+
 ## Three.js responsibilities
 
 Three.js remains responsible for:
@@ -192,7 +221,7 @@ It is not responsible for manufacturing truth or boolean geometry.
 
 ## Next architectural layer
 
-Phase 10 can consume the same stable semantic parts/features and Phase 9 readiness
-results for BOM, cut-list, and assembly documentation. Phase 11 manufacturing output
-should reuse registered operations and Design Health gating rather than introducing
-a separate mesh/report interpretation path.
+Phase 11 manufacturing geometry should reuse the same stable Phase 10 part numbers,
+registered features, and Phase 9 readiness gate for operation-layer DXF/SVG, drilling
+maps, machining-face metadata, and reviewed export packages. It should not introduce
+a separate mesh or report-text interpretation path.

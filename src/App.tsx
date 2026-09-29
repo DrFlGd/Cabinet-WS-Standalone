@@ -19,6 +19,13 @@ import { cloneSectionNodes, sectionRects, sectionRoot, simpleLayoutToSections } 
 import { computeMeasurement, requiredMeasurementSelections, type MeasurementMode } from './cad/measurements';
 import { analyzeDesignHealth } from './cad/designHealth';
 import type { FitSolution } from './cad/fitSolver';
+import {
+  buildAssemblyPacketHtml,
+  buildCutListReportHtml,
+  buildShopDocumentation,
+  cutListCsv,
+  hardwareCsv,
+} from './cad/shopDocs';
 import { hardwareDefinition } from './cad/hardwareCatalog';
 import { useGeometryKernel } from './cad/kernel/useGeometryKernel';
 import type { KernelSelection } from './cad/kernel/types';
@@ -33,6 +40,7 @@ import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
 import MeasurementPanel from './components/MeasurementPanel';
 import DesignHealthPanel from './components/DesignHealthPanel';
+import ShopDocsPanel from './components/ShopDocsPanel';
 import { desktopApi, type RecentProject } from './desktop';
 import { clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
 import type { EditorDocument } from './editor/history';
@@ -77,6 +85,7 @@ export default function App() {
   const [clipEnabled, setClipEnabled] = useState(false);
   const [clipZ, setClipZ] = useState(INITIAL_EDITOR.parameters.height);
   const [hardwareCatalogExpanded, setHardwareCatalogExpanded] = useState(false);
+  const [shopDocsOpen, setShopDocsOpen] = useState(false);
   const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
   const [sectionSelectedId, setSectionSelectedId] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
@@ -106,6 +115,10 @@ export default function App() {
       kernelStatus: kernel.status,
     }),
     [cadDocument, kernel.diagnostics, kernel.status],
+  );
+  const shopDocs = useMemo(
+    () => buildShopDocumentation(cadDocument, designHealth),
+    [cadDocument, designHealth],
   );
 
   async function refreshRecent() {
@@ -328,6 +341,38 @@ export default function App() {
       : `Selected ${part.name} · related settings shown at right`);
   }
 
+  function selectPartById(partId: string) {
+    const part = cadDocument.parts.find(candidate => candidate.id === partId);
+    if (part) select(part);
+  }
+
+  function selectPartIds(partIds: string[]) {
+    const valid = partIds.filter(id => cadDocument.parts.some(part => part.id === id));
+    setSelectedIds(new Set(valid));
+    setSelectedId(valid.at(-1) ?? null);
+    setKernelSelection(null);
+    if (valid.length) setNotice(`Highlighted ${valid.length} assembly part${valid.length === 1 ? '' : 's'}`);
+  }
+
+  function explodeAssemblyView() {
+    setHiddenIds(new Set());
+    setExplode(110);
+    setProjection('perspective');
+    viewport.current?.setView('iso');
+    requestAnimationFrame(() => viewport.current?.fit());
+    setNotice('Exploded assembly view');
+  }
+
+  function resetAssemblyView() {
+    setHiddenIds(new Set());
+    setExplode(0);
+    setSelectedIds(new Set());
+    setSelectedId(null);
+    viewport.current?.setView('iso');
+    requestAnimationFrame(() => viewport.current?.fit());
+    setNotice('Assembly view reset');
+  }
+
   function hideSelected() {
     if (!selectedIds.size) return;
     setHiddenIds(current => new Set([...current, ...selectedIds]));
@@ -492,6 +537,54 @@ export default function App() {
     }
   }
 
+  async function saveTextExport(content: string, suggestedName: string, kind: 'csv' | 'html') {
+    const desktop = desktopApi();
+    if (desktop) {
+      const result = await desktop.saveText({ content, suggestedName, kind });
+      if (result.canceled) {
+        setNotice('Shop documentation export canceled');
+        return;
+      }
+      setNotice(`Exported ${result.name ?? suggestedName}`);
+      return;
+    }
+
+    const blob = new Blob([content], { type: kind === 'csv' ? 'text/csv;charset=utf-8' : 'text/html;charset=utf-8' });
+    const href = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = href;
+    anchor.download = suggestedName;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(href);
+    setNotice(`Downloaded ${suggestedName}`);
+  }
+
+  function exportCutListCsv() {
+    void saveTextExport(cutListCsv(shopDocs), `${safeBaseName(editor.name)}-cut-list.csv`, 'csv');
+  }
+
+  function exportHardwareCsv() {
+    void saveTextExport(hardwareCsv(shopDocs), `${safeBaseName(editor.name)}-hardware.csv`, 'csv');
+  }
+
+  function exportCutListReport() {
+    void saveTextExport(
+      buildCutListReportHtml(cadDocument, shopDocs, editor.displayUnits),
+      `${safeBaseName(editor.name)}-bom-cut-list.html`,
+      'html',
+    );
+  }
+
+  function exportAssemblyPacket() {
+    void saveTextExport(
+      buildAssemblyPacketHtml(cadDocument, shopDocs, editor.displayUnits),
+      `${safeBaseName(editor.name)}-assembly-packet.html`,
+      'html',
+    );
+  }
+
   function openSection(sectionNodeId: number) {
     setSectionSelectedId(sectionNodeId);
     setNotice(`Editing Section ${sectionNodeId + 1} in Manual Layout Editor`);
@@ -644,7 +737,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.9.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.10.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -666,6 +759,7 @@ export default function App() {
       onSaveAs={() => { void saveDocument(true); }}
       canExportStep={kernel.status === 'ready' || Boolean(kernel.result?.parts.length)}
       onExportStep={() => { void exportStep(); }}
+      onOpenShopDocs={() => setShopDocsOpen(true)}
       onOpen={() => { void openDocument(); }}
       onOpenRecent={path => { void openRecent(path); }}
       onUndo={() => { history.undo(); setNotice('Undo'); }}
@@ -797,6 +891,22 @@ export default function App() {
         onOpenSection={openSection}
       />
     </div>
+
+    {shopDocsOpen && <ShopDocsPanel
+      document={cadDocument}
+      docs={shopDocs}
+      units={editor.displayUnits}
+      selectedId={selectedId}
+      onClose={() => setShopDocsOpen(false)}
+      onSelectPart={selectPartById}
+      onSelectParts={selectPartIds}
+      onExplodeAssembly={explodeAssemblyView}
+      onResetAssembly={resetAssemblyView}
+      onExportCutListCsv={exportCutListCsv}
+      onExportHardwareCsv={exportHardwareCsv}
+      onExportCutListReport={exportCutListReport}
+      onExportAssemblyPacket={exportAssemblyPacket}
+    />}
   </main>;
 }
 
@@ -849,7 +959,7 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
 }
 
 function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.9.0 · exact B-Rep · ${featureCount} semantic features · Design Health · STEP`;
-  if (status === 'error') return `Utility v0.9.0 · exact kernel diagnostics: ${diagnosticCount} · Design Health review`;
-  return 'Utility v0.9.0 · OpenCascade worker initializing…';
+  if (status === 'ready') return `Utility v0.10.0 · exact B-Rep · ${featureCount} semantic features · Shop Docs · STEP`;
+  if (status === 'error') return `Utility v0.10.0 · exact kernel diagnostics: ${diagnosticCount} · Shop Docs review`;
+  return 'Utility v0.10.0 · OpenCascade worker initializing…';
 }

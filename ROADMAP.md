@@ -576,36 +576,54 @@ Utility Cabinet reference family in v0.9.**
 
 # Phase 10 — BOM, cut list and assembly documentation
 
-Purpose: reach and then exceed current web manufacturing reporting.
+**Status: implemented for the Utility Cabinet reference family in v0.10**
+
+Purpose: reach and then exceed current web manufacturing reporting without
+depending on OpenSCAD report text.
 
 ## BOM / cut list
 
-- [ ] stable part numbers
-- [ ] material grouping
-- [ ] finished dimensions
-- [ ] blank dimensions
-- [ ] grain direction
-- [ ] edge-banding requirements
-- [ ] purchased hardware
-- [ ] machining summary
-- [ ] CSV export
-- [ ] printable report
+- [x] stable part numbers
+- [x] material grouping
+- [x] finished dimensions
+- [x] blank dimensions
+- [x] grain direction
+- [x] edge-banding requirements
+- [x] purchased hardware
+- [x] machining summary
+- [x] CSV export
+- [x] printable report
+
+Stable shop part numbers are deterministic projections of semantic part IDs. Material
+groups are derived from fabricated part stock/material/thickness. Finished dimensions
+and rectangular blank envelopes remain millimeter-native; printable reports can
+display inches without changing manufacturing values.
+
+Grain direction and exposed-edge banding requirements are derived from semantic
+panel orientation/role. v0.10 does not invent a separate edge-band material or
+thickness setting. Profiled parts can share the same rectangular blank/finished
+envelope while their registered machining/profile intent is summarized here; exact
+operation-layer geometry belongs to Phase 11.
 
 ## Assembly
 
-Port the useful concepts from web `lib/assembly.ts`:
+- [x] exploded assembly view
+- [x] assembly steps/groups
+- [x] part callouts
+- [x] hardware checklist
+- [x] printable assembly packet
+- [x] selected part ↔ BOM row linking
 
-- [ ] exploded assembly view
-- [ ] assembly steps/groups
-- [ ] part callouts
-- [ ] hardware checklist
-- [ ] printable assembly packet
-- [ ] selected part ↔ BOM row linking
+Assembly review reuses the live semantic CAD viewport for exploded/highlighted steps.
+The printable packet also contains a schematic isometric exploded SVG whose callouts
+use the same stable shop part numbers.
 
 ### Definition of done
 
-The standalone project can produce the shop documentation currently supplied by
-the web manufacturing package without depending on OpenSCAD report text.
+Standalone produces the Utility Cabinet BOM, cut list, material/hardware summaries,
+assembly sequence/checklist, CSVs, and printable shop packets directly from semantic
+CAD data/features with no OpenSCAD report parsing. **Met for the Utility Cabinet
+reference family in v0.10.**
 
 ---
 
