@@ -8,19 +8,25 @@ import SelectControl from './SelectControl';
 type Props = {
   parameters: CabinetParameters;
   category?: HardwareCategory;
+  showHeading?: boolean;
   onApply: (profileId: string) => void;
 };
 
-export default function HardwarePicker({ parameters, category, onApply }: Props) {
+export default function HardwarePicker({ parameters, category, showHeading = true, onApply }: Props) {
   const [query, setQuery] = useState('');
   const issues = hardwareCompatibility(parameters);
 
   return (
     <section className="hardware-picker-card">
-      <div className="hardware-picker-heading">
-        <div><Wrench size={14} /><strong>Hardware catalog</strong></div>
-        <span>Utility · {HARDWARE_CATALOG.length} profiles</span>
-      </div>
+      {showHeading && (
+        <div className="hardware-picker-heading">
+          <div><Wrench size={14} /><strong>Hardware catalog</strong></div>
+          <span>Utility · {HARDWARE_CATALOG.length} profiles</span>
+        </div>
+      )}
+      {!showHeading && (
+        <div className="hardware-picker-summary">Utility catalog · {HARDWARE_CATALOG.length} profiles</div>
+      )}
       <label className="hardware-search">
         <Search size={13} />
         <input
