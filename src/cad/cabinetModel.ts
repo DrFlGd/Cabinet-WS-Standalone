@@ -279,9 +279,11 @@ export function buildCabinetDocument(
   parts.push(...hardwareParts(hardware));
 
   return {
-    version: 2,
+    version: 3,
     id: 'cabinet-root',
     family: 'utility',
+    starterId: null,
+    familyValues: {},
     name,
     units: 'mm',
     displayUnits,
