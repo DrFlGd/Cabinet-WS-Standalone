@@ -113,8 +113,11 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
   }
 
   (part.renderFeatures ?? []).forEach((feature, index) => {
+    const stableSuffix = feature.sourcePartId && feature.kind === 'dado'
+      ? `${featureToken(feature.sourcePartId)}-dado`
+      : `${feature.kind}:${index + 1}`;
     features.push({
-      id: `feature:${part.id}:${feature.kind}:${index + 1}`,
+      id: `feature:${part.id}:${stableSuffix}`,
       partId: part.id,
       kind: feature.kind === 'slot' ? 'pocket' : feature.kind === 'drill' ? 'hole' : feature.kind,
       label: renderFeatureLabel(feature.kind),
@@ -126,6 +129,7 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
         width: feature.size.x,
         depth: feature.size.y,
         height: feature.size.z,
+        ...(feature.sourcePartId ? { sourcePartId: feature.sourcePartId } : {}),
       },
     });
   });
@@ -162,6 +166,14 @@ function isToeKickProfile(part: CadPart) {
   const uniqueU = new Set(outline.map(point => point.u));
   const uniqueV = new Set(outline.map(point => point.v));
   return uniqueU.size > 2 && uniqueV.size > 2;
+}
+
+function featureToken(partId: string) {
+  if (partId === 'carcass:bottom') return 'bottom';
+  return partId
+    .replace(/^carcass:/, '')
+    .replaceAll(':', '-')
+    .replace(/[^a-zA-Z0-9_-]+/g, '-');
 }
 
 function renderFeatureLabel(kind: CadRenderFeature['kind']) {
