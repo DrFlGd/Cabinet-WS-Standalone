@@ -2,11 +2,11 @@
 
 A CAD-first prototype for dedicated cabinet-making software with a worker-based OpenCascade/Replicad exact-geometry path.
 
-This repository is intentionally separate from Cabinet Workshop. The goal is a desktop cabinet CAD application with a persistent document model, real-time 3D editing, stable part identity, manufacturing-aware parts, and a future B-Rep geometry kernel.
+This repository is intentionally separate from Cabinet Workshop. The goal is a desktop cabinet CAD application with a persistent document model, real-time 3D editing, stable part identity, manufacturing-aware parts, and an exact worker-based B-Rep geometry kernel.
 
 ## Prototype features
 
-- React desktop-style workspace with model tree, realtime 3D viewport, properties panel, and toolbar.
+- React desktop-style workspace with Manual Layout, collapsible Hardware/Parts drawers, realtime 3D viewport, searchable Properties panel, and toolbar.
 - Utility Cabinet v0.6 model with bounded sections, first-class hardware, and exact OpenCascade/Replicad B-Rep generation behind the realtime editor.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, and contextual editable settings for the selected part.
@@ -16,6 +16,16 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts.
 - Exact STEP assembly export from the toolbar, plus browser development mode and an Electron desktop wrapper.
+
+## v0.6.1 Workspace organization
+
+The left editing workspace is organized as **Hardware | Manual Layout | Parts**. Manual Layout stays central and visible; Hardware is a collapsible drawer on its left and Parts is a collapsible drawer on its right. Either drawer can be opened independently without consuming vertical space from the layout editor.
+
+All Simple-mode layout choices now live directly under Manual Layout Editor: **Layout mode, Contents, Drawer rows, Doors, and Shelf panels**. In Sections/Bays mode, the per-opening layout controls remain in the same editor. These layout decisions are intentionally removed from the right-side Properties surface so there is one place to change cabinet layout.
+
+The right **Properties** panel has an always-visible search field. With no search text it behaves contextually when a part is selected. Entering a search searches all currently applicable non-layout properties regardless of part selection, including labels, descriptions, groups, values, and option names.
+
+The Hardware drawer retains the full v0.5/v0.6 searchable catalog, verification/source information, compatibility feedback, and preset application.
 
 ## v0.6 Exact CAD kernel
 
@@ -31,7 +41,7 @@ The applied-back rabbet is deliberately described as a proof operation: the side
 
 ## v0.5.2 Manual Layout workspace
 
-Manual Layout Editor is now the default left-side workspace. The Layout mode selector lives at the top of that editor: **Simple cabinet** keeps a concise recipe summary visible, while **Sections / bays** activates the manual opening/divider canvas in the same place.
+Manual Layout Editor is the default left-side workspace. The Layout mode selector lives at the top of that editor: **Simple cabinet** exposes its layout controls there, while **Sections / bays** activates the manual opening/divider canvas in the same place.
 
 The generated Parts browser is a secondary drawer immediately to the right of Manual Layout. It starts collapsed for maximum layout/viewport space and can be expanded when individual generated parts need to be selected, hidden, or inspected. Opening Parts expands the left workspace horizontally rather than shrinking the Manual Layout editor vertically.
 
@@ -45,7 +55,7 @@ Part selection is now an editing action as well as an inspection action. Clickin
 
 v0.5 turns the web application's hardware knowledge into first-class standalone CAD data for the Utility Cabinet reference family. The generated standalone catalog currently carries all 84 Utility-compatible profiles from Cabinet Workshop: 74 drawer-slide profiles and 10 concealed-hinge profiles, with manufacturer/model/source and verification status preserved.
 
-The Properties panel includes a searchable hardware catalog. Applying a preset is one undoable parameter operation, after which the copied dimensions remain editable. Profiles marked as manufacturer-partial intentionally keep unsupported drilling disabled; Standalone does not invent a hole choice when a manufacturer product exposes multiple valid mounting options.
+The left Hardware drawer includes the searchable hardware catalog. Applying a preset is one undoable parameter operation, after which the copied dimensions remain editable. Profiles marked as manufacturer-partial intentionally keep unsupported drilling disabled; Standalone does not invent a hole choice when a manufacturer product exposes multiple valid mounting options.
 
 Hardware is now represented as semantic `HardwareDefinition` and `HardwareInstance` objects with mounting references, keepout envelopes, required clearances, drilling data, and simplified realtime reference bodies. Metal-slide side clearance changes drawer-box width, slide length limits drawer-box depth, encoded slide drilling reaches drawer/cabinet mounting members, and concealed hinges add cup/plate drilling intent. Purchased hardware is grouped separately from fabricated cabinet-part BOM rows.
 
