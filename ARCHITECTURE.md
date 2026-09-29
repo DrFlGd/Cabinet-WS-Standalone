@@ -206,6 +206,34 @@ the printable packet generates a separate schematic isometric SVG with stable pa
 callouts. Native Electron text export only receives already-generated CSV/HTML and
 writes it through a save dialog.
 
+## v0.11 manufacturing-geometry boundary
+
+Phase 11 is another derived semantic layer. `buildManufacturingModel()` consumes the
+current `CabinetDocument`, Phase 10 shop part numbers, the regenerated feature graph,
+and Phase 9 Design Health. It projects each fabricated part into a part-local
+millimeter machining plane whose U/V axes are explicit and whose remaining axis is
+the stock-thickness axis.
+
+Registered features become normalized CUT, POCKET, DADO/GROOVE, DRILL, ENGRAVE,
+and EDGE operations. Operations carry stable part/feature identity, machining-face
+semantic IDs, depth/through state, and simple 2D primitives. Outer/profile geometry
+comes from semantic panel profiles, not tessellated Three.js or OpenCascade triangles.
+
+DXF and SVG are presentation/export encodings of that operation model. DXF declares
+millimeters with `$INSUNITS=4`; SVG uses millimeter dimensions and scale 1. Drilling
+maps and JSON metadata preserve the same part-local coordinate frame and semantic
+face/depth information.
+
+The reviewed manufacturing package is a snapshot artifact, not persisted cabinet
+state. A package is blocked while Design Health readiness is `blocked`; otherwise
+the exact manufacturing signature must be explicitly reviewed in the UI. A ZIP
+contains manifests/reports plus per-part and per-layer DXF/SVG/drilling/metadata.
+
+No Phase 11 file is a CNC toolpath. There is no cutter compensation, kerf, feeds,
+speeds, nesting, work offset, machine profile, postprocessor, or G-code generation.
+Those concerns belong to Phase 12 and must consume these registered operations
+rather than reverse-engineer them from exported graphics.
+
 ## Three.js responsibilities
 
 Three.js remains responsible for:
@@ -221,7 +249,7 @@ It is not responsible for manufacturing truth or boolean geometry.
 
 ## Next architectural layer
 
-Phase 11 manufacturing geometry should reuse the same stable Phase 10 part numbers,
-registered features, and Phase 9 readiness gate for operation-layer DXF/SVG, drilling
-maps, machining-face metadata, and reviewed export packages. It should not introduce
-a separate mesh or report-text interpretation path.
+Phase 12 should consume the Phase 11 operation model for sheet stock, grain-aware
+nesting, rotation constraints, kerf/tool diameter, remnants, and machine/postprocessor
+profiles. Toolpaths must remain downstream of explicit machine/tool configuration;
+the project should not infer CNC motion from Three.js meshes or generic DXF alone.
