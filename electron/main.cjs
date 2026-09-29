@@ -117,7 +117,12 @@ function registerIpc() {
 
   ipcMain.handle('export:step', async (_event, options) => {
     const bytes = options?.bytes;
-    if (!(bytes instanceof ArrayBuffer) || bytes.byteLength <= 0 || bytes.byteLength > MAX_STEP_BYTES) {
+    const buffer = bytes instanceof ArrayBuffer
+      ? Buffer.from(bytes)
+      : ArrayBuffer.isView(bytes)
+        ? Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength)
+        : null;
+    if (!buffer || buffer.byteLength <= 0 || buffer.byteLength > MAX_STEP_BYTES) {
       throw new Error('STEP export is empty or too large.');
     }
 
@@ -132,7 +137,7 @@ function registerIpc() {
 
     let filePath = result.filePath;
     if (!/\.(step|stp)$/i.test(filePath)) filePath += '.step';
-    await fs.writeFile(filePath, Buffer.from(bytes));
+    await fs.writeFile(filePath, buffer);
     return { canceled: false, path: filePath, name: path.basename(filePath) };
   });
 
