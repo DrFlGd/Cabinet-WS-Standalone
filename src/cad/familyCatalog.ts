@@ -1,6 +1,7 @@
 import rawCatalog from './data/legacyFamilyStarters.json';
 import { sanitizeParameters, stockThickness } from './cabinetModel';
 import { makeUtilityDefaults } from './utilityStarters';
+import { bestHardwareMatch } from './hardwareCatalog';
 import { sectionLeaf, sectionsFromWebValues } from './sections';
 import type {
   CabinetFamily,
@@ -223,6 +224,13 @@ export function parametersFromFamilyValues(
     mapped.drawerCount = moduleType === 'drawers' ? intOr(v.drawer_count, 2) : 0;
     mapped.doorCount = moduleType === 'door' || moduleType === 'doors' ? 1 : 0;
     mapped.shelfCount = moduleType === 'drawers' ? 0 : intOr(v.door_shelf_count, 1);
+  }
+
+  if (mapped.drawerMount === 'metal_slides') {
+    mapped.drawerSlideId = bestHardwareMatch('drawer_slide', mapped)?.id ?? '';
+  }
+  if (mapped.hingeStyle === 'euro_35mm') {
+    mapped.hingeId = bestHardwareMatch('hinge', mapped)?.id ?? '';
   }
 
   const fallback = sanitizeParameters({ ...defaults, ...mapped, layoutMode: 'legacy' });
