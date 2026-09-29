@@ -39,13 +39,16 @@ export const sectionLeaf = (
 
 export function cloneSectionNodes(nodes: SectionNode[]) {
   return nodes.map(node => {
-    const legacy = [
+    if (node[12] === undefined) {
+      return [
+        node[0], node[1], node[2], node[3], node[4], node[5], node[6],
+        node[7], node[8], [...node[9]], node[10], node[11],
+      ] as SectionNode;
+    }
+    return [
       node[0], node[1], node[2], node[3], node[4], node[5], node[6],
-      node[7], node[8], [...node[9]], node[10], node[11],
+      node[7], node[8], [...node[9]], node[10], node[11], [...node[12]],
     ] as SectionNode;
-    return node[12] === undefined
-      ? legacy
-      : [...legacy, [...node[12]]] as SectionNode;
   });
 }
 
