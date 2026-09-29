@@ -145,7 +145,7 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
   { key: 'drawerGap', kind: 'dimension', label: 'Drawer gap', description: 'Gap between adjacent drawer fronts.', section: 'Fronts', min: 0.5, max: 20, step: 0.1, visibleWhen: p => p.cabinetContents !== 'doors' },
   { key: 'doorGap', kind: 'dimension', label: 'Door gap', description: 'Gap between adjacent doors.', section: 'Fronts', min: 0.5, max: 20, step: 0.1, visibleWhen: p => p.cabinetContents !== 'drawers' },
 
-  { key: 'shelfCount', kind: 'count', label: 'Shelf panels', description: 'Number of shelves supplied in the door/open region.', section: 'Shelves', min: 0, max: 6, visibleWhen: p => p.layoutMode === 'legacy' && p.cabinetContents !== 'drawers' },
+  { key: 'shelfCount', kind: 'count', label: 'Shelf panels', description: 'Number of shelves supplied in the door/open region.', section: 'Layout', min: 0, max: 6, visibleWhen: p => p.layoutMode === 'legacy' && p.cabinetContents !== 'drawers' },
   { key: 'shelfStyle', kind: 'select', label: 'Shelf style', description: 'Fixed shelves or adjustable shelf-pin shelves. In Sections mode this applies to generated shelf panels.', section: 'Shelves', visibleWhen: p => p.layoutMode === 'sections' || (p.cabinetContents !== 'drawers' && p.shelfCount > 0), options: [
     { value: 'fixed', label: 'Fixed' },
     { value: 'adjustable', label: 'Adjustable' },
