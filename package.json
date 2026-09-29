@@ -53,5 +53,8 @@
       ],
       "artifactName": "Cabinet-WS-Standalone-${version}-Windows-x64.${ext}"
     }
+  },
+  "overrides": {
+    "std-env": "4.2.0"
   }
 }
