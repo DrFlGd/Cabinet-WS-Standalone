@@ -234,12 +234,12 @@ Each parameter should describe:
 - dependency/visibility rule
 - affected model nodes
 
-- [x] strongly typed parameter definitions *(Utility)*
+- [x] typed/generated family parameter definitions *(all seven families in v0.14)*
 - [ ] runtime project validation from the same schema
-- [x] generated property controls *(Utility)*
+- [x] generated property controls *(all seven families in v0.14)*
 - [ ] validation messages
-- [x] dependency-aware visibility *(Utility)*
-- [x] advanced-setting presentation *(Utility baseline)*
+- [x] dependency-aware visibility/inactive reasons *(all seven families in v0.14)*
+- [x] advanced-setting presentation *(all seven families in v0.14)*
 
 **Reference:** web `lib/schema.json`, `lib/settings.ts`
 
@@ -739,6 +739,31 @@ reverse-engineering operations from meshes.
 Implement compensated toolpath geometry plus at least one explicit verified machine
 profile/postprocessor before enabling G-code/post output. Do not infer CNC motion
 from nominal DXF alone.
+
+---
+
+# v0.14 — Native family settings milestone
+
+**Status: implemented**
+
+- [x] import complete family field metadata for all seven families
+- [x] generated native controls for select/boolean/number/dimension/text/array fields
+- [x] millimeter/inch display conversion for family dimensions
+- [x] port dependency-aware inactive rules from web `lib/settings.ts`
+- [x] advanced and inactive-setting visibility controls
+- [x] family-setting search across labels, keys, descriptions, values, and options
+- [x] expression-backed family value recomputation
+- [x] one-step undoable family recipe edits
+- [x] family recipe -> canonical model regeneration
+- [x] canonical/contextual edit -> family recipe synchronization
+- [x] sparse/v1/v2 recipe hydration before editing
+- [x] Manual Layout ownership for `section_nodes`
+- [x] regression coverage for all 1,678 family field definitions
+
+The native family settings surface is now complete at the schema/control layer. Legacy
+Output/System values remain compatibility state while Standalone-native file/export
+actions remain authoritative. Runtime validation generated from the same schema remains
+a follow-on item; current editing enforces field bounds/options and dependency rules.
 
 ---
 

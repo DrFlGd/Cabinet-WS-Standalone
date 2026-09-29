@@ -7,7 +7,7 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 ## Prototype features
 
 - React desktop-style workspace with Manual Layout, collapsible Hardware/Parts drawers, realtime 3D viewport, searchable Properties panel, and toolbar.
-- Seven native cabinet families in v0.13—Shop Cart, Utility, Benchtop Drawers, Stackable, Kitchen, Standalone Drawer, and Equipment Stand—with all 110 shipped Cabinet Workshop examples available from the family/example browser.
+- Seven native cabinet families—Shop Cart, Utility, Benchtop Drawers, Stackable, Kitchen, Standalone Drawer, and Equipment Stand—with all 110 shipped Cabinet Workshop examples and the complete v0.14 family-settings schema available natively.
 - Stable semantic part IDs such as `carcass:left`, `shelf:1`, and `door:2`.
 - Direct part/face selection in the Three.js viewport, Shift-click exact edge selection, Ctrl-click multi-selection, semantic distance/face/angle measurements, movable shelves/section dividers, contextual part actions, and editable cabinet dimensions.
 - Hide/show/isolate parts, exploded view, clipping, shaded/edge/wireframe display modes, perspective/orthographic cameras, iso/front/right/top views, persistent shelf handles, and 3D section-divider handles.
@@ -16,6 +16,32 @@ This repository is intentionally separate from Cabinet Workshop. The goal is a d
 - Native Electron New/Open/Save/Save As, recent projects, dirty-state protection, and recovery autosave.
 - Undo/redo with coalesced continuous parameter edits and keyboard shortcuts, including one-step undo for applied fit-solver results.
 - Exact STEP assembly export plus Shop Docs cut-list/assembly reports, Phase 11 DXF/SVG/drilling manufacturing exports, and Phase 12 sheet-nesting/registration outputs.
+
+## v0.14 Native family controls
+
+v0.14 turns the schema-v3 family recipe from retained compatibility data into a native editing surface. The standalone now carries the complete Cabinet Workshop field metadata for all seven families: **1,678 family fields total**, ranging from 99 fields for Equipment Stand to 310 for Shop Cart and Utility.
+
+The right Properties workspace defaults to **Family settings** when no generated part is selected. Controls are generated from the family schema and support option lists, booleans, bounded numeric values, millimeter dimensions with current display-unit conversion, text values, flat arrays, and nested JSON arrays. Users can search the family schema, reveal advanced controls, or inspect currently inactive settings.
+
+The dependency engine ports the useful legacy visibility rules rather than showing hundreds of irrelevant inputs at once. Joinery, drawer/door presence, slide type, hinge type, worktop enablement, face frames, stackable module type, equipment sizing mode, skeletonized sides, French-cleat mounting, standalone-drawer sizing basis, shelf drilling, registration holes, and other dependent surfaces report why they are inactive. Section-tree data remains intentionally owned by **Manual Layout** instead of exposing a second raw `section_nodes` editor.
+
+Expression-backed legacy values are recomputed after source edits, including toe-kick derived dimensions, drawer-bank face gap, wood-runner defaults, small-panel tab sizing, Kitchen face-frame mid-rail height, and depth-derived runner dimensions.
+
+A family edit is one undoable history operation:
+
+```text
+native family control
+  -> schema-v3 familyValues
+  -> dependency/expression normalization
+  -> family adapter
+  -> canonical CabinetParameters / dedicated family generator
+  -> semantic CabinetDocument
+  -> exact OpenCascade + downstream manufacturing layers
+```
+
+Existing Native model/contextual controls remain available and now synchronize their mapped values back into `familyValues`, preventing the retained family recipe from becoming stale. Sparse and pre-v3 projects are hydrated from family defaults before synchronization, so changing a new family setting cannot reset unrelated saved cabinet dimensions.
+
+Legacy **Output/System** fields are retained and editable for project compatibility, but Standalone's native save, STEP, Shop Docs, manufacturing, and production actions remain authoritative. OpenSCAD output-mode settings do not reintroduce the old web/OpenSCAD runtime.
 
 ## v0.13 Seven-family and example-catalog parity
 
@@ -29,7 +55,7 @@ Standalone Drawer and Equipment Stand use dedicated native family generators rat
 
 Legacy Cabinet Workshop imports now accept all seven numeric/string family IDs. Old Standalone schema-v1/v2 projects migrate to schema v3 as Utility projects without changing their existing canonical parameters.
 
-This milestone ports **the families and shipped example catalog**, not the web application's entire 99–310-field presentation layer. The shared native Properties surface remains the primary editor; family-only legacy values that do not yet have a redesigned control remain retained in `familyValues` and continue to drive the family adapter where implemented. OpenSCAD remains reference/oracle code only and is not reintroduced into the production runtime.
+v0.14 subsequently adds the complete generated native family-settings surface over these retained recipes. OpenSCAD remains reference/oracle code only and is not reintroduced into the production runtime.
 
 ## v0.12 Sheet nesting and production planning
 

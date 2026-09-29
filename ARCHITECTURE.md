@@ -327,6 +327,53 @@ family recipe
     -> exact OpenCascade + downstream shop/manufacturing/production layers
 ```
 
+## v0.14 native family-settings boundary
+
+The v0.13 `familyValues` payload is now an editable domain surface rather than passive
+compatibility storage. `legacyFamilySchema.json` contains the complete field metadata
+for all seven original families. `familySettings.ts` owns family-field lookup,
+dependency/inactive rules, schema-bound normalization, expression-backed derived values,
+recipe hydration, and synchronization between legacy family values and canonical
+Standalone parameters.
+
+The generated React controls do not own geometry. Their edit path is:
+
+```text
+FamilySettingsPanel
+  -> applyFamilyFieldChange()
+  -> familyValues (schema v3)
+  -> parametersFromFamilyValues()
+  -> CabinetParameters / dedicated family generator
+  -> buildFamilyCabinetDocument()
+```
+
+Each edit goes through the existing editor history and is therefore undoable as one
+document operation. Editing existing canonical/contextual controls takes the reverse
+path through `syncFamilyValuesFromParameters()`, so a schema-v3 project does not
+accumulate two silently divergent representations of the same mapped setting.
+
+Dependency handling deliberately follows the old web semantics where useful: inactive
+controls keep their saved value instead of deleting it. The generated UI normally hides
+inactive fields but can reveal them with the reason they are inactive. This preserves
+configuration intent when a parent option is toggled off and later restored.
+
+Fields with legacy expressions are treated as derived/read-only controls. Their values
+are recomputed from trusted built-in formulas after source edits. The Standalone does
+not evaluate arbitrary project-provided code.
+
+`section_nodes` is a special ownership boundary. The raw family field remains visible
+as a Manual Layout link, but the section tree is edited only by the semantic section
+editor. This avoids two independent editors mutating the same hierarchy.
+
+Sparse family recipes—including projects migrated from schema v1/v2—are hydrated from
+the active family schema before synchronization. Canonical saved dimensions/settings are
+then overlaid into the hydrated recipe. This protects old projects from losing unrelated
+settings when a newly exposed family field is edited.
+
+Legacy Output/System settings remain persisted compatibility data. They do not override
+Standalone-native Open/Save, STEP, Shop Docs, manufacturing, nesting, or production
+commands, and they never switch the runtime back to OpenSCAD.
+
 ## Three.js responsibilities
 
 Three.js remains responsible for:
