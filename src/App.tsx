@@ -15,7 +15,8 @@ import {
   type ImportReport,
 } from './cad/documentIO';
 import { formatDimension, unitLabel, type DisplayUnits } from './cad/units';
-import { simpleLayoutToSections } from './cad/sections';
+import { cloneSectionNodes, sectionRects, sectionRoot, simpleLayoutToSections } from './cad/sections';
+import { computeMeasurement, requiredMeasurementSelections, type MeasurementMode } from './cad/measurements';
 import { hardwareDefinition } from './cad/hardwareCatalog';
 import { useGeometryKernel } from './cad/kernel/useGeometryKernel';
 import type { KernelSelection } from './cad/kernel/types';
@@ -28,6 +29,7 @@ import SelectControl from './components/SelectControl';
 import DimensionInput from './components/DimensionInput';
 import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
+import MeasurementPanel from './components/MeasurementPanel';
 import { desktopApi, type RecentProject } from './desktop';
 import { clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
 import type { EditorDocument } from './editor/history';
@@ -65,6 +67,8 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [kernelSelection, setKernelSelection] = useState<KernelSelection | null>(null);
+  const [measurementMode, setMeasurementMode] = useState<MeasurementMode>('off');
+  const [measurementSelections, setMeasurementSelections] = useState<KernelSelection[]>([]);
   const [displayMode, setDisplayMode] = useState<ViewportDisplayMode>('shaded-edges');
   const [projection, setProjection] = useState<ViewportProjection>('perspective');
   const [clipEnabled, setClipEnabled] = useState(false);
@@ -89,6 +93,10 @@ export default function App() {
   const bodyCount = cadDocument.parts.filter(part => part.category !== 'hardware').length;
   const hardwareCount = cadDocument.hardware.length;
   const kernel = useGeometryKernel(cadDocument);
+  const measurementResult = useMemo(
+    () => computeMeasurement(cadDocument, kernel.result?.parts ?? [], measurementMode, measurementSelections),
+    [cadDocument, kernel.result?.parts, measurementMode, measurementSelections],
+  );
 
   async function refreshRecent() {
     const desktop = desktopApi();
@@ -329,9 +337,104 @@ export default function App() {
 
   function selectTopology(selection: KernelSelection | null) {
     setKernelSelection(selection);
-    if (selection) {
-      setNotice(`Selected ${selection.kind} · ${selection.semanticId}`);
+    if (!selection) return;
+
+    if (measurementMode !== 'off') {
+      const valid = measurementMode === 'distance'
+        || (measurementMode === 'face' && selection.kind === 'face')
+        || (measurementMode === 'angle' && selection.kind === 'face');
+      if (valid) {
+        setMeasurementSelections(current => {
+          const required = requiredMeasurementSelections(measurementMode);
+          if (required <= 1) return [selection];
+          if (current.length >= required) return [selection];
+          if (current.some(item => item.partId === selection.partId && item.kind === selection.kind && item.semanticId === selection.semanticId)) return current;
+          return [...current, selection];
+        });
+      }
     }
+    setNotice(`Selected ${selection.kind} · ${selection.semanticId}`);
+  }
+
+  function changeMeasurementMode(mode: MeasurementMode) {
+    setMeasurementMode(mode);
+    setMeasurementSelections([]);
+    if (mode !== 'off') setNotice(`Measure ${mode} · select semantic geometry in the viewport`);
+  }
+
+  function clearMeasurement() {
+    setMeasurementSelections([]);
+    setMeasurementMode('off');
+  }
+
+  function updateShelfPosition(partId: string, nextZ: number) {
+    const part = cadDocument.parts.find(candidate => candidate.id === partId);
+    if (!part) return;
+    const shelfIndex = Number(part.metadata?.shelfIndex ?? 0) - 1;
+    const minZ = Number(part.metadata?.shelfMinZ ?? NaN);
+    const maxZ = Number(part.metadata?.shelfMaxZ ?? NaN);
+    if (shelfIndex < 0 || !Number.isFinite(minZ) || !Number.isFinite(maxZ) || maxZ <= minZ) return;
+    const normalized = Math.max(0.03, Math.min(0.97, (nextZ + part.size.z / 2 - minZ) / (maxZ - minZ)));
+    const sectionId = Number(part.metadata?.sectionId ?? 0);
+
+    history.edit(current => {
+      if (sectionId > 0 && current.parameters.layoutMode === 'sections') {
+        const nodes = cloneSectionNodes(current.parameters.sectionNodes);
+        const nodeIndex = sectionId - 1;
+        const node = nodes[nodeIndex];
+        if (!node) return current;
+        const count = node[5] === 'open' ? node[6] : node[11];
+        const positions = Array.from({ length: count }, (_, index) => node[12]?.[index] ?? (index + 1) / (count + 1));
+        positions[shelfIndex] = normalized;
+        node[12] = positions;
+        return { ...current, parameters: sanitizeParameters({ ...current.parameters, sectionNodes: nodes }) };
+      }
+
+      const count = current.parameters.shelfCount;
+      const positions = Array.from({ length: count }, (_, index) => current.parameters.shelfPositions[index] ?? (index + 1) / (count + 1));
+      positions[shelfIndex] = normalized;
+      return { ...current, parameters: sanitizeParameters({ ...current.parameters, shelfPositions: positions }) };
+    }, `shelf-position:${partId}`);
+    setNotice(`Moved ${part.name}`);
+  }
+
+  function updateSectionDivider(partId: string, delta: number) {
+    const part = cadDocument.parts.find(candidate => candidate.id === partId);
+    const parentId = Number(part?.metadata?.dividerParentId ?? -1);
+    const order = Number(part?.metadata?.dividerOrder ?? -1);
+    const axis = part?.metadata?.dividerAxis;
+    if (!part || parentId < 0 || order <= 0 || (axis !== 'x' && axis !== 'z')) return;
+
+    history.edit(current => {
+      if (current.parameters.layoutMode !== 'sections') return current;
+      const nodes = cloneSectionNodes(current.parameters.sectionNodes);
+      const thickness = stockThickness(current.parameters.carcassStock, current.parameters.materialThickness);
+      const rects = sectionRects(nodes, sectionRoot(current.parameters, thickness), thickness);
+      const children = nodes
+        .map((node, index) => ({ node, index }))
+        .filter(entry => entry.node[0] === parentId)
+        .sort((a, b) => a.node[1] - b.node[1]);
+      const previous = children.find(entry => entry.node[1] === order - 1);
+      const currentChild = children.find(entry => entry.node[1] === order);
+      if (!previous || !currentChild) return current;
+
+      const span = (id: number) => axis === 'x' ? rects[id]?.w ?? 0 : rects[id]?.h ?? 0;
+      for (const entry of children) {
+        if (entry.node[3] === 'weight') entry.node[4] = Math.max(1, span(entry.index));
+      }
+      const previousSpan = span(previous.index);
+      const currentSpan = span(currentChild.index);
+      const previousDelta = axis === 'x' ? delta : -delta;
+      const nextPrevious = Math.max(60, Math.min(previousSpan + currentSpan - 60, previousSpan + previousDelta));
+      const nextCurrent = previousSpan + currentSpan - nextPrevious;
+      previous.node[3] = 'weight';
+      currentChild.node[3] = 'weight';
+      previous.node[4] = nextPrevious;
+      currentChild.node[4] = nextCurrent;
+      return { ...current, parameters: sanitizeParameters({ ...current.parameters, sectionNodes: nodes }) };
+    }, `section-divider:${parentId}:${order}`);
+    setSectionSelectedId(parentId);
+    setNotice('Moved section divider from 3D viewport');
   }
 
   async function exportStep() {
@@ -518,7 +621,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.7.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.8.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -614,6 +717,14 @@ export default function App() {
           units={editor.displayUnits}
           onChange={(key, value) => updateParameter(key, value)}
         />
+        <MeasurementPanel
+          mode={measurementMode}
+          result={measurementResult}
+          selectionCount={measurementSelections.length}
+          units={editor.displayUnits}
+          onMode={changeMeasurementMode}
+          onClear={clearMeasurement}
+        />
         <CadViewport
           ref={viewport}
           document={cadDocument}
@@ -630,6 +741,8 @@ export default function App() {
           onSelect={select}
           onTopologySelect={selectTopology}
           onDimensionChange={(key, value) => updateParameter(key, value)}
+          onShelfPositionChange={updateShelfPosition}
+          onSectionDividerChange={updateSectionDivider}
           onHideSelected={hideSelected}
           onIsolateSelected={isolateSelected}
           onShowAll={showAllParts}
@@ -707,7 +820,7 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
 }
 
 function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.7.0 · exact B-Rep · ${featureCount} semantic features · direct CAD editing · STEP`;
-  if (status === 'error') return `Utility v0.7.0 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
-  return 'Utility v0.7.0 · OpenCascade worker initializing…';
+  if (status === 'ready') return `Utility v0.8.0 · exact B-Rep · ${featureCount} semantic features · cabinet-depth editing · STEP`;
+  if (status === 'error') return `Utility v0.8.0 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
+  return 'Utility v0.8.0 · OpenCascade worker initializing…';
 }
