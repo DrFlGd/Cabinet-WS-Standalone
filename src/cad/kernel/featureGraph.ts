@@ -1,4 +1,4 @@
-import type { CabinetDocument, CadPart } from '../types';
+import type { CabinetDocument, CadPart, CadRenderFeature } from '../types';
 import type { CadFeature, FeatureGraph } from './types';
 
 export function buildFeatureGraph(document: CabinetDocument): FeatureGraph {
@@ -164,7 +164,7 @@ function isToeKickProfile(part: CadPart) {
   return uniqueU.size > 2 && uniqueV.size > 2;
 }
 
-function renderFeatureLabel(kind: CadPart['renderFeatures'][number]['kind']) {
+function renderFeatureLabel(kind: CadRenderFeature['kind']) {
   switch (kind) {
     case 'dado': return 'Dado';
     case 'rabbet': return 'Rabbet';
