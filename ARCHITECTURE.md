@@ -153,6 +153,30 @@ Semantic measurement is read-only over exact output. Distance resolves semantic 
 
 The bounded section tree remains the source of opening truth. Face-frame-aware UI dimensions show the usable frame-clear opening while preserving the underlying carcass section constraints. New section nodes may persist an optional shelf-position array; legacy 12-field nodes remain accepted and are migrated/defaulted in memory.
 
+## v0.9 validation and solver boundary
+
+Design Health is a pure semantic consumer. It reads the current `CabinetDocument`,
+regenerates the cabinet feature graph, consumes hardware definitions/keepout
+envelopes, bounded-section constraints, and current exact-kernel diagnostics, and
+returns categorized checks plus coverage/readiness. It does not depend on Three.js
+objects, raw OpenCascade topology indexes, or OpenSCAD report text.
+
+Current native checks cover document/interface integrity, joinery residual stock,
+section feasibility, hardware compatibility/support, shelf-to-hardware keepout
+collisions, registered drilling edge distance, overlapping subtractive machining
+envelopes, and exact-kernel diagnostics. Because checks bind to semantic part and
+feature IDs, later manufacturing/BOM UIs can link warnings directly to the same
+entities.
+
+The Fit Solver is also document-native. A target resolves to a proposed
+`Partial<CabinetParameters>` plus requested/achieved values, explanation lines,
+warnings, and feasibility. The UI never mutates geometry directly: applying a
+feasible solution sends the parameter patch through `sanitizeParameters()` inside
+one editor-history edit. The resulting document then follows the normal analytical
+preview -> exact worker rebuild -> Design Health reevaluation cycle. Infeasible
+drawer slide limits and unsupported cabinet envelope sizes are reported rather than
+silently clamped.
+
 ## Three.js responsibilities
 
 Three.js remains responsible for:
@@ -168,4 +192,7 @@ It is not responsible for manufacturing truth or boolean geometry.
 
 ## Next architectural layer
 
-Phase 9 can now consume the richer semantic model for Design Health and fit solving: drawer/slide conflicts, face-frame opening constraints, hinge clearances, machining overlap, material thickness, and collisions. Manufacturing consumers should continue to bind to semantic parts/features/topology rather than renderer objects or transient OpenCascade indexes.
+Phase 10 can consume the same stable semantic parts/features and Phase 9 readiness
+results for BOM, cut-list, and assembly documentation. Phase 11 manufacturing output
+should reuse registered operations and Design Health gating rather than introducing
+a separate mesh/report interpretation path.

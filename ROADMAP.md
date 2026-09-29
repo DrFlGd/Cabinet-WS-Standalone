@@ -513,50 +513,64 @@ Standalone can model common frameless and face-frame Utility cabinet constructio
 
 # Phase 9 — Design Health and fitting
 
+**Status: implemented for the Utility Cabinet reference family in v0.9**
+
 Purpose: port the web application's validation/solver concepts, but make them native
 to the CAD document.
 
 ## 9.1 Design Health
 
-Port the categories currently surfaced from OpenSCAD:
+- [x] errors
+- [x] warnings
+- [x] compatibility
+- [x] coverage
+- [x] system/interface checks
+- [x] manufacturing readiness
 
-- [ ] errors
-- [ ] warnings
-- [ ] compatibility
-- [ ] coverage
-- [ ] system/interface checks
-- [ ] manufacturing readiness
+The native engine consumes `CabinetDocument`, the semantic feature graph, hardware
+definitions/keepouts, bounded section constraints, and exact-kernel diagnostics. It
+does not parse OpenSCAD output.
 
-New checks should work from semantic geometry/features where possible.
+Implemented checks include:
 
-Examples:
-
-- material too thin for selected dado
-- hinge cup breakthrough
-- slide length incompatible with cabinet depth
-- impossible fixed section dimensions
-- shelf/hardware collision
-- insufficient edge distance
-- overlapping machining
-- unsupported hardware configuration
+- [x] material too thin for selected dado
+- [x] captured drawer-bottom groove residual stock / breakthrough
+- [x] hinge cup breakthrough
+- [x] slide length incompatible with cabinet depth
+- [x] impossible fixed section dimensions
+- [x] shelf/hardware collision using hardware keepout envelopes
+- [x] insufficient drilling edge distance / machining outside part boundary
+- [x] overlapping registered subtractive machining envelopes
+- [x] unsupported, reference-only, partial, or ambiguous hardware configuration
+- [x] duplicate semantic part/feature IDs
+- [x] invalid fabricated body dimensions
+- [x] missing hardware mounting references
+- [x] exact-kernel diagnostics incorporated into readiness
 
 ## 9.2 Fit solving
 
-Port useful target-driven behavior:
+- [x] fitted drawer targets
+- [x] equipment stand targets
+- [x] module pitch/count solving
+- [x] result explanation
+- [x] apply solved result as an undoable operation
+- [x] reject unsupported/out-of-envelope results instead of silently relying on parameter clamping
 
-- [ ] fitted drawer targets
-- [ ] equipment stand targets
-- [ ] module pitch/count solving
-- [ ] result explanation
-- [ ] apply solved result as an undoable operation
+Drawer solving works backward from requested usable interior dimensions through box
+stock, slide clearance/length, carcass/rear construction, and face-frame opening
+deductions. Equipment solving works from a target W/H/D envelope plus clearances.
+Module solving resolves cabinet width or height from pitch × count plus margins.
 
 **Reference:** web `app/DesignHealth.tsx`, `app/FitTargetResult.tsx`,
-`lib/manufacturing.ts`
+`lib/manufacturing.ts` were used for product behavior only; Standalone's
+implementation is native and OpenSCAD-independent.
 
 ### Definition of done
 
-Users receive actionable design feedback before manufacturing, without requiring
-OpenSCAD ECHO parsing as the long-term implementation.
+Users receive actionable, categorized design feedback and manufacturing-readiness
+status before manufacturing, and can solve/apply supported target dimensions with
+an explanation and one-step undo, without OpenSCAD ECHO parsing. **Met for the
+Utility Cabinet reference family in v0.9.**
 
 ---
 

@@ -1090,3 +1090,193 @@ button { color: inherit; }
 .measurement-result span { color: #819099; font-size: 9px; }
 .measurement-result strong { color: #e8edf0; font-size: 14px; }
 .measurement-result small { color: #708089; font-size: 8px; overflow-wrap: anywhere; }
+
+
+/* v0.9 Design Health and Fit Solver */
+.design-health-panel {
+  position: absolute;
+  top: 96px;
+  right: 12px;
+  z-index: 7;
+  width: 360px;
+  max-height: calc(100% - 150px);
+  display: grid;
+  border: 1px solid #3d4850;
+  border-radius: 8px;
+  background: rgba(22, 27, 31, .95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 14px 34px rgba(0,0,0,.28);
+  overflow: hidden;
+}
+.design-health-panel.pass { border-color: #39786d; }
+.design-health-panel.warning { border-color: #7a6739; }
+.design-health-panel.error { border-color: #7d4a47; }
+.design-health-summary {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 18px minmax(0,1fr) 16px;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: #20262a;
+  color: #dbe4e7;
+  padding: 9px 10px;
+  text-align: left;
+  cursor: pointer;
+}
+.design-health-summary > span { min-width: 0; display: grid; gap: 2px; }
+.design-health-summary strong { font-size: 10px; }
+.design-health-summary small { color: #819098; font-size: 8px; }
+.design-health-summary .open { transform: rotate(180deg); }
+.design-health-panel.pass .design-health-summary > svg:first-child { color: #62cdbc; }
+.design-health-panel.warning .design-health-summary > svg:first-child { color: #e0bf70; }
+.design-health-panel.error .design-health-summary > svg:first-child { color: #e79b94; }
+.design-health-content {
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+  padding: 9px;
+}
+.design-health-section-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 7px;
+  color: #cfd8dc;
+}
+.design-health-section-heading strong { flex: 1; font-size: 10px; }
+.design-health-section-heading > span {
+  color: #7f8f97;
+  font-size: 7px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.health-issues, .fit-solver {
+  border: 1px solid #333e45;
+  border-radius: 6px;
+  background: #181e22;
+  padding: 8px;
+}
+.health-check {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 6px;
+  padding: 6px 7px;
+  border-radius: 5px;
+  border-left: 3px solid #46545c;
+  background: #20262a;
+}
+.health-check.error { border-left-color: #b45f59; background: #302121; }
+.health-check.warning { border-left-color: #aa8b43; background: #2d291f; }
+.health-check > div { display: flex; justify-content: space-between; gap: 8px; }
+.health-check strong { font-size: 9px; }
+.health-check small {
+  flex: 0 0 auto;
+  color: #7d8c94;
+  font-size: 7px;
+  text-transform: uppercase;
+}
+.health-check p, .health-check em {
+  margin: 0;
+  color: #9ca9af;
+  font-size: 8px;
+  line-height: 1.4;
+}
+.health-check em { color: #c5b989; font-style: normal; }
+.health-pass { display: flex; gap: 6px; align-items: center; color: #6fd4c3; }
+.health-pass p { margin: 0; font-size: 8px; color: #9fb2ad; }
+.health-more { display: block; color: #74828a; font-size: 7px; margin: 4px 0 2px; }
+.health-coverage { margin-top: 7px; }
+.health-coverage summary, .fit-solution details summary {
+  color: #85949b;
+  font-size: 8px;
+  cursor: pointer;
+}
+.health-coverage > div {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 7px;
+  margin-top: 6px;
+  align-items: start;
+}
+.health-coverage > div > span {
+  border: 1px solid #46525a;
+  border-radius: 999px;
+  padding: 2px 5px;
+  color: #97a5ac;
+  font-size: 7px;
+  text-align: center;
+  text-transform: uppercase;
+}
+.health-coverage > div > span.checked { border-color: #39786d; color: #6fd4c3; }
+.health-coverage > div > span.partial { border-color: #79683d; color: #d7bd7e; }
+.health-coverage > div > p { margin: 0; display: grid; gap: 2px; }
+.health-coverage strong { font-size: 8px; color: #bac5ca; }
+.health-coverage small { font-size: 7px; color: #72828a; line-height: 1.35; }
+.fit-mode-tabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-bottom: 7px; }
+.fit-mode-tabs button {
+  border: 1px solid #39454d;
+  border-radius: 4px;
+  background: #20272c;
+  color: #9aa7ad;
+  padding: 5px;
+  font-size: 8px;
+  cursor: pointer;
+}
+.fit-mode-tabs button.active { border-color: #35d0ba; background: #18312e; color: #d9f6f0; }
+.fit-input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fit-input-grid label { display: grid; gap: 3px; color: #87969e; font-size: 8px; }
+.fit-input-grid input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #374149;
+  border-radius: 5px;
+  background: #191e22;
+  color: #e8edf0;
+  padding: 6px 7px;
+  font-size: 9px;
+}
+.fit-input-grid .number-input { grid-template-columns: 1fr 22px; }
+.fit-solution {
+  display: grid;
+  gap: 7px;
+  margin-top: 8px;
+  border-top: 1px solid #303a40;
+  padding-top: 8px;
+}
+.fit-solution.infeasible { border-top-color: #65403d; }
+.fit-solution-title { display: flex; justify-content: space-between; gap: 8px; }
+.fit-solution-title strong { font-size: 9px; }
+.fit-solution-title span { color: #67cdbd; font-size: 7px; text-transform: uppercase; }
+.fit-solution.infeasible .fit-solution-title span { color: #e0a198; }
+.fit-achieved { display: grid; gap: 3px; }
+.fit-achieved > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid #252d32;
+}
+.fit-achieved span { color: #7e8d95; font-size: 7px; }
+.fit-achieved strong { color: #d7e0e4; font-size: 8px; font-variant-numeric: tabular-nums; }
+.fit-solution details p, .fit-warning {
+  margin: 5px 0 0;
+  color: #7f8f97;
+  font-size: 7px;
+  line-height: 1.4;
+}
+.fit-warning { color: #d6b874; }
+.fit-apply {
+  border: 1px solid #328b7d;
+  border-radius: 5px;
+  background: #244d47;
+  color: #eafffb;
+  padding: 6px 8px;
+  font-size: 8px;
+  cursor: pointer;
+}
+.fit-apply:disabled { opacity: .4; cursor: default; }
+.fit-solution > small { color: #6f7e86; font-size: 7px; line-height: 1.35; }
+@media (max-width: 1250px) {
+  .design-health-panel { width: 320px; }
+}

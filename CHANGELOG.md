@@ -4,6 +4,34 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.9.0] - 2026-09-28
+
+### Added
+
+- Native Design Health engine operating directly on `CabinetDocument`, semantic features, hardware definitions/keepouts, section constraints, and exact-kernel diagnostics.
+- Categorized error, warning, compatibility, coverage, system/interface, and manufacturing-readiness reporting in a live viewport panel.
+- Material/joinery residual-stock checks for carcass dadoes and captured drawer-bottom grooves.
+- Hardware checks for hinge-cup breakthrough, slide-depth conflicts, unsupported/reference-only/partial profiles, ambiguous automatic drilling, and missing mounting references.
+- Shelf-versus-hardware keepout collision detection.
+- Registered drilling edge-distance checks and detection of machining extending outside a part boundary.
+- Overlap detection for registered dado/rabbet/groove/pocket machining envelopes.
+- Semantic document checks for duplicate part/feature IDs and invalid fabricated body dimensions.
+- Native Fit Solver modes for fitted drawer interiors, equipment envelopes, and module pitch/count.
+- Solver requested/achieved values, calculation explanations, feasibility warnings, and supported-envelope validation.
+- One-click solver application as one undoable editor-history operation followed by normal exact rebuild and health reevaluation.
+- Regression coverage for Design Health categories, collisions, machining checks, fit solving, geometry achievement, infeasible targets, and OpenSCAD-independent integration boundaries.
+
+### Changed
+
+- Application/package version advanced to 0.9.0.
+- The roadmap marks Phase 9 complete for the Utility Cabinet reference family and advances the next major milestone to Phase 10 BOM/cut-list/assembly documentation.
+- Design validation no longer requires the web application's OpenSCAD `ECHO` parsing model; the old web implementation remains reference behavior only.
+
+### Compatibility
+
+- No saved-project schema change. Design Health state and Fit Solver target inputs are editor state, while applied solutions change only existing semantic cabinet parameters.
+- Existing schema-v2 projects continue to load through the same migration/default path.
+
 ## [0.8.0] - 2026-09-28
 
 ### Added
