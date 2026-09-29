@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { buildCabinetDocument, stockThickness } from './cabinetModel';
 import { analyzeDesignHealth } from './designHealth';
@@ -128,5 +129,5 @@ describe('Phase 11 manufacturing geometry', () => {
 });
 
 function requireSource(path: string) {
-  return require('node:fs').readFileSync(path, 'utf8') as string;
+  return readFileSync(path, 'utf8');
 }
