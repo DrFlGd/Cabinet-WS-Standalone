@@ -1,396 +1,159 @@
 # Cabinet WS Standalone architecture
 
-## Core rule
-
-The CAD document owns cabinet meaning. Three.js owns visualization and interaction,
-not cabinet truth.
-
-Do not store durable cabinet identity in mesh UUIDs, scene ordering, OpenCascade
-face indexes, or renderer state.
-
-## v0.7 modeling flow
-
-```text
-CabinetParameters
-      |
-      v
-buildCabinetDocument()
-      |
-      +--> stable CadPart / HardwareInstance records
-      |       id / material / position / size / metadata
-      |
-      +--> immediate analytical preview
-      |       |
-      |       v
-      |    Three.js
-      |
-      +--> buildFeatureGraph()
-              |
-              v
-      WorkerGeometryKernel
-              |
-              +--> Replicad / OpenCascade B-Rep
-              |       panel blanks
-              |       profile cutouts
-              |       dado / rabbet / pocket booleans
-              |       drilling / hole patterns
-              |
-              +--> semantic topology map
-              |       stable face / edge / feature IDs
-              |
-              +--> per-part tessellation cache
-                      |
-                      v
-                   Three.js
-```
-
-The analytical model is intentionally retained. It is the cheap interaction preview
-while a worker rebuild is running and the fallback for any part whose exact rebuild
-reports an error. Once a matching exact result returns, its tessellation replaces the
-preview for that part.
-
-## GeometryKernel boundary
-
-The renderer talks to the kernel through a small asynchronous boundary:
-
-```ts
-interface GeometryKernel {
-  rebuild(document: CabinetDocument, dirtyIds?: string[]): Promise<KernelResult>;
-  tessellate(bodyIds?: string[]): TessellatedPart[];
-  exportStep(bodyIds?: string[]): Promise<ArrayBuffer>;
-  dispose(): void;
-}
-```
-
-The browser/Electron renderer never receives live OpenCascade objects. The worker
-returns transferable/plain tessellation and semantic-topology records. STEP is
-generated inside the worker and returned as bytes for the desktop save dialog.
-
-### Rebuild behavior
-
-- Each rebuild has a monotonically increasing request ID.
-- Older pending rebuilds are rejected/superseded when a newer edit arrives.
-- The worker yields between parts so queued edits can invalidate stale work.
-- The client compares part/feature signatures and sends dirty part IDs.
-- Unchanged tessellations are served from the worker cache.
-- Exact-result errors are returned as diagnostics and surfaced in Properties.
-- During any rebuild the viewport returns to the current analytical preview instead
-  of displaying exact geometry from an older parameter state.
-
-## Feature graph
-
-The feature graph is generated from cabinet semantics and is not persisted as raw
-kernel state. Current feature vocabulary includes:
-
-- panel blank
-- dado
-- rabbet
-- groove
-- pocket
-- hole
-- hole pattern
-- hardware reference
-- assembly transform
-
-Chamfer/bevel and edge-treatment IDs are reserved in the type system but their
-geometry/manufacturing behavior is deferred.
-
-A feature has a stable cabinet-facing ID such as a part-local dado or back-rabbet
-operation. Manufacturing work should consume these registered features rather than
-reverse-engineering operations from tessellated triangles.
-
-## Semantic topology
-
-OpenCascade can reorder topology whenever a boolean or dimension changes, so raw
-kernel indexes are never user-facing identities.
-
-The worker classifies generated topology into stable names such as:
-
-- `carcass:left`
-- `face:carcass:left:inside`
-- `face:carcass:left:front`
-- `edge:carcass:left:front-top`
-- semantic `feature:...` IDs from the feature graph
-
-Raw face/edge IDs are kept only long enough to map tessellation groups to these
-semantic names. Selection, future measurements, dimensions, constraints, and
-manufacturing references should bind to the semantic identity.
-
-## Exact geometry currently covered
-
-For the Utility Cabinet v0.6 proof of concept the kernel creates exact bodies for
-fabricated cabinet parts. Purchased hardware remains simplified semantic reference geometry. It also applies the machining intent already present in the
-semantic cabinet model, including:
-
-- panel/profile extrusion
-- toe-kick side profiles
-- dado/pocket subtraction
-- applied-back rabbet proof geometry on cabinet sides
-- adjustable-shelf line boring and other registered drilling
-- semantic purchased-hardware references remain preview-only; they are deliberately excluded from the exact body set
-
-STEP export writes the exact assembly with stable part names and millimeter units.
-
-The applied-back rabbet is currently a kernel proof operation on the side panels;
-the existing analytical applied-back envelope has not yet been redesigned around a
-full production rabbet construction recipe. That construction-detail refinement
-belongs with the broader cabinet manufacturing work rather than being hidden as a
-false parity claim.
-
-## Direct interaction boundary
-
-v0.7 adds direct manipulation without changing cabinet ownership. Width/height/depth overlays and W/D/H drag handles call the same `CabinetParameters` update/history path used by Properties. The analytical document rebuild is immediate; exact OpenCascade work remains asynchronous in the worker.
-
-Multi-selection, isolate/hide state, clipping, display mode, camera projection, and the right-click part menu are editor/viewport state. They must not become durable cabinet identity or substitute renderer transforms for persistent cabinet parameters. A direct manipulation is only a real model edit when it changes semantic document data and therefore participates in undo/redo and exact rebuilds.
-
-v0.8 extends that rule to shelves and section dividers. Simple shelves persist normalized positions in cabinet parameters; section shelves persist an optional normalized position list on their owning section node. 3D divider handles modify adjacent bounded-section weights through editor history. No shelf or divider drag survives only as a renderer transform.
-
-## v0.8 construction and measurement boundary
-
-Drawer joinery, bottom construction, organizer grids, and face frames are generated as semantic `CadPart` records plus registered cut features. Captured-bottom grooves and drawer rabbets enter the same feature graph consumed by the exact worker; face-frame stiles/rails are fabricated bodies rather than decorative viewport overlays.
-
-Semantic measurement is read-only over exact output. Distance resolves semantic face centers/edge midpoints, face size uses the selected tessellation face group, and angle uses semantic face normals. Measurement state is not persisted and cannot mutate geometry.
-
-The bounded section tree remains the source of opening truth. Face-frame-aware UI dimensions show the usable frame-clear opening while preserving the underlying carcass section constraints. New section nodes may persist an optional shelf-position array; legacy 12-field nodes remain accepted and are migrated/defaulted in memory.
-
-## v0.9 validation and solver boundary
-
-Design Health is a pure semantic consumer. It reads the current `CabinetDocument`,
-regenerates the cabinet feature graph, consumes hardware definitions/keepout
-envelopes, bounded-section constraints, and current exact-kernel diagnostics, and
-returns categorized checks plus coverage/readiness. It does not depend on Three.js
-objects, raw OpenCascade topology indexes, or OpenSCAD report text.
-
-Current native checks cover document/interface integrity, joinery residual stock,
-section feasibility, hardware compatibility/support, shelf-to-hardware keepout
-collisions, registered drilling edge distance, overlapping subtractive machining
-envelopes, and exact-kernel diagnostics. Because checks bind to semantic part and
-feature IDs, later manufacturing/BOM UIs can link warnings directly to the same
-entities.
-
-The Fit Solver is also document-native. A target resolves to a proposed
-`Partial<CabinetParameters>` plus requested/achieved values, explanation lines,
-warnings, and feasibility. The UI never mutates geometry directly: applying a
-feasible solution sends the parameter patch through `sanitizeParameters()` inside
-one editor-history edit. The resulting document then follows the normal analytical
-preview -> exact worker rebuild -> Design Health reevaluation cycle. Infeasible
-drawer slide limits and unsupported cabinet envelope sizes are reported rather than
-silently clamped.
-
-## v0.10 shop-documentation boundary
-
-Shop documentation is a derived semantic view, not persisted document state. The
-Phase 10 generator consumes the current `CabinetDocument`, regenerates the registered
-feature graph, and receives the current Design Health/readiness result. It produces
-stable shop part numbers, BOM/cut-list rows, material groups, hardware checklists,
-assembly groups, CSV data, and printable HTML.
-
-Shop part numbers are deterministic projections of semantic part IDs. They do not
-depend on Three.js UUIDs, raw OpenCascade topology ordering, dimensions, or row
-position, so CAD selection and BOM selection can share the same `partId`.
-
-Finished and blank sizes in Phase 10 are body/panel-blank **envelopes**. A toe-kick
-profile, hole pattern, dado, rabbet, groove, or pocket remains registered feature
-intent summarized alongside the part; Phase 10 does not pretend those envelopes are
-operation-layer manufacturing geometry. Phase 11 owns per-operation DXF/SVG,
-machining-face metadata, and profile/drilling maps.
-
-Grain direction and edge-banding requirements are semantic shop-documentation
-inference from panel orientation and exposed cabinet role. No hidden edge-band stock,
-thickness, or manufacturer data is invented. When those become explicit cabinet
-parameters later, the report layer should consume them instead of inference.
-
-Assembly steps and checklist state are editor/report concerns. The interactive
-assembly review reuses semantic part selection and the existing exploded viewport;
-the printable packet generates a separate schematic isometric SVG with stable part
-callouts. Native Electron text export only receives already-generated CSV/HTML and
-writes it through a save dialog.
-
-## v0.11 manufacturing-geometry boundary
-
-Phase 11 is another derived semantic layer. `buildManufacturingModel()` consumes the
-current `CabinetDocument`, Phase 10 shop part numbers, the regenerated feature graph,
-and Phase 9 Design Health. It projects each fabricated part into a part-local
-millimeter machining plane whose U/V axes are explicit and whose remaining axis is
-the stock-thickness axis.
-
-Registered features become normalized CUT, POCKET, DADO/GROOVE, DRILL, ENGRAVE,
-and EDGE operations. Operations carry stable part/feature identity, machining-face
-semantic IDs, depth/through state, and simple 2D primitives. Outer/profile geometry
-comes from semantic panel profiles, not tessellated Three.js or OpenCascade triangles.
-
-DXF and SVG are presentation/export encodings of that operation model. DXF declares
-millimeters with `$INSUNITS=4`; SVG uses millimeter dimensions and scale 1. Drilling
-maps and JSON metadata preserve the same part-local coordinate frame and semantic
-face/depth information.
-
-The reviewed manufacturing package is a snapshot artifact, not persisted cabinet
-state. A package is blocked while Design Health readiness is `blocked`; otherwise
-the exact manufacturing signature must be explicitly reviewed in the UI. A ZIP
-contains manifests/reports plus per-part and per-layer DXF/SVG/drilling/metadata.
-
-No Phase 11 file is a CNC toolpath. There is no cutter compensation, kerf, feeds,
-speeds, nesting, work offset, machine profile, postprocessor, or G-code generation.
-Those concerns belong to Phase 12 and must consume these registered operations
-rather than reverse-engineer them from exported graphics.
-
-## v0.12 production-planning boundary
-
-Phase 12 production planning consumes the Phase 11 nominal manufacturing model; it
-does not modify or replace nominal part geometry. Sheet stock, nesting settings,
-remnants, tool assumptions, and machine/postprocessor contracts are downstream
-manufacturing configuration.
-
-The current planner groups compatible material/thickness parts and uses a
-deterministic free-rectangle heuristic. Grain direction is translated from the
-semantic BOM into each part's Phase 11 U/V machining plane. A 90-degree placement is
-allowed only when user rotation settings and stock/part grain constraints permit it.
-
-Every placement carries stable `partId`, Phase 10 `partNumber`, source
-manufacturing operation IDs, sheet ID, X/Y translation, and 0/90-degree rotation.
-Sheet DXF/SVG is produced by transforming Phase 11 operation geometry through that
-placement. Registration JSON preserves the same mapping so sheet output never needs
-to infer identity from filenames or drawing order.
-
-Inter-part nesting clearance is the maximum of configured spacing, kerf allowance,
-and primary tool diameter. This is a stock-planning safety envelope, not cutter
-compensation. Real tool-center compensation remains a separate downstream concern.
-
-Remnants are explicit user-entered stock pieces. The software does not silently
-invent available remnants. Full-sheet quantities may be finite or unlimited for
-planning.
-
-The code now defines tool-library, machine-profile, postprocessor, tool-assignment,
-and compensation-intent records. `buildToolpathPlan()` registers operations against
-nested placements and transforms nominal geometry into sheet coordinates, but the
-bundled postprocessor has `emitsMachineMotion: false` and `canPostprocess: false`.
-There is deliberately no G-code generator yet.
-
-A future completion of Phase 12 must generate actual compensated tool-center paths
-and bind them to an explicit verified machine/postprocessor profile before machine
-motion can be exported. Nominal DXF/SVG must never be treated as safe CNC motion.
-
-## v0.13 family-adapter and schema-v3 boundary
-
-v0.13 generalizes `CabinetDocument` identity from a Utility-only literal to seven
-explicit `CabinetFamily` values. Schema v3 persists three related but distinct
-surfaces:
-
-- `family` — durable family identity;
-- `starterId` — optional identity of the shipped example used to seed the design;
-- `familyValues` — the resolved legacy family recipe retained as JSON data;
-- `parameters` — the canonical native Standalone parameter model used by current
-  shared editing and geometry paths.
-
-The recipe and canonical parameter model are deliberately separate. A legacy family
-can contain settings that have no redesigned Standalone property control yet without
-losing provenance or silently discarding the source recipe. Native edits continue to
-change canonical parameters; family-specific controls can be added later without
-requiring another import from the web project.
-
-`familyCatalog.ts` resolves every shipped Cabinet Workshop starter against the
-original family field defaults and adapts that resolved recipe into canonical
-Standalone parameters. The imported catalog contains 110 starters across Shop Cart,
-Utility, Benchtop Drawers, Stackable Cabinet, Kitchen Cabinet, Standalone Drawer,
-and Equipment Stand.
-
-`buildFamilyCabinetDocument()` is the family dispatch boundary. Shop Cart, Utility,
-Benchtop, Stackable, and Kitchen intentionally reuse the mature semantic cabinet
-generator after family adaptation so they inherit the same exact B-Rep, section,
-hardware, documentation, manufacturing, and nesting pipelines. Stackable adds
-semantic stack-interface/base parts after shared construction.
-
-Standalone Drawer and Equipment Stand are not forced into a false carcass
-abstraction. They have dedicated semantic generators. Drawer parts still use stable
-drawer IDs and registered groove/drilling intent. Equipment stands generate stable
-side/base/top/back/tray/cleat identities and use exact extruded-profile holes for
-skeletonized side cutouts.
-
-Legacy Cabinet Workshop import maps both numeric and string family identifiers into
-the same dispatch boundary. Old Standalone schema-v1/v2 documents migrate to schema
-v3 as Utility documents. OpenSCAD is not called by any family adapter or generator;
-the old repository remains a source of recipes and regression expectations only.
-
-The widened canonical envelope sanitizer is intentional: compact Benchtop and
-Standalone Drawer examples can be smaller than the old Utility-only minimums. It
-does not change Utility defaults.
-
-This milestone is family/example parity, not a claim that every legacy settings
-widget has been reimplemented. The stable architecture remains:
-
-```text
-family recipe
-    -> family adapter
-    -> canonical semantic parameters / dedicated family generator
-    -> CabinetDocument / stable CadPart IDs
-    -> feature graph
-    -> exact OpenCascade + downstream shop/manufacturing/production layers
-```
-
-## v0.14 native family-settings boundary
-
-The v0.13 `familyValues` payload is now an editable domain surface rather than passive
-compatibility storage. `legacyFamilySchema.json` contains the complete field metadata
-for all seven original families. `familySettings.ts` owns family-field lookup,
-dependency/inactive rules, schema-bound normalization, expression-backed derived values,
-recipe hydration, and synchronization between legacy family values and canonical
-Standalone parameters.
-
-The generated React controls do not own geometry. Their edit path is:
-
-```text
-FamilySettingsPanel
-  -> applyFamilyFieldChange()
-  -> familyValues (schema v3)
-  -> parametersFromFamilyValues()
-  -> CabinetParameters / dedicated family generator
-  -> buildFamilyCabinetDocument()
-```
-
-Each edit goes through the existing editor history and is therefore undoable as one
-document operation. Editing existing canonical/contextual controls takes the reverse
-path through `syncFamilyValuesFromParameters()`, so a schema-v3 project does not
-accumulate two silently divergent representations of the same mapped setting.
-
-Dependency handling deliberately follows the old web semantics where useful: inactive
-controls keep their saved value instead of deleting it. The generated UI normally hides
-inactive fields but can reveal them with the reason they are inactive. This preserves
-configuration intent when a parent option is toggled off and later restored.
-
-Fields with legacy expressions are treated as derived/read-only controls. Their values
-are recomputed from trusted built-in formulas after source edits. The Standalone does
-not evaluate arbitrary project-provided code.
-
-`section_nodes` is a special ownership boundary. The raw family field remains visible
-as a Manual Layout link, but the section tree is edited only by the semantic section
-editor. This avoids two independent editors mutating the same hierarchy.
-
-Sparse family recipes—including projects migrated from schema v1/v2—are hydrated from
-the active family schema before synchronization. Canonical saved dimensions/settings are
-then overlaid into the hydrated recipe. This protects old projects from losing unrelated
-settings when a newly exposed family field is edited.
-
-Legacy Output/System settings remain persisted compatibility data. They do not override
-Standalone-native Open/Save, STEP, Shop Docs, manufacturing, nesting, or production
-commands, and they never switch the runtime back to OpenSCAD.
-
-## Three.js responsibilities
-
-Three.js remains responsible for:
-
-- viewport rendering
-- camera/orbit interaction
-- part highlighting
-- raycasting
-- display of semantic face/edge selection
-- cheap preview geometry while exact work runs
-
-It is not responsible for manufacturing truth or boolean geometry.
-
-## Next architectural layer
-
-Complete Phase 12 by adding compensated tool-center path generation and at least one
-explicit verified machine/postprocessor implementation. G-code/post output should
-remain unavailable until all operations being posted are supported by the selected
-machine/tool profile. After that production workflow is strong, Phase 13 can expand
-the cabinet/furniture modeling surface.
+## Ownership
+
+The CAD document owns cabinet meaning. Three.js owns visualization and interaction.
+Durable identity must not depend on mesh UUIDs, scene order or raw OpenCascade
+face/edge indexes. OpenSCAD is a migration reference, not the production runtime.
+
+The processing flow is:
+
+1. Project/editor state: family recipe plus canonical native parameters.
+2. Family adapters and generators: semantic parts, hardware and construction intent.
+3. Feature graph: stable part-local manufacturing features.
+4. Worker kernel: exact bodies, semantic topology and tessellation.
+5. Consumers: viewport, measurements, Design Health, shop documentation,
+   manufacturing operations and production planning.
+
+## Project state and family editing
+
+Schema v3 persists `family`, optional `starterId`, `familyValues`, canonical
+`parameters`, name, millimeter storage units and display units. Schema v1/v2 projects
+migrate as Utility documents. Web imports accept all seven legacy family identities
+and hydrate sparse recipes before adapting native geometry.
+
+`familyCatalog.ts` owns starter recipes and recipe-to-native adaptation.
+`familySettings.ts` owns schema controls/dependencies, computed expressions and
+native-to-recipe synchronization. These modules must not import editor or renderer
+state. `familyModel.ts` dispatches semantic generation:
+
+- Shop Cart, Utility, Benchtop, Stackable and Kitchen share the cabinet generator.
+- Stackable adds interface/base parts.
+- Drawer and Equipment Stand have dedicated generators.
+
+The recipe and native model are related but not interchangeable: some recipe fields
+are compatibility-only, and some native parameters have no recipe equivalent.
+Synchronization projects differences against the recipe's adapted native model.
+It does not unconditionally rewrite recipe-only alternatives such as equipment
+`top_style`, automatic back styles, or legacy joinery aliases.
+
+A family edit compares the recipe's old and new adapted native models and updates
+only affected canonical parameters. This preserves unrelated native edits, including
+shelf positions and manually edited section trees. Family mode changes still apply
+the dimensions/structure produced by the newly selected mode. All edits use one
+history operation, and nested parameter arrays are cloned in history snapshots.
+
+Native dimension edits invert drawer inside-clear/enclosure calculations. An
+arbitrary modular-grid drawer resize switches to outside-box sizing; a native
+resize of an equipment-sized stand switches to manual sizing. These transitions
+are explicit persisted recipe changes and participate in undo/redo. Kitchen nominal
+depth inversion includes both face-frame thickness and segmented-frame back dado.
+
+Manual Layout owns `section_nodes`; it is not duplicated as a raw family array
+editor. Canonical layout transitions synchronize back to recipe layout mode.
+Output/System fields retain compatibility values; native export commands remain
+authoritative. Runtime validation currently sanitizes native parameters and bounds
+individual controls; full schema-derived recipe validation remains future work.
+
+## Exact geometry boundary
+
+`WorkerGeometryKernel` exposes asynchronous `rebuild`, `tessellate`, `exportStep`
+and `dispose`. Live OpenCascade objects never cross the worker boundary. Responses
+contain plain tessellation/topology records or STEP bytes.
+
+Rebuilds use increasing request IDs, dirty-part signatures and a tessellation cache.
+Older rebuilds are superseded; the worker yields between parts. The UI uses the
+current analytical preview while rebuilding instead of showing old exact geometry.
+Failed parts retain preview fallback with diagnostics. The cache currently has no
+eviction policy; bounding it is a known performance task.
+
+The feature vocabulary includes panel blanks, profiles, dados, rabbets, grooves,
+pockets, holes/patterns, hardware references and assembly transforms. Chamfer/bevel
+and edge-treatment kinds are reserved; their exact behavior is not complete.
+
+Semantic face/edge IDs map generated topology back to cabinet roles. Measurements
+bind to these identities: distance uses reference centers/midpoints, face size uses
+the selected exact tessellation face group, and angle uses semantic face normals.
+They are inspection tools, not a general constraint solver.
+
+## STEP export contract
+
+STEP is generated from a snapshot of the current kernel payload, with semantic
+part names and millimeter units. Purchased hardware reference envelopes are excluded.
+Explicitly requested unavailable bodies fail the request. An empty assembly fails.
+
+The worker rejects the entire export if any requested body fails or a machining
+feature was skipped. It preserves diagnostics and releases assembled shapes in a
+`finally` block, including serialization failures. The client also rejects error or
+skipped-cut diagnostics before returning bytes. The existing UI error handler shows
+the failure and does not open the save dialog for a failed export.
+
+Preview fallback is an interaction aid only; it is not permission to export an
+incomplete exact assembly. An in-progress export uses its captured request snapshot,
+not subsequent edits.
+
+## Direct editing and hardware
+
+Viewport dimensions, shelf movement and section-divider handles update semantic
+parameters through the same history path as Properties. Camera, selection,
+hide/isolate, clipping, exploded view and display modes remain editor state.
+
+Hardware presets copy editable dimensions/clearances and drilling intent into the
+model. Purchased instances carry identity, mounting references, keepout envelopes
+and verification status. Reference geometry does not claim manufacturer-exact B-Reps.
+Unsupported drilling must not be invented from ambiguous catalog data.
+
+The catalog originated with Utility-compatible profiles. Family-specific coverage
+needs explicit verification. Equipment Stand currently has no purchased hardware
+instances, and its French-cleat angle is metadata on rectangular rails. These are
+known implementation gaps, not completed production geometry.
+
+## Validation and shop documentation
+
+Design Health consumes the semantic document, feature graph, hardware/keepouts,
+section constraints and current kernel diagnostics. It returns categorized checks,
+coverage and manufacturing readiness without parsing OpenSCAD reports or meshes.
+The fit solver proposes parameter patches; applying a feasible result is one
+undoable semantic edit.
+
+Shop Docs derives stable part numbers, BOM/cut-list rows, material groups, hardware
+lists and assembly reports. Part numbers derive from semantic IDs. Blank/finished
+sizes are envelopes; profile/machining detail remains registered feature intent.
+Grain and exposed-edge requirements are partly inferred, not complete material/CAM
+specifications. Assembly review links to the same semantic selection as the viewport.
+
+## Manufacturing geometry and production planning
+
+`buildManufacturingModel()` projects fabricated parts/features into explicit local
+U/V machining planes. CUT, POCKET, DADO/GROOVE, DRILL, ENGRAVE and EDGE operations
+carry part/feature identity, face, depth and through state. DXF declares millimeters;
+SVG is true-scale. Drilling CSV/JSON retain the same coordinate frame.
+
+Reviewed package export is blocked on Design Health errors and requires review of
+the current manufacturing signature. Manufacturing geometry is nominal, not CNC
+motion. The applied-back rabbet remains a proof operation requiring construction
+reconciliation; reports must not imply verified parity beyond implemented features.
+
+Production planning consumes nominal operations and semantic stock/grain data.
+A deterministic free-rectangle heuristic allocates compatible material/thickness
+parts to sheets and explicit remnants. Rotation is 0/90 degrees subject to grain.
+Clearance is the maximum of configured spacing, kerf allowance and tool diameter.
+Placements retain part IDs, shop numbers, operation IDs, sheet identity and transforms.
+Sheet DXF/SVG and registration JSON derive from those transforms.
+
+Production configuration is currently transient component state and resets when
+its source documentation/manufacturing changes. Persistence and reconciliation are
+backlog work. Tool/machine/postprocessor types exist, but compensated tool-center
+paths and a verified postprocessor do not. G-code remains disabled.
+
+## Regression boundaries
+
+Tests should verify document behavior: family/native edit sequences, repeated
+save/reopen, legacy hydration, undo/redo, geometry and operation intent. The complete
+starter catalog is checked for stable IDs and viable semantic parts; this is not
+an independent cross-engine parity proof.
+
+STEP worker tests inject body/cut/serialization failures and check rejection and
+cleanup. These tests isolate transaction behavior with mocked geometry APIs; exact
+OpenCascade and packaged Electron execution need dedicated integration/smoke checks.
+CI currently runs Vitest, TypeScript/Vite builds and Windows portable packaging.

@@ -1,5 +1,6 @@
 import rawSchema from './data/legacyFamilySchema.json';
-import { stockThickness } from './cabinetModel';
+import { parametersFromFamilyValues } from './familyCatalog';
+import { sanitizeParameters, stockThickness } from './cabinetModel';
 import type { CabinetFamily, FamilyRecipeValues, JsonValue, StockChoice } from './types';
 
 export type FamilyFieldDefinition = {
@@ -473,7 +474,7 @@ function effectiveMaterialThickness(values: FamilyRecipeValues) {
 }
 
 
-export function syncFamilyValuesFromParameters(
+function projectParametersToFamilyValues(
   family: CabinetFamily,
   values: FamilyRecipeValues,
   parameters: import('./types').CabinetParameters,
@@ -484,6 +485,8 @@ export function syncFamilyValuesFromParameters(
   };
 
   if (family === 'equipment_stand') {
+    const original = parametersFromFamilyValues(family, next);
+    if ((['width', 'height', 'depth'] as const).some(key => parameters[key] !== original[key])) set('sizing_mode', 'manual');
     set('overall_width', parameters.width);
     set('overall_height', parameters.height);
     set('overall_depth', parameters.depth);
@@ -494,18 +497,45 @@ export function syncFamilyValuesFromParameters(
       set('target_box_outside_width', parameters.width);
       set('target_box_outside_height', parameters.height);
       set('target_box_outside_depth', parameters.depth);
+    } else if (basis === 'inside_clear') {
+      set('target_box_inside_width', parameters.width - 2 * parameters.drawerMaterialThickness);
+      set('target_box_inside_depth', parameters.depth - 2 * parameters.drawerMaterialThickness);
+      set('target_box_inside_height', parameters.height - Number(next.drawer_bottom_inset ?? 6) - parameters.drawerBottomThickness);
+    } else if (basis === 'modular_grid') {
+      const original = parametersFromFamilyValues(family, next);
+      if (parameters.width !== original.width || parameters.depth !== original.depth || parameters.height !== original.height) {
+        // An arbitrary native resize cannot retain an integer module-count constraint.
+        set('drawer_design_basis', 'outside_box');
+        set('target_box_outside_width', parameters.width);
+        set('target_box_outside_height', parameters.height);
+        set('target_box_outside_depth', parameters.depth);
+      }
     } else if (basis === 'enclosure') {
       const clearance = parameters.drawerMount === 'metal_slides'
         ? parameters.metalSlideClearancePerSide
-        : 0;
+        : next.drawer_mount === 'wood_rails'
+          ? Number(next.wood_rail_thickness ?? 12) + Number(next.wood_rail_side_clearance ?? 1)
+          : Number(next.drawer_free_fit_clearance_per_side ?? 1);
       set('enclosure_opening_width', parameters.width + 2 * clearance);
-      set('enclosure_target_box_height', parameters.height);
-      set('enclosure_usable_depth', parameters.depth + parameters.metalSlideFrontSetback);
+      if (next.enclosure_height_mode === 'fill_opening') {
+        set('enclosure_opening_height', parameters.height + 2 * Number(next.drawer_vertical_clearance ?? 2));
+      } else if (next.enclosure_height_mode === 'inside_clear') {
+        set('enclosure_target_inside_height', parameters.height - Number(next.drawer_bottom_inset ?? 6) - parameters.drawerBottomThickness);
+      } else set('enclosure_target_box_height', parameters.height);
+      const setback = next.drawer_face_style === 'inset_flush'
+        ? Math.max(Number(next.front_setback ?? 0), parameters.drawerFrontThickness + Math.max(0, Number(next.drawer_face_back_clearance ?? 0)))
+        : Number(next.front_setback ?? 0);
+      set('enclosure_usable_depth', parameters.depth + setback + Number(next.drawer_back_clearance ?? 0));
     }
   } else {
     set('cabinet_width', parameters.width);
     set('cabinet_height', parameters.height);
-    if (family === 'kitchen') set('cabinet_nominal_depth', parameters.depth + (parameters.faceFrameStyle === 'full' ? parameters.faceFrameThickness : 0));
+    if (family === 'kitchen') {
+      const frame = parameters.faceFrameStyle === 'full' ? parameters.faceFrameThickness : 0;
+      const dado = frame && next.face_frame_construction === 'segmented_back_dado'
+        ? Math.min(Math.max(0.5, Number(next.face_frame_back_dado_depth ?? 6)), Math.max(0.5, frame - 0.5)) : 0;
+      set('cabinet_nominal_depth', parameters.depth + frame - dado);
+    }
     else set('cabinet_depth', parameters.depth);
   }
 
@@ -526,7 +556,7 @@ export function syncFamilyValuesFromParameters(
   set('drawer_graduated_step', parameters.drawerGraduatedStep);
   set('drawer_height_weights', [...parameters.drawerCustomWeights]);
 
-  set('top_style', parameters.topStyle);
+  set('top_style', family === 'equipment_stand' ? (parameters.topStyle === 'stretchers' ? 'frame' : 'panel') : parameters.topStyle);
   set('top_stretcher_depth', parameters.topStretcherDepth);
   set('back_style', parameters.backStyle);
   set('back_inset', parameters.backInset);
@@ -596,8 +626,8 @@ export function syncFamilyValuesFromParameters(
   set('hinge_plate_center_from_front', parameters.hingePlateCenterFromFront);
   set('hinge_plate_hole_spacing', parameters.hingePlateHoleSpacing);
 
+  set('cabinet_layout_mode', parameters.layoutMode);
   if (parameters.layoutMode === 'sections') {
-    set('cabinet_layout_mode', 'sections');
     set('section_nodes', JSON.parse(JSON.stringify(parameters.sectionNodes)) as JsonValue);
   }
 
@@ -608,4 +638,61 @@ export function activeFamilyFieldCount(family: CabinetFamily, values: FamilyReci
   return familyFieldDefinitions(family)
     .filter(field => !familyFieldInactiveReason(family, field, values))
     .length;
+}
+
+
+/** Preserve recipe-only choices; only project differences from its current native model. */
+export function syncFamilyValuesFromParameters(
+  family: CabinetFamily,
+  values: FamilyRecipeValues,
+  parameters: import('./types').CabinetParameters,
+): FamilyRecipeValues {
+  const hydrated = completeFamilyValues(family, values);
+  const originalParameters = parametersFromFamilyValues(family, hydrated);
+  const baseline = projectParametersToFamilyValues(family, hydrated, originalParameters);
+  const projected = projectParametersToFamilyValues(family, hydrated, parameters);
+  for (const key of Object.keys(projected)) {
+    if (JSON.stringify(projected[key]) !== JSON.stringify(baseline[key])) hydrated[key] = projected[key];
+  }
+  // Sizing-mode transitions own the complete envelope, including untouched axes.
+  if (projected.sizing_mode !== baseline.sizing_mode) {
+    for (const key of ['sizing_mode', 'overall_width', 'overall_height', 'overall_depth']) hydrated[key] = projected[key];
+  }
+  if (projected.drawer_design_basis !== baseline.drawer_design_basis) {
+    for (const key of ['drawer_design_basis', 'target_box_outside_width', 'target_box_outside_height', 'target_box_outside_depth']) hydrated[key] = projected[key];
+  }
+  // A native thickness edit must select measured stock rather than retain a
+  // nominal recipe choice that would override the edited value on adaptation.
+  for (const [parameter, stockKey] of [
+    ['drawerMaterialThickness', 'drawer_stock'],
+    ['drawerBottomThickness', 'drawer_bottom_stock'],
+    ['drawerFrontThickness', 'drawer_front_stock'],
+    ['doorThickness', 'door_stock'],
+    ['faceFrameThickness', 'face_frame_stock'],
+  ] as const) {
+    if (parameters[parameter] === originalParameters[parameter]) continue;
+    const field = familyFieldDefinitions(family).find(candidate => candidate.key === stockKey);
+    if (field?.options?.includes('custom_mm')) hydrated[stockKey] = 'custom_mm';
+    else if (field?.options?.includes('custom')) hydrated[stockKey] = 'custom';
+  }
+  return recomputeFamilyExpressions(family, hydrated);
+}
+
+/** A family edit owns only parameters whose adapted values actually change. */
+export function editFamilySetting(
+  family: CabinetFamily,
+  values: FamilyRecipeValues,
+  parameters: import('./types').CabinetParameters,
+  key: string,
+  value: JsonValue,
+) {
+  const before = completeFamilyValues(family, values);
+  const familyValues = applyFamilyFieldChange(family, before, key, value);
+  const oldModel = parametersFromFamilyValues(family, before);
+  const newModel = parametersFromFamilyValues(family, familyValues);
+  const patch: Record<string, unknown> = {};
+  for (const parameter of Object.keys(newModel) as (keyof typeof newModel)[]) {
+    if (JSON.stringify(oldModel[parameter]) !== JSON.stringify(newModel[parameter])) patch[parameter] = newModel[parameter];
+  }
+  return { familyValues, parameters: sanitizeParameters({ ...parameters, ...patch }) };
 }

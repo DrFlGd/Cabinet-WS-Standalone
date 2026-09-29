@@ -74,19 +74,23 @@ async function handleRebuild(request: Extract<KernelRequest, { type: 'rebuild' }
 }
 
 async function handleStepExport(request: Extract<KernelRequest, { type: 'export-step' }>) {
+  const diagnostics: KernelDiagnostic[] = [];
+  const shapeEntries: { shape: any; name: string; color: string }[] = [];
   try {
     await started;
-    const diagnostics: KernelDiagnostic[] = [];
     const requested = request.bodyIds?.length ? new Set(request.bodyIds) : null;
-    const shapeEntries: { shape: any; name: string; color: string }[] = [];
 
     for (const part of request.payload.document.parts) {
-      if (!isKernelEligiblePart(part) || (requested && !requested.has(part.id))) continue;
+      if (part.category === 'hardware' || !part.visible || (requested && !requested.has(part.id))) continue;
+      let shape: any = null;
       try {
-        let shape = buildExactShape(part, request.payload.graph.partFeatures[part.id] ?? [], diagnostics);
+        if (!isKernelEligiblePart(part) || !Object.values(part.size).every(Number.isFinite)) throw new Error('Invalid body dimensions');
+        shape = buildExactShape(part, request.payload.graph.partFeatures[part.id] ?? [], diagnostics);
         shape = shape.translate([part.position.x, part.position.y, part.position.z]);
         shapeEntries.push({ shape, name: part.id, color: part.color });
+        shape = null; // Ownership transfers to shapeEntries.
       } catch (error) {
+        safeDelete(shape);
         diagnostics.push({
           severity: 'error',
           code: 'step-part-failed',
@@ -97,13 +101,24 @@ async function handleStepExport(request: Extract<KernelRequest, { type: 'export-
       await yieldToMessages();
     }
 
+    if (requested) {
+      for (const id of requested) {
+        if (!shapeEntries.some(entry => entry.name === id)) diagnostics.push({
+          severity: 'error', code: 'step-body-missing', partId: id,
+          message: `Requested STEP body is unavailable: ${id}`,
+        });
+      }
+    }
+    const incomplete = diagnostics.filter(item => item.severity === 'error' || item.code === 'feature-cut-failed');
+    if (incomplete.length) {
+      throw new Error('Incomplete STEP assembly: ' + incomplete.map(item => item.message).join('; '));
+    }
     if (!shapeEntries.length) {
       throw new Error('No exact bodies were available for STEP export.');
     }
 
     const blob = exportSTEP(shapeEntries, { unit: 'MM', modelUnit: 'MM' });
     const bytes = await blob.arrayBuffer();
-    shapeEntries.forEach(entry => safeDelete(entry.shape));
     scope.postMessage(
       { type: 'step-exported', requestId: request.requestId, bytes, diagnostics },
       [bytes],
@@ -113,12 +128,14 @@ async function handleStepExport(request: Extract<KernelRequest, { type: 'export-
       type: 'failed',
       requestId: request.requestId,
       message: errorMessage(error),
-      diagnostics: [{
+      diagnostics: [...diagnostics, {
         severity: 'error',
         code: 'step-export-failed',
         message: errorMessage(error),
       }],
     });
+  } finally {
+    shapeEntries.forEach(entry => safeDelete(entry.shape));
   }
 }
 
@@ -236,11 +253,14 @@ function buildExactShape(
 
     try {
       const tools = cuttingTools(part, feature);
-      for (const tool of tools) {
-        const next = shape.cut(tool);
-        safeDelete(shape);
-        safeDelete(tool);
-        shape = next;
+      try {
+        for (const tool of tools) {
+          const next = shape.cut(tool);
+          safeDelete(shape);
+          shape = next;
+        }
+      } finally {
+        tools.forEach(safeDelete);
       }
     } catch (error) {
       diagnostics.push({
@@ -441,3 +461,4 @@ function errorMessage(error: unknown) {
 function yieldToMessages() {
   return new Promise<void>(resolve => setTimeout(resolve, 0));
 }
+
