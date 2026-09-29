@@ -35,6 +35,11 @@ export type CabinetDesktopApi = {
     bytes: ArrayBuffer;
     suggestedName: string;
   }): Promise<DesktopSaveResult>;
+  saveText(options: {
+    content: string;
+    suggestedName: string;
+    kind: 'csv' | 'html';
+  }): Promise<DesktopSaveResult>;
   listRecent(): Promise<RecentProject[]>;
   readRecovery(): Promise<RecoveryResult>;
   writeRecovery(content: string): Promise<void>;
