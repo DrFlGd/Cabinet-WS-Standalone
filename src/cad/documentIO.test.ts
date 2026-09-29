@@ -3,7 +3,7 @@ import { buildCabinetDocument, DEFAULT_PARAMETERS } from './cabinetModel';
 import { parseDocument, parseDocumentWithReport, serializeDocument } from './documentIO';
 
 describe('Cabinet WS project migrations', () => {
-  it('migrates schema v1 projects to v2 with millimeter display units', () => {
+  it('migrates schema v1 projects to v3 with millimeter display units', () => {
     const legacy = JSON.stringify({
       version: 1,
       name: 'Legacy cabinet',
@@ -12,7 +12,7 @@ describe('Cabinet WS project migrations', () => {
     });
 
     const document = parseDocument(legacy);
-    expect(document.version).toBe(2);
+    expect(document.version).toBe(3);
     expect(document.family).toBe('utility');
     expect(document.displayUnits).toBe('mm');
     expect(document.parameters).toEqual(DEFAULT_PARAMETERS);
@@ -47,7 +47,7 @@ describe('Cabinet WS project migrations', () => {
     expect(document.parameters.layoutMode).toBe('legacy');
   });
 
-  it('round-trips schema v2 section layouts without converting geometry', () => {
+  it('round-trips schema v3 section layouts without converting geometry', () => {
     const original = buildCabinetDocument({
       ...DEFAULT_PARAMETERS,
       layoutMode: 'sections',
@@ -204,13 +204,54 @@ describe('Cabinet WS project migrations', () => {
     expect(parsed.report.warnings).toEqual([]);
   });
 
-  it('rejects non-Utility Cabinet Workshop projects in v0.4', () => {
-    expect(() => parseDocument(JSON.stringify({
+  it('imports non-Utility Cabinet Workshop families into schema v3', () => {
+    const kitchen = parseDocument(JSON.stringify({
       version: 2,
       engineFamily: 'modular_organization',
       family: 4,
-      values: {},
-    }))).toThrow(/Utility Cabinet/);
+      values: {
+        design_name: 'Kitchen import',
+        cabinet_width: 762,
+        cabinet_height: 876.3,
+        cabinet_nominal_depth: 609.6,
+        cabinet_contents: 'combo',
+        drawer_count: 1,
+        door_count: 2,
+        door_shelf_count: 1,
+        front_facing_style: 'face_frame',
+        custom_face_frame_thickness: 19.05,
+      },
+    }));
+    expect(kitchen.version).toBe(3);
+    expect(kitchen.family).toBe('kitchen');
+    expect(kitchen.name).toBe('Kitchen import');
+    expect(kitchen.parameters.width).toBe(762);
+    expect(kitchen.familyValues.cabinet_nominal_depth).toBe(609.6);
+  });
+
+  it('round-trips family identity, starter identity, and retained recipe values', () => {
+    const parsed = parseDocumentWithReport(JSON.stringify({
+      version: 2,
+      engineFamily: 'modular_organization',
+      family: 5,
+      values: {
+        _starter: 'drawer_42_mm_grid_10_x_8',
+        design_name: 'Grid drawer',
+        drawer_design_basis: 'modular_grid',
+        drawer_module_pitch_x: 42,
+        drawer_module_count_x: 10,
+        drawer_module_pitch_y: 42,
+        drawer_module_count_y: 8,
+        drawer_module_inside_height: 85,
+        custom_drawer_material_thickness: 12,
+        custom_drawer_bottom_thickness: 6,
+      },
+    }));
+    const loaded = parseDocument(serializeDocument(parsed.document));
+    expect(loaded.family).toBe('drawer');
+    expect(loaded.starterId).toBe('drawer_42_mm_grid_10_x_8');
+    expect(loaded.familyValues.drawer_design_basis).toBe('modular_grid');
+    expect(loaded.parts.some(part => part.id === 'drawer:1:bottom')).toBe(true);
   });
 
   it('rejects malformed parameter types instead of silently normalizing them', () => {
