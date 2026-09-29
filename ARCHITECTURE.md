@@ -119,7 +119,7 @@ manufacturing references should bind to the semantic identity.
 ## Exact geometry currently covered
 
 For the Utility Cabinet v0.6 proof of concept the kernel creates exact bodies for
-all modeled parts. It also applies the machining intent already present in the
+fabricated cabinet parts. Purchased hardware remains simplified semantic reference geometry. It also applies the machining intent already present in the
 semantic cabinet model, including:
 
 - panel/profile extrusion
@@ -127,7 +127,7 @@ semantic cabinet model, including:
 - dado/pocket subtraction
 - applied-back rabbet proof geometry on cabinet sides
 - adjustable-shelf line boring and other registered drilling
-- selected hardware reference envelopes
+- semantic purchased-hardware references remain preview-only; they are deliberately excluded from the exact body set
 
 STEP export writes the exact assembly with stable part names and millimeter units.
 
