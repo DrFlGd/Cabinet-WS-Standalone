@@ -823,7 +823,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.11.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.12.0</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -996,6 +996,7 @@ export default function App() {
       onExportManufacturingPart={exportManufacturingPart}
       onExportManufacturingLayer={exportManufacturingLayer}
       onExportManufacturingPackage={exportManufacturingPackage}
+      onExportProductionText={(content, suggestedName, kind) => { void saveTextExport(content, suggestedName, kind); }}
     />}
   </main>;
 }
@@ -1049,7 +1050,7 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
 }
 
 function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.11.0 · exact B-Rep · ${featureCount} semantic features · Manufacturing · STEP`;
-  if (status === 'error') return `Utility v0.11.0 · exact kernel diagnostics: ${diagnosticCount} · manufacturing review`;
-  return 'Utility v0.11.0 · OpenCascade worker initializing…';
+  if (status === 'ready') return `Utility v0.12.0 · exact B-Rep · ${featureCount} semantic features · Production planning · STEP`;
+  if (status === 'error') return `Utility v0.12.0 · exact kernel diagnostics: ${diagnosticCount} · production review`;
+  return 'Utility v0.12.0 · OpenCascade worker initializing…';
 }
