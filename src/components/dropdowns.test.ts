@@ -38,6 +38,7 @@ describe('desktop dropdown controls', () => {
     expect(sectionSource).toContain('ariaLabel="Cabinet contents"');
     expect(sectionSource).toContain('Drawer rows');
     expect(sectionSource).toContain('Doors');
+    expect(sectionSource).toContain('Shelf panels');
     expect(sectionSource).toContain('onParameterChange');
 
     expect(hardwareDrawerSource).toContain('Open hardware catalog');
