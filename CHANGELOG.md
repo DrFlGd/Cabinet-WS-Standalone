@@ -19,16 +19,18 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 - Recovery autosave now flushes when the document becomes hidden and makes a
   best-effort flush on unload, matching the reference application's lifecycle intent.
-- Atomic project/recovery writes are serialized per destination and use unique
-  staging filenames so overlapping writes cannot rename the same temporary file.
+- Atomic project/recovery writes use unique staging filenames, and recovery writes
+  and clears share one per-destination operation queue so a pending write cannot
+  recreate stale recovery data after a clear.
 - Version text in the workspace now comes from package metadata instead of duplicated
   hard-coded release strings.
 
 ### Testing
 
 - Added behavioral tests for renderer crash/reload decisions, crash-dialog fallback,
-  browser and desktop recovery storage, concurrent atomic recovery writes,
-  error-boundary fallback rendering, and About/version rendering.
+  browser and desktop recovery storage, concurrent atomic recovery writes, ordered
+  write/clear recovery operations, error-boundary fallback rendering, and
+  About/version rendering.
 - Packaged Windows crash/recovery interaction remains unverified; CI packaging is not
   described as an application smoke test.
 
