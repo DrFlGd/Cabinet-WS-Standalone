@@ -391,7 +391,7 @@ function drawerBankSections(v: Record<string, unknown>): SectionNode[] {
     node[7] = mode === 'graduated' || mode === 'custom_weights' ? mode : 'equal';
     node[8] = steps[index] ?? 0.35;
     const rawWeights = Array.isArray(customWeights[index]) ? customWeights[index] : [];
-    node[9] = rawWeights.filter(item => typeof item === 'number' && Number.isFinite(item)) as number[];
+    node[9] = rawWeights.filter((item: unknown): item is number => typeof item === 'number' && Number.isFinite(item));
     nodes.push(node);
   }
   return nodes;
