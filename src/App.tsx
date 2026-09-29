@@ -455,7 +455,7 @@ export default function App() {
 
   return <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.6.0</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>Utility CAD · v0.6.1</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -592,7 +592,7 @@ function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: 
 }
 
 function kernelFooter(status: 'idle' | 'loading' | 'ready' | 'error', featureCount: number, diagnosticCount: number) {
-  if (status === 'ready') return `Utility v0.6 · exact B-Rep · ${featureCount} semantic features · STEP`;
-  if (status === 'error') return `Utility v0.6 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
-  return 'Utility v0.6 · OpenCascade worker initializing…';
+  if (status === 'ready') return `Utility v0.6.1 · exact B-Rep · ${featureCount} semantic features · STEP`;
+  if (status === 'error') return `Utility v0.6.1 · exact kernel diagnostics: ${diagnosticCount} · preview fallback`;
+  return 'Utility v0.6.1 · OpenCascade worker initializing…';
 }
