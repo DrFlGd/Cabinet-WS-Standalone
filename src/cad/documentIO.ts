@@ -225,10 +225,6 @@ function importCabinetWorkshopProject(record: Record<string, unknown>): ParsedPr
       + 'The family adapter generated a safe fallback layout.',
     );
   }
-  warnings.push(
-    'The original Cabinet Workshop recipe is retained in the schema-v3 familyValues payload. '
-    + 'Shared Standalone controls edit the canonical model; legacy-only advanced fields remain recipe-backed.',
-  );
 
   return {
     document: buildFamilyCabinetDocument(
