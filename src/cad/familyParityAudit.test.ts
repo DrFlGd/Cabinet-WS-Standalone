@@ -152,8 +152,8 @@ describe('family parity audit', () => {
       starterId: starter.id,
       familyValues: values,
     });
-    expect(document.parts.filter(part => /section:\\d+:drawer:\\d+:front/.test(part.id))).toHaveLength(2);
-    expect(document.parts.filter(part => /section:\\d+:door:\\d+/.test(part.id))).toHaveLength(1);
+    expect(document.parts.filter(part => /section:\d+:drawer:\d+:front/.test(part.id))).toHaveLength(2);
+    expect(document.parts.filter(part => /section:\d+:door:\d+/.test(part.id))).toHaveLength(1);
     expect(document.parts.some(part => part.metadata?.sectionDivider === true)).toBe(true);
   });
 
