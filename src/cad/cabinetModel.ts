@@ -910,9 +910,9 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
 
   const carcassStock = oneOf(source.carcassStock, stockChoices, defaults.carcassStock);
   const backStock = oneOf(source.backStock, stockChoices, defaults.backStock);
-  const width = clampNumber(source.width, 300, 2400, defaults.width);
-  const height = clampNumber(source.height, 300, 3000, defaults.height);
-  const depth = clampNumber(source.depth, 200, 1200, defaults.depth);
+  const width = clampNumber(source.width, 40, 3000, defaults.width);
+  const height = clampNumber(source.height, 30, 3000, defaults.height);
+  const depth = clampNumber(source.depth, 40, 1600, defaults.depth);
   const layoutMode = oneOf(source.layoutMode, ['legacy', 'sections'] as const, defaults.layoutMode);
   const sectionNodes = Array.isArray(source.sectionNodes) && !treeErrors(source.sectionNodes).length
     ? cloneSectionNodes(source.sectionNodes as SectionNode[])
