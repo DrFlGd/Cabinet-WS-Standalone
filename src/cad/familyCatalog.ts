@@ -111,8 +111,8 @@ export function parametersFromFamilyValues(
     height: numberOr(v.cabinet_height, v.custom_cabinet_height, v.overall_height, defaults.height),
     depth: numberOr(v.cabinet_depth, v.custom_cabinet_depth, v.overall_depth, defaults.depth),
 
-    carcassStock: stockOr(v.carcass_stock, defaults.carcassStock),
-    backStock: stockOr(v.back_stock, defaults.backStock),
+    carcassStock: canonicalStock(v.carcass_stock, defaults.carcassStock),
+    backStock: canonicalStock(v.back_stock, defaults.backStock),
     materialThickness: numberOr(v.custom_carcass_thickness, v.material_thickness, defaults.materialThickness),
     backThickness: numberOr(v.custom_back_thickness, defaults.backThickness),
     drawerMaterialThickness: thicknessFromValues(v, 'drawer_stock', 'custom_drawer_material_thickness', defaults.drawerMaterialThickness),
@@ -208,7 +208,6 @@ export function parametersFromFamilyValues(
     mapped.doorCount = 0;
     mapped.shelfCount = 0;
     mapped.includeWorktop = false;
-    mapped.topStyle = 'full';
   }
   if (family === 'shop_cart') {
     mapped.mountStyle = 'floor';
@@ -412,7 +411,8 @@ const stockChoices: StockChoice[] = [
   '1_nominal',
 ];
 
-function stockOr(value: unknown, fallback: StockChoice): StockChoice {
+function canonicalStock(value: unknown, fallback: StockChoice): StockChoice {
+  if (value === 'custom') return 'custom_mm';
   return typeof value === 'string' && stockChoices.includes(value as StockChoice)
     ? value as StockChoice
     : fallback;
@@ -424,8 +424,16 @@ function thicknessFromValues(
   customKey: string,
   fallback: number,
 ) {
-  const stock = stockOr(values[stockKey], 'custom_mm');
+  const raw = values[stockKey];
   const custom = numberOr(values[customKey], fallback);
+  if (raw === 'custom' || raw === 'custom_mm' || raw === undefined || raw === null) return custom;
+  if (raw === 'same_as_carcass') {
+    return thicknessFromValues(values, 'carcass_stock', 'custom_carcass_thickness', custom);
+  }
+  if (raw === 'same_as_drawer') {
+    return thicknessFromValues(values, 'drawer_stock', 'custom_drawer_material_thickness', custom);
+  }
+  const stock = canonicalStock(raw, 'custom_mm');
   return stockThickness(stock, custom);
 }
 
