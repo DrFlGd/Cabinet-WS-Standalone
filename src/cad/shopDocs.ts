@@ -351,3 +351,32 @@ function explodedAssemblySvg(document: CabinetDocument, docs: ShopDocumentation)
     const factor = explosionFactor(part, index);
     const partCenter = { x: part.position.x + part.size.x / 2, y: part.position.y + part.size.y / 2, z: part.position.z + part.size.z / 2 };
     const direction = normalizeVec({ x: partCenter.x - center.x, y: partCenter.y - center.y, z: partCenter.z - center.z });
+    const p = { x: part.position.x + direction.x * factor, y: part.position.y + direction.y * factor, z: part.position.z + direction.z * factor };
+    const projected = boxCorners(p, part.size).map(projectIso);
+    const faces = [[projected[4], projected[5], projected[7], projected[6]],[projected[0], projected[1], projected[5], projected[4]],[projected[1], projected[3], projected[7], projected[5]]];
+    const labelPoint = projectIso({ x: p.x + part.size.x / 2, y: p.y + part.size.y / 2, z: p.z + part.size.z + 12 });
+    return { faces, labelPoint, label: bomById.get(part.id)?.partNumber ?? stablePartNumber(part), depth: p.x + p.y + p.z };
+  }).sort((a, b) => a.depth - b.depth);
+  const allPoints = shapes.flatMap(shape => shape.faces.flat()).concat(shapes.map(shape => shape.labelPoint));
+  const minX = Math.min(...allPoints.map(point => point.x)) - 40, maxX = Math.max(...allPoints.map(point => point.x)) + 40;
+  const minY = Math.min(...allPoints.map(point => point.y)) - 40, maxY = Math.max(...allPoints.map(point => point.y)) + 40;
+  return `<svg class="assembly-svg" xmlns="http://www.w3.org/2000/svg" viewBox="${minX} ${minY} ${Math.max(100, maxX-minX)} ${Math.max(100, maxY-minY)}" role="img" aria-label="Exploded cabinet assembly guide">${shapes.map(shape => `${shape.faces.map((face, faceIndex) => `<polygon points="${face.map(point => `${point.x},${point.y}`).join(' ')}" class="face face-${faceIndex}"/>`).join('')}<text x="${shape.labelPoint.x}" y="${shape.labelPoint.y}" text-anchor="middle">${esc(shape.label)}</text>`).join('')}</svg>`;
+}
+
+function explosionFactor(part: CadPart, index: number) {
+  const scale: Record<Exclude<PartCategory, 'hardware'>, number> = { carcass:60, back:110, shelf:85, front:135, drawer:100, worktop:120, divider:70, frame:125 };
+  return scale[part.category as Exclude<PartCategory, 'hardware'>] + (index % 4) * 5;
+}
+function normalizeVec(vector: Vec3) { const length = Math.hypot(vector.x, vector.y, vector.z) || 1; return { x:vector.x/length, y:vector.y/length, z:vector.z/length }; }
+function boxCorners(p: Vec3, s: Vec3) { const x0=p.x,x1=p.x+s.x,y0=p.y,y1=p.y+s.y,z0=p.z,z1=p.z+s.z; return [{x:x0,y:y0,z:z0},{x:x1,y:y0,z:z0},{x:x0,y:y1,z:z0},{x:x1,y:y1,z:z0},{x:x0,y:y0,z:z1},{x:x1,y:y0,z:z1},{x:x0,y:y1,z:z1},{x:x1,y:y1,z:z1}]; }
+function projectIso(point: Vec3) { return { x:(point.x-point.y)*0.78, y:(point.x+point.y)*0.34-point.z*0.78 }; }
+
+function printableHtml(title: string, body: string) {
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(title)}</title><style>body{font:13px system-ui,-apple-system,sans-serif;color:#203238;max-width:1120px;margin:28px auto;padding:0 24px}h1{font-size:28px;margin-bottom:4px}h2{margin-top:28px;border-bottom:1px solid #cfd8d6;padding-bottom:5px}h3{margin-bottom:6px}p,li{line-height:1.55}.meta,.note{color:#5f7176}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0}.summary div{border:1px solid #ccd8d5;padding:10px}.summary strong{display:block;font-size:18px}.summary span{font-size:11px;color:#62757a}table{width:100%;border-collapse:collapse;font-size:10.5px}th,td{text-align:left;vertical-align:top;padding:6px;border-bottom:1px solid #d8dfdd}th{background:#edf3f1}.assembly-step{break-inside:avoid;border-left:3px solid #3a8f82;padding-left:12px;margin:15px 0}.callouts{display:flex;flex-wrap:wrap;gap:4px}.callouts span{border:1px solid #9bb2ad;border-radius:3px;padding:2px 5px;font:10px ui-monospace,monospace}.assembly-svg{width:100%;height:440px;border:1px solid #d2dcda;background:#f7faf9}.assembly-svg .face{stroke:#52656a;stroke-width:1.2}.assembly-svg .face-0{fill:#d8e6e2}.assembly-svg .face-1{fill:#bcd0ca}.assembly-svg .face-2{fill:#9ebbb3}.assembly-svg text{font:9px ui-monospace,monospace;fill:#1d4443;stroke:white;stroke-width:2.5;paint-order:stroke}@media print{body{margin:0;max-width:none;padding:0}h2{break-after:avoid}thead{display:table-header-group}tr,.assembly-step{break-inside:avoid}.assembly-svg{height:360px}@page{margin:14mm}}</style></head><body><button onclick="window.print()" style="padding:9px 14px;border:0;background:#236e64;color:white;cursor:pointer">Print / Save as PDF</button>${body}</body></html>`;
+}
+
+function compareBomRows(a: BomRow, b: BomRow) {
+  const order: PartCategory[] = ['carcass','divider','back','frame','shelf','drawer','front','worktop','hardware'];
+  return order.indexOf(a.category)-order.indexOf(b.category) || a.partNumber.localeCompare(b.partNumber, undefined, { numeric:true });
+}
+function esc(value: unknown) { return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c] ?? c)); }
