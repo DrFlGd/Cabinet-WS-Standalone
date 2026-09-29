@@ -3,6 +3,7 @@ import { PARAMETER_SECTIONS, UTILITY_PARAMETER_SCHEMA, type ParameterDefinition 
 import { partSettingsContext } from '../cad/partContext';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { CabinetParameters, CadPart } from '../cad/types';
+import type { KernelDiagnostic, KernelSelection } from '../cad/kernel/types';
 import DimensionInput from './DimensionInput';
 import SelectControl from './SelectControl';
 import HardwarePicker from './HardwarePicker';
@@ -15,6 +16,8 @@ type Props = {
   displayUnits: DisplayUnits;
   onChange: (key: keyof CabinetParameters, value: ParameterValue) => void;
   onApplyHardware: (profileId: string) => void;
+  topologySelection: KernelSelection | null;
+  kernelDiagnostics: KernelDiagnostic[];
   onShowCabinetSettings: () => void;
   onOpenSection: (sectionNodeId: number) => void;
 };
@@ -25,6 +28,8 @@ export default function PropertiesPanel({
   displayUnits,
   onChange,
   onApplyHardware,
+  topologySelection,
+  kernelDiagnostics,
   onShowCabinetSettings,
   onOpenSection,
 }: Props) {
@@ -39,6 +44,15 @@ export default function PropertiesPanel({
 
       {selected && context ? (
         <div className="properties-scroll">
+          <KernelDiagnostics diagnostics={kernelDiagnostics} />
+          {topologySelection?.partId === selected.id && (
+            <section className="kernel-topology-card">
+              <span className="eyebrow">SEMANTIC TOPOLOGY</span>
+              <strong>{topologySelection.kind === 'face' ? 'Selected face' : 'Selected edge'}</strong>
+              <code>{topologySelection.semanticId}</code>
+              <p>This identity is cabinet-semantic and does not persist a raw OpenCascade topology index.</p>
+            </section>
+          )}
           <div className="part-context-toolbar">
             <button type="button" onClick={onShowCabinetSettings}>All cabinet settings</button>
           </div>
@@ -78,6 +92,7 @@ export default function PropertiesPanel({
         </div>
       ) : (
         <div className="properties-scroll">
+          <KernelDiagnostics diagnostics={kernelDiagnostics} />
           <HardwarePicker parameters={parameters} onApply={onApplyHardware} />
           {PARAMETER_SECTIONS.map(section => {
             const fields = UTILITY_PARAMETER_SCHEMA.filter(
@@ -100,6 +115,28 @@ export default function PropertiesPanel({
         </div>
       )}
     </aside>
+  );
+}
+
+function KernelDiagnostics({ diagnostics }: { diagnostics: KernelDiagnostic[] }) {
+  if (!diagnostics.length) return null;
+  const visible = diagnostics.slice(0, 6);
+  const errors = diagnostics.filter(item => item.severity === 'error').length;
+  const warnings = diagnostics.filter(item => item.severity === 'warning').length;
+
+  return (
+    <section className="kernel-diagnostics">
+      <div className="kernel-diagnostics-heading">
+        <strong>Exact CAD diagnostics</strong>
+        <span>{errors ? `${errors} error${errors === 1 ? '' : 's'}` : ''}{errors && warnings ? ' · ' : ''}{warnings ? `${warnings} warning${warnings === 1 ? '' : 's'}` : ''}</span>
+      </div>
+      {visible.map((diagnostic, index) => (
+        <p key={`${diagnostic.code}-${diagnostic.partId ?? 'document'}-${index}`} className={diagnostic.severity}>
+          {diagnostic.partId ? `${diagnostic.partId}: ` : ''}{diagnostic.message}
+        </p>
+      ))}
+      {diagnostics.length > visible.length && <small>+{diagnostics.length - visible.length} more diagnostics</small>}
+    </section>
   );
 }
 
