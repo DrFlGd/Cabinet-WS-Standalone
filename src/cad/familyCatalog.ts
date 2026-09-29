@@ -1,11 +1,12 @@
 import rawCatalog from './data/legacyFamilyStarters.json';
 import { sanitizeParameters, stockThickness } from './cabinetModel';
 import { makeUtilityDefaults } from './utilityStarters';
-import { sectionLeaf, sectionsFromWebValues, type SectionNode } from './sections';
+import { sectionLeaf, sectionsFromWebValues } from './sections';
 import type {
   CabinetFamily,
   CabinetParameters,
   FamilyRecipeValues,
+  SectionNode,
   StockChoice,
 } from './types';
 
