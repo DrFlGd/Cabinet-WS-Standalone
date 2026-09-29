@@ -4,6 +4,31 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [0.6.1] - 2026-09-28
+
+### Changed
+
+- Manual Layout Editor now owns all layout-count/configuration choices for Simple mode: Layout mode, Contents, Drawer rows, Doors, and Shelf panels.
+- `Shelf panels` is now classified as a Layout parameter rather than a general Shelf property; shelf construction/style remains in searchable Properties.
+- Layout parameters are no longer duplicated in the right-side Properties panel or selected-part contextual controls.
+- Added an always-visible **Search properties…** field at the top of the right Properties panel.
+- Property search works regardless of current part selection and searches applicable property labels, descriptions, groups, keys, current values, and select-option labels.
+- A non-empty property search searches the full currently applicable non-layout property set; clearing it returns to selected-part contextual editing or the full cabinet-property view.
+- Moved the searchable Hardware Catalog out of Properties and into a dedicated collapsible drawer on the left side of Manual Layout.
+- The left editing workspace is now **Hardware | Manual Layout | Parts**, with Hardware and Parts independently collapsible on opposite sides.
+- Opening either secondary drawer expands the left workspace horizontally instead of reducing Manual Layout height.
+- Hardware compatibility feedback, catalog search, source/verification metadata, and preset application remain available inside the new Hardware drawer.
+
+### Testing
+
+- Updated interface regression guards to require all Simple layout counts in Manual Layout, a left-side Hardware drawer, a right-side Parts drawer, and a permanently available property search.
+- Added guards preventing Layout controls and the Hardware catalog from being reintroduced into the right Properties surface.
+
+### Compatibility
+
+- No saved-project schema change. Existing schema-v2 projects remain compatible.
+- Moving `shelfCount` between UI groups changes presentation only; the persisted parameter key and behavior are unchanged.
+
 ## [0.6.0] - 2026-09-28
 
 ### Added

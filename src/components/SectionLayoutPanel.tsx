@@ -19,7 +19,10 @@ type Props = {
   thickness: number;
   units: DisplayUnits;
   selectedSectionId: number;
-  onLayoutModeChange: (mode: CabinetParameters['layoutMode']) => void;
+  onParameterChange: (
+    key: keyof CabinetParameters,
+    value: CabinetParameters[keyof CabinetParameters],
+  ) => void;
   onSelectedSectionChange: (sectionId: number) => void;
   onChange: (nodes: SectionNode[]) => void;
 };
@@ -39,7 +42,7 @@ export default function SectionLayoutPanel({
   thickness,
   units,
   selectedSectionId,
-  onLayoutModeChange,
+  onParameterChange,
   onSelectedSectionChange,
   onChange,
 }: Props) {
@@ -172,18 +175,87 @@ export default function SectionLayoutPanel({
             { value: 'legacy', label: 'Simple cabinet' },
             { value: 'sections', label: 'Sections / bays' },
           ]}
-          onChange={value => onLayoutModeChange(value as CabinetParameters['layoutMode'])}
+          onChange={value => onParameterChange('layoutMode', value as CabinetParameters['layoutMode'])}
         />
       </div>
 
       {parameters.layoutMode === 'legacy' ? (
-        <div className="section-simple-summary">
-          <span className="eyebrow">SIMPLE LAYOUT ACTIVE</span>
-          <strong>{parameters.cabinetContents === 'combo' ? 'Drawers + doors' : parameters.cabinetContents === 'drawers' ? 'Drawers' : 'Doors'}</strong>
-          <p>
-            {parameters.drawerCount} drawer row{parameters.drawerCount === 1 ? '' : 's'} · {parameters.doorCount} door{parameters.doorCount === 1 ? '' : 's'}
+        <div className="section-simple-layout">
+          <div className="section-layout-subheading">
+            <span className="eyebrow">SIMPLE LAYOUT</span>
+            <strong>Opening contents</strong>
+          </div>
+
+          <div className="section-control-grid">
+            <label>
+              Contents
+              <SelectControl
+                ariaLabel="Cabinet contents"
+                value={parameters.cabinetContents}
+                options={[
+                  { value: 'drawers', label: 'Drawers' },
+                  { value: 'doors', label: 'Doors' },
+                  { value: 'combo', label: 'Drawers + doors' },
+                ]}
+                onChange={value => onParameterChange('cabinetContents', value as CabinetParameters['cabinetContents'])}
+              />
+            </label>
+
+            {parameters.cabinetContents !== 'doors' && (
+              <label>
+                Drawer rows
+                <input
+                  type="number"
+                  min={0}
+                  max={8}
+                  step={1}
+                  value={parameters.drawerCount}
+                  onChange={event => {
+                    const value = event.currentTarget.valueAsNumber;
+                    if (Number.isFinite(value)) onParameterChange('drawerCount', value);
+                  }}
+                />
+              </label>
+            )}
+
+            {parameters.cabinetContents !== 'drawers' && (
+              <label>
+                Doors
+                <input
+                  type="number"
+                  min={0}
+                  max={4}
+                  step={1}
+                  value={parameters.doorCount}
+                  onChange={event => {
+                    const value = event.currentTarget.valueAsNumber;
+                    if (Number.isFinite(value)) onParameterChange('doorCount', value);
+                  }}
+                />
+              </label>
+            )}
+
+            {parameters.cabinetContents !== 'drawers' && (
+              <label>
+                Shelf panels
+                <input
+                  type="number"
+                  min={0}
+                  max={6}
+                  step={1}
+                  value={parameters.shelfCount}
+                  onChange={event => {
+                    const value = event.currentTarget.valueAsNumber;
+                    if (Number.isFinite(value)) onParameterChange('shelfCount', value);
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+          <p className="section-layout-helper">
+            Switch to <b>Sections / bays</b> above for nested openings, divider construction, per-opening contents, and direct divider sizing.
           </p>
-          <p>Choose <b>Sections / bays</b> above to edit openings and dividers manually.</p>
         </div>
       ) : <div className="section-layout-content">
       {errors.length ? (
