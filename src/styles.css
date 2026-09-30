@@ -1116,6 +1116,7 @@ button { color: inherit; }
   width: 100%;
   max-height: min(42vh, 420px);
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   border: 1px solid #3d4850;
   border-right: 0;
   border-left: 0;
