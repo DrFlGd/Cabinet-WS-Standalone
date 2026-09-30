@@ -7,7 +7,6 @@ import { utilityStarter } from './utilityStarters';
 
 const document: CabinetDocument = buildCabinetDocument(utilityStarter('default').parameters);
 const partId = 'carcass:left';
-const part = document.parts.find(candidate => candidate.id === partId)!;
 
 const exact: TessellatedPart = {
   partId,
@@ -31,21 +30,102 @@ const exact: TessellatedPart = {
   ],
 };
 
+function faceFixture(
+  vertices: number[],
+  triangles: number[],
+  normal: [number, number, number] = [0, 0, 1],
+): TessellatedPart {
+  return {
+    ...exact,
+    signature: 'face-fixture',
+    vertices,
+    normals: Array.from({ length: vertices.length / 3 }, () => normal).flat(),
+    triangles,
+    faceGroups: [{ start: 0, count: triangles.length, rawFaceId: 1, semanticId: 'face:test:front' }],
+    semanticFaces: [
+      { id: 'face:test:front', partId, rawFaceId: 1, role: 'front', center: [0,0,0], normal },
+      ...exact.semanticFaces.slice(1),
+    ],
+  };
+}
+
 describe('semantic measurements', () => {
-  it('measures exact planar face extents and area from tessellation groups', () => {
-    const result = computeMeasurement(document, [exact], 'face', [
+  it('measures rectangular planar face sides in the face plane rather than from a world bounding box', () => {
+    const c = Math.SQRT1_2;
+    const rotated = faceFixture([
+      0, 0, 0,
+      100 * c, 100 * c, 0,
+      100 * c - 200 * c, 100 * c + 200 * c, 0,
+      -200 * c, 200 * c, 0,
+    ], [0,1,2, 0,2,3]);
+
+    const result = computeMeasurement(document, [rotated], 'face', [
       { partId, kind: 'face', semanticId: 'face:test:front' },
     ]);
-    expect(result?.value).toBeCloseTo(20_000);
-    expect(result?.detail).toContain('200.00 × 100.00');
+
+    expect(result?.primary.map(metric => metric.label)).toEqual(['Long side', 'Short side']);
+    expect(result?.primary[0].value).toBeCloseTo(200, 5);
+    expect(result?.primary[1].value).toBeCloseTo(100, 5);
+    expect(result?.secondary?.[0]).toMatchObject({ label: 'Area', unit: 'mm2' });
+    expect(result?.secondary?.[0].value).toBeCloseTo(20_000);
   });
 
-  it('measures distance between semantic reference centers', () => {
+  it('uses cabinet axes for applicable planar face width and height labels', () => {
+    const frontFace = faceFixture([
+      0,0,0,
+      100,0,0,
+      100,0,200,
+      0,0,200,
+    ], [0,1,2, 0,2,3], [0,1,0]);
+
+    const result = computeMeasurement(document, [frontFace], 'face', [
+      { partId, kind: 'face', semanticId: 'face:test:front' },
+    ]);
+
+    expect(result?.primary.map(metric => metric.label)).toEqual(['Width', 'Height']);
+    expect(result?.primary[0].value).toBeCloseTo(100);
+    expect(result?.primary[1].value).toBeCloseTo(200);
+  });
+
+  it('uses an intrinsic span for non-rectangular planar faces and keeps area secondary', () => {
+    const triangle = faceFixture([
+      0,0,0,
+      80,0,0,
+      20,60,0,
+    ], [0,1,2]);
+
+    const result = computeMeasurement(document, [triangle], 'face', [
+      { partId, kind: 'face', semanticId: 'face:test:front' },
+    ]);
+
+    expect(result?.primary[0]).toMatchObject({ label: 'Maximum span', unit: 'mm' });
+    expect(result?.primary[0].value).toBeCloseTo(80);
+    expect(result?.secondary?.[0]).toMatchObject({ label: 'Area', unit: 'mm2' });
+  });
+
+  it('labels non-planar face span as approximate instead of presenting box dimensions as exact', () => {
+    const curvedSample = faceFixture([
+      0,0,0,
+      100,0,0,
+      100,100,20,
+      0,100,0,
+    ], [0,1,2, 0,2,3]);
+
+    const result = computeMeasurement(document, [curvedSample], 'face', [
+      { partId, kind: 'face', semanticId: 'face:test:front' },
+    ]);
+
+    expect(result?.title).toBe('Curved face');
+    expect(result?.primary[0]).toMatchObject({ label: 'Approx. span', unit: 'mm', approximate: true });
+    expect(result?.secondary?.[0]).toMatchObject({ label: 'Surface area', unit: 'mm2' });
+  });
+
+  it('measures distance between selected reference centers', () => {
     const result = computeMeasurement(document, [exact], 'distance', [
       { partId, kind: 'edge', semanticId: 'edge:test:a' },
       { partId, kind: 'edge', semanticId: 'edge:test:b' },
     ]);
-    expect(result?.value).toBeCloseTo(200);
+    expect(result?.primary[0].value).toBeCloseTo(200);
   });
 
   it('measures face-normal angle', () => {
@@ -53,6 +133,6 @@ describe('semantic measurements', () => {
       { partId, kind: 'face', semanticId: 'face:test:front' },
       { partId, kind: 'face', semanticId: 'face:test:right' },
     ]);
-    expect(result?.value).toBeCloseTo(90);
+    expect(result?.primary[0].value).toBeCloseTo(90);
   });
 });

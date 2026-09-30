@@ -6,6 +6,38 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Added
+
+- Add a dismissible, keyboard-accessible Viewer Help dialog covering navigation,
+  selection, measurements, direct-edit handles, display units, and editor shortcuts.
+
+### Changed
+
+- Remove always-visible viewer helper objects from ordinary viewing: cabinet W/D/H
+  drag cubes now appear only while Alt is held, and shelf/divider drag handles appear
+  only for the selected editable part.
+- Face selection now shows axis-appropriate Width/Height/Depth for aligned
+  rectangular planar faces, intrinsic long/short sides for rotated rectangles,
+  maximum span for other planar faces, and an explicitly approximate span for
+  non-planar faces; area remains secondary and follows the selected display units.
+- Remove ordinary Semantic Topology selection details, the persistent click-instruction
+  bubble, and the normal Exact CAD status badge. Loading and geometry-error feedback
+  remains visible when actionable.
+- Simplify normal viewport status text while preserving existing STEP export readiness
+  rules and kernel diagnostics on error.
+
+### Testing
+
+- Add regression coverage for rotated planar-face dimensions, non-rectangular and
+  non-planar face presentation, display-unit formatting, mode-specific helper
+  visibility, Help content/accessibility, and removal of persistent technical UI.
+
+### Compatibility
+
+- No saved-project/schema, family/native synchronization, Manual Layout, undo/redo,
+  geometry-generation, or STEP export behavior changes.
+
+
 ## [0.14.2] - 2026-09-29
 
 ### Added
