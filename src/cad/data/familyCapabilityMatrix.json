@@ -15,42 +15,42 @@
   "counts": {
     "shop_cart": {
       "total": 310,
-      "geometry-driving": 80,
+      "geometry-driving": 81,
       "manufacturing-driving": 22,
       "compatibility-only": 45,
-      "unsupported": 163,
+      "unsupported": 162,
       "known-gap": 41
     },
     "utility": {
       "total": 310,
-      "geometry-driving": 80,
+      "geometry-driving": 81,
       "manufacturing-driving": 22,
       "compatibility-only": 45,
-      "unsupported": 163,
+      "unsupported": 162,
       "known-gap": 41
     },
     "benchtop": {
       "total": 222,
-      "geometry-driving": 52,
+      "geometry-driving": 53,
       "manufacturing-driving": 10,
       "compatibility-only": 37,
-      "unsupported": 123,
+      "unsupported": 122,
       "known-gap": 37
     },
     "stackable": {
       "total": 277,
-      "geometry-driving": 59,
+      "geometry-driving": 60,
       "manufacturing-driving": 22,
       "compatibility-only": 46,
-      "unsupported": 150,
+      "unsupported": 149,
       "known-gap": 41
     },
     "kitchen": {
       "total": 299,
-      "geometry-driving": 83,
+      "geometry-driving": 84,
       "manufacturing-driving": 23,
       "compatibility-only": 45,
-      "unsupported": 148,
+      "unsupported": 147,
       "known-gap": 41
     },
     "drawer": {
@@ -273,10 +273,10 @@
       "family": "shop_cart",
       "key": "joint_fit_clearance",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+native-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Tab-slot carcass geometry applies this clearance to the through-slot receiver around the retained mating tab."
     },
     {
       "family": "shop_cart",
@@ -816,7 +816,7 @@
       "status": "geometry-driving",
       "owner": "family-adapter",
       "parity": "known-gap",
-      "note": "Standalone implements native joinery categories, but reference tab/slot placement/count/detail controls are not fully represented."
+      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
     },
     {
       "family": "shop_cart",
@@ -3063,10 +3063,10 @@
       "family": "utility",
       "key": "joint_fit_clearance",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+native-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Tab-slot carcass geometry applies this clearance to the through-slot receiver around the retained mating tab."
     },
     {
       "family": "utility",
@@ -3606,7 +3606,7 @@
       "status": "geometry-driving",
       "owner": "family-adapter",
       "parity": "known-gap",
-      "note": "Standalone implements native joinery categories, but reference tab/slot placement/count/detail controls are not fully represented."
+      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
     },
     {
       "family": "utility",
@@ -5835,10 +5835,10 @@
       "family": "benchtop",
       "key": "joint_fit_clearance",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+native-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Tab-slot carcass geometry applies this clearance to the through-slot receiver around the retained mating tab."
     },
     {
       "family": "benchtop",
@@ -6243,7 +6243,7 @@
       "status": "geometry-driving",
       "owner": "family-adapter",
       "parity": "known-gap",
-      "note": "Standalone implements native joinery categories, but reference tab/slot placement/count/detail controls are not fully represented."
+      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
     },
     {
       "family": "benchtop",
@@ -7842,10 +7842,10 @@
       "family": "stackable",
       "key": "joint_fit_clearance",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+native-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Tab-slot carcass geometry applies this clearance to the through-slot receiver around the retained mating tab."
     },
     {
       "family": "stackable",
@@ -8223,7 +8223,7 @@
       "status": "geometry-driving",
       "owner": "family-adapter",
       "parity": "known-gap",
-      "note": "Standalone implements native joinery categories, but reference tab/slot placement/count/detail controls are not fully represented."
+      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
     },
     {
       "family": "stackable",
@@ -10353,10 +10353,10 @@
       "family": "kitchen",
       "key": "joint_fit_clearance",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+native-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Tab-slot carcass geometry applies this clearance to the through-slot receiver around the retained mating tab."
     },
     {
       "family": "kitchen",
@@ -10905,7 +10905,7 @@
       "status": "geometry-driving",
       "owner": "family-adapter",
       "parity": "known-gap",
-      "note": "Standalone implements native joinery categories, but reference tab/slot placement/count/detail controls are not fully represented."
+      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
     },
     {
       "family": "kitchen",
