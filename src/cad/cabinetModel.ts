@@ -824,7 +824,7 @@ function tabbedHorizontalPanelGeometry(
     .sort((a, b) => a.start - b.start);
   const outline: { u: number; v: number }[] = [];
   const push = (u: number, v: number) => {
-    const last = outline.at(-1);
+    const last = outline[outline.length - 1];
     if (!last || last.u !== u || last.v !== v) outline.push({ u, v });
   };
 
@@ -913,12 +913,15 @@ function sidePanelHoles(
   if (p.joineryStyle === 'tab_slot' && p.bottomWidthStyle !== 'full_width') {
     const spec = carcassTabSpec(p, depth);
     const slotWidth = spec.tabWidth + spec.clearance;
-    const slotHeight = stockThickness(p.carcassStock, p.materialThickness) + spec.clearance;
+    const materialThickness = stockThickness(p.carcassStock, p.materialThickness);
+    const slotBottom = Math.max(0, base - spec.clearance / 2);
+    const slotTop = Math.min(height, base + materialThickness + spec.clearance / 2);
+    const slotHeight = Math.max(0, slotTop - slotBottom);
     for (const y of spec.centers) {
       holes.push({
         kind: 'rect',
         u: y - slotWidth / 2,
-        v: base - spec.clearance / 2,
+        v: slotBottom,
         width: slotWidth,
         height: slotHeight,
       });
