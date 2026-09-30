@@ -65,7 +65,7 @@ button { color: inherit; }
   overflow: hidden;
   background: #1d2226;
 }
-.layout-primary-column.shared-layout { grid-template-rows: minmax(220px,1fr) auto; }
+.layout-primary-column.shared-layout { grid-template-rows: minmax(180px,1fr) auto; }
 .layout-primary-column.dedicated-layout { grid-template-rows: minmax(0,1fr); }
 .layout-primary-column.dedicated-layout .design-health-panel {
   align-self: start;
@@ -1295,7 +1295,7 @@ button { color: inherit; }
 .fit-apply:disabled { opacity: .4; cursor: default; }
 .fit-solution > small { color: #6f7e86; font-size: 7px; line-height: 1.35; }
 @media (max-width: 1250px) {
-  .layout-primary-column.shared-layout { grid-template-rows: minmax(200px,1fr) auto; }
+  .layout-primary-column.shared-layout { grid-template-rows: minmax(160px,1fr) auto; }
 }
 
 
