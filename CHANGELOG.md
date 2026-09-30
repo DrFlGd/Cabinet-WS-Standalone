@@ -10,6 +10,7 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 - Route the native window X and application Exit/Quit path through an explicit clean/dirty close lifecycle instead of letting a dirty renderer `beforeunload` veto desktop shutdown indefinitely.
 - Dirty desktop close now offers Save / Discard / Cancel; Cancel and cancelled/failed saves keep the window open, while successful Save or explicit Discard complete the close without repeated prompts.
+- Track whether the renderer close listener is actually registered: startup/root-error states with no listener now allow native close directly, and listener teardown releases any pending request instead of suppressing later close attempts indefinitely.
 - Suppress recovery autosave/unload writes while an accepted close is completing so stale recovery data cannot be recreated after Save or Discard.
 
 ### Changed
@@ -20,7 +21,7 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ### Testing
 
-- Add behavior-level close-flow coverage for clean close, Save, Discard, Cancel, cancelled/failed saves, duplicate close suppression, approved retry, crash-close bypass, and desktop recovery flush without an unload veto.
+- Add behavior-level close-flow coverage for clean close, Save, Discard, Cancel, cancelled/failed saves, duplicate close suppression, approved retry, missing-renderer-listener fallback, listener-loss recovery, crash-close bypass, and desktop recovery flush without an unload veto.
 - Add Design Health rendering coverage for collapsible state semantics and visible significant-issue counts.
 - Native packaged-Windows X/Exit interaction remains a separate manual/smoke validation boundary; unit tests and packaging alone do not establish it.
 
