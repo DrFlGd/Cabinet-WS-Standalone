@@ -2,7 +2,7 @@
 
 This file describes current status and upcoming work. Historical releases and
 implementation details belong in [CHANGELOG.md](CHANGELOG.md) and
-[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.1.
+[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.2.
 
 ## Migration rules
 
@@ -121,3 +121,11 @@ wall/floor references, cabinet-run alignment and collision visualization.
 
 Pursue these after the existing cabinet workflow is dependable; avoid turning the
 project into a general mechanical CAD system without a cabinet-specific need.
+
+## Family-parity audit baseline
+
+[FAMILY_PARITY.md](FAMILY_PARITY.md) records setting ownership, confirmed gaps, and
+reference fixtures. Priorities are fit-target sizing, drawer construction/machining,
+Equipment Stand mounting geometry, and clear feedback for unsupported controls.
+This audit does not certify full family parity. Reproducible installs and packaged
+Windows smoke coverage in PR #21 remain deferred from v0.14.2.

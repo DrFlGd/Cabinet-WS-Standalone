@@ -4,9 +4,10 @@ A desktop cabinet-design application built with React, Electron, Three.js, and a
 worker-based Replicad/OpenCascade geometry kernel. Cabinet Workshop is the reference
 for migrated behavior; OpenSCAD is not a runtime dependency.
 
-The package version is **0.14.1**. Release history is listed in [CHANGELOG.md](CHANGELOG.md).
+The package version is **0.14.2**. Release history is listed in [CHANGELOG.md](CHANGELOG.md).
 This is a development application: controls/catalog coverage does not imply that
 every legacy construction or machining option has verified native geometry parity.
+See [FAMILY_PARITY.md](FAMILY_PARITY.md) for the capability matrix and prioritized gaps.
 
 ## Current capabilities
 

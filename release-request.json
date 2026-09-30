@@ -1,5 +1,5 @@
 {
-  "version": "0.14.1",
-  "milestone": "Edit/save reliability, complete STEP exports and documentation cleanup",
+  "version": "0.14.2",
+  "milestone": "Recovery reliability, runtime About information, and family-parity audit",
   "requestedFrom": "main"
 }

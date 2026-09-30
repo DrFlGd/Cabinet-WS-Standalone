@@ -6,6 +6,8 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+## [0.14.2] - 2026-09-29
+
 ### Added
 
 - Add a machine-readable family capability matrix covering all 1,678 retained settings with geometry-driving, manufacturing-driving, compatibility-only, or unsupported ownership status.
@@ -50,6 +52,12 @@ The project follows milestone versions while the standalone CAD architecture is 
   unchanged.
 - Recovery continues to use the existing `recovery.cabinetws.json` desktop file and
   browser recovery key; no recovery-data migration is required.
+
+### Release scope
+
+- Includes recovery/About improvements (#22) and the family-parity audit (#23).
+- Defers reproducible installs and packaged Windows workflow smoke coverage (#21).
+- Project schema remains v3. Packaged crash/recovery interaction remains unverified.
 
 ## [0.14.1] - 2026-09-29
 
