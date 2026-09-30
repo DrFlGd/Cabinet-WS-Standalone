@@ -82,8 +82,7 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
     });
   }
 
-  const tabSlotReceiver = document.parameters.joineryStyle === 'tab_slot'
-    && (part.id === 'carcass:left' || part.id === 'carcass:right');
+  const tabSlotReceiver = part.metadata?.tabSlotReceivers === true;
   rectHoles.forEach((hole, index) => {
     const clearance = tabSlotReceiver
       ? Number(part.metadata?.jointFitClearance ?? document.parameters.dadoFitClearance)
