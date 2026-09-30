@@ -19,11 +19,13 @@ const {
   }, details?: { reason?: string; exitCode?: number }) => Promise<string>;
   createWindowCloseController(options: {
     requestClose: () => void;
+    canRequestClose?: () => boolean;
     onCancel?: () => void;
   }): {
     handleClose(event: { preventDefault(): void }): string;
     approve(): string;
     cancel(): string;
+    rendererUnavailable(): string;
     isApproved(): boolean;
     isPending(): boolean;
   };
@@ -130,6 +132,47 @@ describe('Electron window close requests', () => {
     expect(controller.handleClose(approved)).toBe('approved');
 
     expect(approved.preventDefault).not.toHaveBeenCalled();
+    expect(requestClose).toHaveBeenCalledOnce();
+    expect(controller.isApproved()).toBe(true);
+  });
+
+  it('allows native close immediately when no renderer close listener is registered', () => {
+    const requestClose = vi.fn();
+    const event = { preventDefault: vi.fn() };
+    const controller = createWindowCloseController({
+      requestClose,
+      canRequestClose: () => false,
+    });
+
+    expect(controller.handleClose(event)).toBe('fallback-approved');
+    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(requestClose).not.toHaveBeenCalled();
+    expect(controller.isApproved()).toBe(true);
+    expect(controller.isPending()).toBe(false);
+  });
+
+  it('releases a pending request if the renderer listener disappears', () => {
+    let rendererReady = true;
+    const requestClose = vi.fn();
+    const onCancel = vi.fn();
+    const controller = createWindowCloseController({
+      requestClose,
+      canRequestClose: () => rendererReady,
+      onCancel,
+    });
+
+    const first = { preventDefault: vi.fn() };
+    expect(controller.handleClose(first)).toBe('requested');
+    expect(controller.isPending()).toBe(true);
+
+    rendererReady = false;
+    expect(controller.rendererUnavailable()).toBe('cancelled');
+    expect(controller.isPending()).toBe(false);
+    expect(onCancel).toHaveBeenCalledOnce();
+
+    const retry = { preventDefault: vi.fn() };
+    expect(controller.handleClose(retry)).toBe('fallback-approved');
+    expect(retry.preventDefault).not.toHaveBeenCalled();
     expect(requestClose).toHaveBeenCalledOnce();
     expect(controller.isApproved()).toBe(true);
   });
