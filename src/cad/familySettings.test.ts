@@ -3,6 +3,7 @@ import { allFamilyStarters, familyStarter, parametersFromFamilyValues } from './
 import {
   applyFamilyFieldChange,
   completeFamilyValues,
+  editFamilySetting,
   familyFieldDefinitions,
   familyFieldInactiveReason,
   syncFamilyValuesFromParameters,
@@ -123,6 +124,26 @@ describe('v0.14 native family settings', () => {
     expect(edited.drawer_divider_rows).toBe(2);
     expect(parametersFromFamilyValues('utility', edited).drawerDividerCount).toBe(2);
     expect(parametersFromFamilyValues('utility', edited).drawerDividerRows).toBe(1);
+  });
+
+  it('preserves saved canonical dividers across unrelated family edits', () => {
+    const starter = familyStarter('utility', 'utility_3_drawer_base');
+    const savedParameters = {
+      ...starter.parameters,
+      drawerDividerCount: 2,
+      drawerDividerRows: 1,
+    };
+
+    const edited = editFamilySetting(
+      'utility',
+      starter.values,
+      savedParameters,
+      'cabinet_width',
+      Number(starter.values.cabinet_width) + 25,
+    );
+
+    expect(edited.parameters.drawerDividerCount).toBe(2);
+    expect(edited.parameters.drawerDividerRows).toBe(1);
   });
 
   it('maps reference tab-slot fit clearance into the active canonical joinery clearance', () => {
