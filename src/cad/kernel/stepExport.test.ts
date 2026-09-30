@@ -3,10 +3,10 @@ import type { KernelRequest, KernelResponse } from './types';
 import { buildFeatureGraph } from './featureGraph';
 import { buildCabinetDocument, DEFAULT_PARAMETERS } from '../cabinetModel';
 
-const mocks = vi.hoisted(() => ({ makeBox: vi.fn(), exportSTEP: vi.fn(), setOC: vi.fn() }));
+const mocks = vi.hoisted(() => ({ makeBox: vi.fn(), draw: vi.fn(), exportSTEP: vi.fn(), setOC: vi.fn() }));
 vi.mock('replicad-opencascadejs', () => ({ default: async () => ({}) }));
 vi.mock('replicad-opencascadejs/wasm?url', () => ({ default: 'test.wasm' }));
-vi.mock('replicad', () => ({ ...mocks, draw: vi.fn(), makeCylinder: vi.fn() }));
+vi.mock('replicad', () => ({ ...mocks, makeCylinder: vi.fn() }));
 
 let scope: { onmessage: ((event: { data: KernelRequest }) => void) | null; postMessage: ReturnType<typeof vi.fn> };
 let shapes: { translate: ReturnType<typeof vi.fn>; cut: ReturnType<typeof vi.fn>; delete: ReturnType<typeof vi.fn> }[];
@@ -15,12 +15,28 @@ beforeEach(async () => {
   vi.resetModules();
   vi.clearAllMocks();
   shapes = [];
-  mocks.makeBox.mockImplementation(() => {
+  const makeShape = () => {
     const shape = { translate: vi.fn(), cut: vi.fn(), delete: vi.fn() };
     shape.translate.mockReturnValue(shape);
-    shape.cut.mockReturnValue(shape);
+    shape.cut.mockImplementation(() => makeShape());
     shapes.push(shape);
     return shape;
+  };
+  mocks.makeBox.mockImplementation(makeShape);
+  mocks.draw.mockImplementation(() => {
+    const sketch = {
+      movePointerTo: vi.fn(),
+      lineTo: vi.fn(),
+      close: vi.fn(),
+      sketchOnPlane: vi.fn(),
+      extrude: vi.fn(),
+    };
+    sketch.movePointerTo.mockReturnValue(sketch);
+    sketch.lineTo.mockReturnValue(sketch);
+    sketch.close.mockReturnValue(sketch);
+    sketch.sketchOnPlane.mockReturnValue(sketch);
+    sketch.extrude.mockImplementation(makeShape);
+    return sketch;
   });
   mocks.exportSTEP.mockReturnValue(new Blob(['STEP bytes']));
   scope = { onmessage: null, postMessage: vi.fn() };
@@ -58,6 +74,44 @@ describe('STEP worker export completeness', () => {
     expect(mocks.exportSTEP.mock.calls[0][0]).toHaveLength(2);
     expect(shapes.every(shape => shape.delete.mock.calls.length > 0)).toBe(true);
   });
+  it('exports retained tab geometry together with through-cut receiver slots', async () => {
+    const source = buildCabinetDocument({
+      ...DEFAULT_PARAMETERS,
+      joineryStyle: 'tab_slot',
+      dadoFitClearance: 0.5,
+    });
+    source.parts = source.parts.filter(part => ['carcass:left', 'carcass:bottom'].includes(part.id));
+    const graph = buildFeatureGraph(source);
+
+    scope.onmessage!({
+      data: {
+        type: 'export-step',
+        requestId: 7,
+        payload: { document: source, graph, dirtyPartIds: [] },
+      },
+    });
+    await vi.waitFor(() => expect(scope.postMessage).toHaveBeenCalled(), { timeout: 2000 });
+
+    const response = scope.postMessage.mock.calls[0][0] as KernelResponse;
+    expect(response.type).toBe('step-exported');
+    expect(mocks.exportSTEP.mock.calls[0][0].map((entry: { name: string }) => entry.name)).toEqual([
+      'carcass:left',
+      'carcass:bottom',
+    ]);
+
+    const receiverFeatures = graph.partFeatures['carcass:left'].filter(feature => feature.semanticRole === 'tab-slot-receiver');
+    expect(receiverFeatures).toHaveLength(2);
+    expect(receiverFeatures.every(feature => feature.parameters.machiningDepth === source.parts[0].size.x)).toBe(true);
+
+    const bottom = source.parts.find(part => part.id === 'carcass:bottom')!;
+    expect(bottom.geometry?.kind).toBe('extruded-profile');
+    const bottomSketch = mocks.draw.mock.results[1]?.value;
+    const outlineCalls = bottomSketch.lineTo.mock.calls.map((call: [number[]]) => call[0]);
+    expect(outlineCalls.some((point: number[]) => point[0] === 0)).toBe(true);
+    expect(outlineCalls.some((point: number[]) => point[0] === bottom.size.x)).toBe(true);
+    expect(shapes.some(shape => shape.cut.mock.calls.length > 0)).toBe(true);
+  });
+
   it('fails the entire export when one body fails', async () => {
     const response = await exportParts({ failPart: true });
     expect(response.type).toBe('failed');
