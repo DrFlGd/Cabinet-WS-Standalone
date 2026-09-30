@@ -109,6 +109,24 @@ describe('family parity audit', () => {
     expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).toBe(true);
   });
 
+  it('does not reinterpret unsupported Equipment Stand skeleton windows as tab-slot receivers', () => {
+    const starter = familyStarter('equipment_stand', 'equipment_stand_tab_slot_full_back_stand');
+    const document = buildFamilyCabinetDocument(starter.parameters, starter.name, 'mm', {
+      family: starter.family,
+      starterId: starter.id,
+      familyValues: starter.values,
+    });
+    const graph = buildFeatureGraph(document);
+
+    const left = document.parts.find(part => part.id === 'carcass:left')!;
+    expect((left.geometry?.holes ?? []).some(hole => hole.kind === 'rect')).toBe(true);
+    expect(graph.partFeatures['carcass:left'].some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(false);
+    expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).not.toBe(true);
+    expect(familyCapabilityFor('equipment_stand', 'joinery_style')).toMatchObject({
+      parity: 'known-gap',
+    });
+  });
+
   it('classifies helper-resolved drawer stock and measured thickness as geometry-driving', () => {
     const families: CabinetFamily[] = ['shop_cart', 'utility', 'benchtop', 'stackable', 'kitchen', 'drawer'];
     const keys = [
