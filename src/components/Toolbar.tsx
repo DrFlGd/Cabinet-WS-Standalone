@@ -1,5 +1,6 @@
 import {
   Box,
+  CircleHelp,
   ClipboardList,
   FileDown,
   FilePlus2,
@@ -56,6 +57,7 @@ type Props = {
   onHideSelected: () => void;
   onIsolateSelected: () => void;
   onShowAll: () => void;
+  onHelp: () => void;
   onAbout: () => void;
 };
 
@@ -92,6 +94,7 @@ export default function Toolbar({
   onHideSelected,
   onIsolateSelected,
   onShowAll,
+  onHelp,
   onAbout,
 }: Props) {
   return <div className="toolbar">
@@ -176,6 +179,7 @@ export default function Toolbar({
     </label>
     <div className="units-control"><Ruler size={15} /><span>Units</span><SelectControl ariaLabel="Display units" value={units} options={[{ value: 'mm', label: 'mm' }, { value: 'in', label: 'inches' }]} onChange={value => onUnits(value as DisplayUnits)} /></div>
     <label className="explode-control"><Move3D size={16} /><span>Explode</span><input type="range" min="0" max="180" value={explode} onChange={event => onExplode(Number(event.target.value))} /><output>{formatDimension(explode, units)} {unitLabel(units)}</output></label>
+    <button className="icon-button" onClick={onHelp} title="Viewer Help" aria-label="Viewer Help"><CircleHelp size={16} /> Help</button>
     <button className="icon-button" onClick={onAbout} title="About Cabinet WS Standalone" aria-label="About Cabinet WS Standalone"><Info size={16} /></button>
     <button className="icon-button" onClick={onFit} title="Fit model"><Maximize2 size={16} /></button>
   </div>;

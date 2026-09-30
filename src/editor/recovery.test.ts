@@ -118,6 +118,38 @@ describe('recovery lifecycle events', () => {
     expect(documentListeners.has('visibilitychange')).toBe(false);
   });
 
+  it('flushes desktop recovery before unload without vetoing an Electron-approved close', () => {
+    const windowListeners = new Map<string, EventListener>();
+    const flush = vi.fn();
+    const windowTarget = {
+      addEventListener: vi.fn((name: string, listener: EventListenerOrEventListenerObject) => {
+        windowListeners.set(name, listener as EventListener);
+      }),
+      removeEventListener: vi.fn((name: string) => {
+        windowListeners.delete(name);
+      }),
+    } as unknown as Pick<Window, 'addEventListener' | 'removeEventListener'>;
+    const documentTarget = {
+      visibilityState: 'visible',
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    } as unknown as Pick<Document, 'addEventListener' | 'removeEventListener' | 'visibilityState'>;
+
+    attachRecoveryLifecycle({
+      dirty: true,
+      flush,
+      blockUnload: false,
+      windowTarget,
+      documentTarget,
+    });
+
+    const unload = new Event('beforeunload', { cancelable: true }) as BeforeUnloadEvent;
+    windowListeners.get('beforeunload')?.(unload);
+
+    expect(flush).toHaveBeenCalledOnce();
+    expect(unload.defaultPrevented).toBe(false);
+  });
+
   it('does not register a dirty-navigation guard for clean documents', () => {
     const windowTarget = {
       addEventListener: vi.fn(),
