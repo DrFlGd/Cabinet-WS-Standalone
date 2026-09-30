@@ -67,7 +67,7 @@ describe('realtime cabinet rendering features', () => {
     for (const slot of slots) {
       if (slot.kind !== 'rect') throw new Error('Expected rectangular tab-slot receiver');
       expect(slot.width).toBeCloseTo(tabWidth + clearance);
-      expect(slot.height).toBeCloseTo(source.materialThickness + clearance);
+      expect(slot.height).toBeCloseTo(side.size.x + clearance);
     }
 
     const graph = buildFeatureGraph(tabSlot);
@@ -76,7 +76,7 @@ describe('realtime cabinet rendering features', () => {
       expect(receivers).toHaveLength(2);
       expect(receivers.every(feature => feature.parameters.sourcePartId === 'carcass:bottom')).toBe(true);
       expect(receivers.every(feature => feature.parameters.clearance === clearance)).toBe(true);
-      expect(receivers.every(feature => feature.parameters.machiningDepth === source.materialThickness)).toBe(true);
+      expect(receivers.every(feature => feature.parameters.machiningDepth === side.size.x)).toBe(true);
     }
     expect(graph.partFeatures['carcass:bottom'].some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(false);
   });
