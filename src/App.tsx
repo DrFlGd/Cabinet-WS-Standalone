@@ -273,7 +273,7 @@ export default function App() {
     const desktop = desktopApi();
     if (!desktop) return;
 
-    return desktop.onCloseRequested(() => {
+    desktop.onCloseRequested(() => {
       if (closePending.current) return;
       closePending.current = true;
 
@@ -309,6 +309,8 @@ export default function App() {
         void desktop.resolveClose('cancel').catch(() => undefined);
       });
     });
+
+    return () => desktop.offCloseRequested();
   }, [dirty, editor.name, currentPath, serialized]);
 
   useEffect(() => {
