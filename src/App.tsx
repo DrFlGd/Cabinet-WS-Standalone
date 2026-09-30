@@ -55,6 +55,7 @@ import AboutDialog from './components/AboutDialog';
 import WorkspaceErrorBoundary from './components/WorkspaceErrorBoundary';
 import { desktopApi, type AppInfo, type RecentProject } from './desktop';
 import { attachRecoveryLifecycle, clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
+import { handleDesktopCloseRequest } from './editor/closeFlow';
 import type { EditorDocument } from './editor/history';
 import { useDocumentHistory } from './editor/useDocumentHistory';
 
@@ -131,6 +132,7 @@ export default function App() {
   const cadDocument = useMemo(() => toCadDocument(editor), [editor]);
   const serialized = useMemo(() => serializeDocument(cadDocument), [cadDocument]);
   const dirty = serialized !== savedContent;
+  const hasSharedLayout = editor.family !== 'drawer' && editor.family !== 'equipment_stand';
   const selected = selectedId
     ? cadDocument.parts.find(part => part.id === selectedId) ?? null
     : null;
@@ -257,12 +259,47 @@ export default function App() {
     const detachLifecycle = attachRecoveryLifecycle({
       dirty,
       flush: flushDirtyRecovery,
+      blockUnload: !desktopApi(),
     });
     return () => {
       window.clearTimeout(timer);
       detachLifecycle();
     };
   }, [dirty, recoveryReady, serialized]);
+
+  useEffect(() => {
+    const desktop = desktopApi();
+    if (!desktop) return;
+
+    return desktop.onCloseRequested(() => {
+      void handleDesktopCloseRequest({
+        dirty,
+        flushRecovery: async () => {
+          if (!dirty) return;
+          try {
+            await writeRecovery(serialized);
+          } catch (error) {
+            console.error('Could not flush recovery before close.', error);
+          }
+        },
+        confirmClose: () => desktop.confirmClose({ documentName: editor.name }),
+        save: () => saveDocument(false),
+        discard: async () => {
+          try {
+            await clearRecovery();
+          } catch (error) {
+            console.error('Could not clear recovery after explicit discard.', error);
+          }
+        },
+        approve: () => desktop.resolveClose('approve'),
+        cancel: () => desktop.resolveClose('cancel'),
+      }).catch(error => {
+        console.error('Could not complete the desktop close flow.', error);
+        setNotice('Could not complete close request');
+        void desktop.resolveClose('cancel').catch(() => undefined);
+      });
+    });
+  }, [dirty, editor.name, currentPath, serialized]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -882,7 +919,7 @@ export default function App() {
     }
   }
 
-  async function saveDocument(saveAs = false) {
+  async function saveDocument(saveAs = false): Promise<boolean> {
     const desktop = desktopApi();
 
     try {
@@ -893,22 +930,32 @@ export default function App() {
           suggestedName: suggestedFileName(editor.name),
           saveAs,
         });
-        if (result.canceled) return;
+        if (result.canceled) return false;
 
         setCurrentPath(result.path ?? currentPath);
         setSavedContent(serialized);
-        await clearRecovery();
+        try {
+          await clearRecovery();
+        } catch (error) {
+          console.error('Saved the project but could not clear its recovery copy.', error);
+        }
         await refreshRecent();
         setNotice(`Saved ${result.name ?? editor.name}`);
-        return;
+        return true;
       }
 
       downloadDocument(cadDocument);
       setSavedContent(serialized);
-      await clearRecovery();
+      try {
+        await clearRecovery();
+      } catch (error) {
+        console.error('Downloaded the project but could not clear its recovery copy.', error);
+      }
       setNotice('Downloaded cabinet document');
+      return true;
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not save document');
+      return false;
     }
   }
 
@@ -996,15 +1043,23 @@ export default function App() {
             onToggle={() => setHardwareCatalogExpanded(current => !current)}
             onApply={applyHardware}
           />
-          {editor.family !== 'drawer' && editor.family !== 'equipment_stand' && <SectionLayoutPanel
-            parameters={editor.parameters}
-            thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
-            units={editor.displayUnits}
-            selectedSectionId={sectionSelectedId}
-            onParameterChange={updateParameter}
-            onSelectedSectionChange={setSectionSelectedId}
-            onChange={updateSections}
-          />}
+          <div className={`layout-primary-column ${hasSharedLayout ? 'shared-layout' : 'dedicated-layout'}`}>
+            {hasSharedLayout && <SectionLayoutPanel
+              parameters={editor.parameters}
+              thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
+              units={editor.displayUnits}
+              selectedSectionId={sectionSelectedId}
+              onParameterChange={updateParameter}
+              onSelectedSectionChange={setSectionSelectedId}
+              onChange={updateSections}
+            />}
+            <DesignHealthPanel
+              report={designHealth}
+              parameters={editor.parameters}
+              units={editor.displayUnits}
+              onApplySolution={applyFitSolution}
+            />
+          </div>
           <TreePanel
             document={cadDocument}
             selectedId={selectedId}
@@ -1036,12 +1091,6 @@ export default function App() {
           units={editor.displayUnits}
           onMode={changeMeasurementMode}
           onClear={clearMeasurement}
-        />
-        <DesignHealthPanel
-          report={designHealth}
-          parameters={editor.parameters}
-          units={editor.displayUnits}
-          onApplySolution={applyFitSolution}
         />
         <CadViewport
           ref={viewport}
