@@ -11,12 +11,19 @@ const MAX_TEXT_EXPORT_BYTES = 20_000_000;
 const MAX_BINARY_EXPORT_BYTES = 250_000_000;
 const approvedPaths = new Set();
 const closeControllers = new WeakMap();
+const rendererCloseListeners = new WeakSet();
 let isQuitting = false;
 const recoverRenderer = createRendererRecoveryHandler({
   dialog,
   isShuttingDown: () => isQuitting,
   beforeClose: win => closeControllers.get(win)?.approve(),
 });
+
+function markRendererCloseUnavailable(win) {
+  if (!win) return;
+  rendererCloseListeners.delete(win);
+  closeControllers.get(win)?.rendererUnavailable();
+}
 
 function userFile(name) {
   return path.join(app.getPath('userData'), name);
@@ -79,6 +86,18 @@ function registerIpc() {
     chromium: process.versions.chrome,
     isPackaged: app.isPackaged,
   }));
+
+  ipcMain.on('app:close-listener-state', (event, ready) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win || win.isDestroyed()) return;
+
+    if (ready === true) {
+      rendererCloseListeners.add(win);
+      return;
+    }
+
+    markRendererCloseUnavailable(win);
+  });
 
   ipcMain.handle('app:confirm-close', async (event, options) => {
     const win = BrowserWindow.fromWebContents(event.sender);
@@ -302,6 +321,7 @@ function createWindow() {
     requestClose: () => {
       if (!win.isDestroyed()) win.webContents.send('app:close-requested');
     },
+    canRequestClose: () => rendererCloseListeners.has(win),
     onCancel: () => {
       isQuitting = false;
     },
@@ -316,10 +336,15 @@ function createWindow() {
     }
   });
   win.on('closed', () => {
+    rendererCloseListeners.delete(win);
     closeControllers.delete(win);
   });
 
+  win.webContents.on('did-start-loading', () => {
+    markRendererCloseUnavailable(win);
+  });
   win.webContents.on('render-process-gone', (_event, details) => {
+    markRendererCloseUnavailable(win);
     void recoverRenderer(win, details);
   });
 
