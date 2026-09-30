@@ -76,6 +76,39 @@ describe('family parity audit', () => {
     });
   });
 
+  it('records proven shared-cabinet tab-slot clearance ownership without closing broader parity gaps', () => {
+    const families: CabinetFamily[] = ['shop_cart', 'utility', 'benchtop', 'stackable', 'kitchen'];
+    for (const family of families) {
+      expect(familyCapabilityFor(family, 'joint_fit_clearance'), family).toMatchObject({
+        status: 'geometry-driving',
+        owner: 'family-adapter+native-generator',
+        parity: 'unverified',
+      });
+      expect(familyCapabilityFor(family, 'joinery_style'), family).toMatchObject({
+        status: 'geometry-driving',
+        parity: 'known-gap',
+      });
+    }
+
+    const starter = familyStarter('utility');
+    const values = recipeWithPatch(starter.values, {
+      joinery_style: 'tab_slot',
+      joint_fit_clearance: 0.55,
+    });
+    const parameters = parametersFromFamilyValues('utility', values);
+    const document = buildFamilyCabinetDocument(parameters, 'Tab-slot audit', 'mm', {
+      family: 'utility',
+      starterId: null,
+      familyValues: values,
+    });
+    const graph = buildFeatureGraph(document);
+    const receivers = graph.partFeatures['carcass:left'].filter(feature => feature.semanticRole === 'tab-slot-receiver');
+
+    expect(receivers).toHaveLength(2);
+    expect(receivers.every(feature => feature.parameters.clearance === 0.55)).toBe(true);
+    expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).toBe(true);
+  });
+
   it('classifies helper-resolved drawer stock and measured thickness as geometry-driving', () => {
     const families: CabinetFamily[] = ['shop_cart', 'utility', 'benchtop', 'stackable', 'kitchen', 'drawer'];
     const keys = [
