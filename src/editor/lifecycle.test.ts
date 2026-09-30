@@ -4,17 +4,29 @@ import { describe, expect, it, vi } from 'vitest';
 const require = createRequire(import.meta.url);
 const {
   createRendererRecoveryHandler,
+  createWindowCloseController,
   rendererFailureDetail,
 } = require('../../electron/lifecycle.cjs') as {
   createRendererRecoveryHandler(options: {
     dialog: { showMessageBox: (...args: unknown[]) => Promise<{ response: number }> };
     logger?: { error?: (...args: unknown[]) => void };
     isShuttingDown?: () => boolean;
+    beforeClose?: (win: unknown) => void;
   }): (win: {
     isDestroyed(): boolean;
     reload(): void;
     close(): void;
   }, details?: { reason?: string; exitCode?: number }) => Promise<string>;
+  createWindowCloseController(options: {
+    requestClose: () => void;
+    onCancel?: () => void;
+  }): {
+    handleClose(event: { preventDefault(): void }): string;
+    approve(): string;
+    cancel(): string;
+    isApproved(): boolean;
+    isPending(): boolean;
+  };
   rendererFailureDetail(details?: { reason?: string; exitCode?: number }): string;
 };
 
@@ -48,9 +60,11 @@ describe('Electron renderer recovery lifecycle', () => {
   it('closes the window when the user declines a crash reload', async () => {
     const win = fakeWindow();
     const dialog = { showMessageBox: vi.fn(async (..._args: unknown[]) => ({ response: 1 })) };
-    const recover = createRendererRecoveryHandler({ dialog });
+    const beforeClose = vi.fn();
+    const recover = createRendererRecoveryHandler({ dialog, beforeClose });
 
     expect(await recover(win, { reason: 'crashed', exitCode: 11 })).toBe('closed');
+    expect(beforeClose).toHaveBeenCalledWith(win);
     expect(win.close).toHaveBeenCalledOnce();
     expect(win.reload).not.toHaveBeenCalled();
   });
@@ -85,5 +99,52 @@ describe('Electron renderer recovery lifecycle', () => {
     const detail = rendererFailureDetail({ reason: 'integrity-failure', exitCode: 7 });
     expect(detail).toContain('integrity-failure');
     expect(detail).toContain('exit 7');
+  });
+});
+
+
+describe('Electron window close requests', () => {
+  it('prevents the first native close and requests one renderer decision', () => {
+    const requestClose = vi.fn();
+    const controller = createWindowCloseController({ requestClose });
+    const first = { preventDefault: vi.fn() };
+    const repeated = { preventDefault: vi.fn() };
+
+    expect(controller.handleClose(first)).toBe('requested');
+    expect(controller.handleClose(repeated)).toBe('pending');
+
+    expect(first.preventDefault).toHaveBeenCalledOnce();
+    expect(repeated.preventDefault).toHaveBeenCalledOnce();
+    expect(requestClose).toHaveBeenCalledOnce();
+    expect(controller.isPending()).toBe(true);
+  });
+
+  it('allows the approved retry to close without another prompt', () => {
+    const requestClose = vi.fn();
+    const controller = createWindowCloseController({ requestClose });
+    const first = { preventDefault: vi.fn() };
+    const approved = { preventDefault: vi.fn() };
+
+    controller.handleClose(first);
+    expect(controller.approve()).toBe('approved');
+    expect(controller.handleClose(approved)).toBe('approved');
+
+    expect(approved.preventDefault).not.toHaveBeenCalled();
+    expect(requestClose).toHaveBeenCalledOnce();
+    expect(controller.isApproved()).toBe(true);
+  });
+
+  it('resets a cancelled request so a later X or Exit can prompt again', () => {
+    const requestClose = vi.fn();
+    const onCancel = vi.fn();
+    const controller = createWindowCloseController({ requestClose, onCancel });
+
+    controller.handleClose({ preventDefault: vi.fn() });
+    expect(controller.cancel()).toBe('cancelled');
+    expect(controller.isPending()).toBe(false);
+    expect(onCancel).toHaveBeenCalledOnce();
+
+    expect(controller.handleClose({ preventDefault: vi.fn() })).toBe('requested');
+    expect(requestClose).toHaveBeenCalledTimes(2);
   });
 });
