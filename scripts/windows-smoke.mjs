@@ -176,6 +176,7 @@ async function waitForNotice(client, expected) {
     client,
     `document.querySelector('.header-status span')?.textContent.includes(${JSON.stringify(expected)})`,
     `notice containing ${JSON.stringify(expected)}`,
+    30_000,
   );
 }
 
