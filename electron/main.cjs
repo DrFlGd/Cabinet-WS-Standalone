@@ -8,6 +8,29 @@ const MAX_STEP_BYTES = 250_000_000;
 const MAX_TEXT_EXPORT_BYTES = 20_000_000;
 const MAX_BINARY_EXPORT_BYTES = 250_000_000;
 const approvedPaths = new Set();
+const smokeRoot = process.env.CABINET_WS_SMOKE_DIR
+  ? path.resolve(process.env.CABINET_WS_SMOKE_DIR)
+  : null;
+
+if (smokeRoot) {
+  fsSync.mkdirSync(smokeRoot, { recursive: true });
+  const smokeUserData = path.join(smokeRoot, 'user-data');
+  fsSync.mkdirSync(smokeUserData, { recursive: true });
+  app.setPath('userData', smokeUserData);
+
+  app.commandLine.appendSwitch('enable-logging', 'file');
+  app.commandLine.appendSwitch('log-file', path.join(smokeRoot, 'chromium.log'));
+  const debugPort = process.env.CABINET_WS_SMOKE_DEBUG_PORT;
+  if (debugPort && /^\d+$/.test(debugPort)) {
+    app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1');
+    app.commandLine.appendSwitch('remote-debugging-port', debugPort);
+    app.commandLine.appendSwitch('remote-allow-origins', '*');
+  }
+}
+
+function smokeFile(name) {
+  return smokeRoot ? path.join(smokeRoot, name) : null;
+}
 
 function userFile(name) {
   return path.join(app.getPath('userData'), name);
@@ -66,16 +89,18 @@ async function atomicWrite(filePath, content) {
 
 function registerIpc() {
   ipcMain.handle('document:open', async () => {
-    const result = await dialog.showOpenDialog({
-      title: 'Open Cabinet WS project',
-      properties: ['openFile'],
-      filters: [
-        { name: 'Cabinet WS projects', extensions: ['json'] },
-      ],
-    });
-    if (result.canceled || !result.filePaths[0]) return null;
-
-    const filePath = result.filePaths[0];
+    let filePath = smokeFile('smoke-project.cabinetws.json');
+    if (!filePath) {
+      const result = await dialog.showOpenDialog({
+        title: 'Open Cabinet WS project',
+        properties: ['openFile'],
+        filters: [
+          { name: 'Cabinet WS projects', extensions: ['json'] },
+        ],
+      });
+      if (result.canceled || !result.filePaths[0]) return null;
+      filePath = result.filePaths[0];
+    }
     const content = await readJsonFile(filePath);
     await addRecent(filePath);
     return { path: filePath, name: path.basename(filePath), content };
@@ -100,16 +125,19 @@ function registerIpc() {
       : null;
 
     if (!filePath) {
-      const result = await dialog.showSaveDialog({
-        title: 'Save Cabinet WS project',
-        defaultPath: String(options?.suggestedName || 'cabinet.cabinetws.json'),
-        filters: [
-          { name: 'Cabinet WS projects', extensions: ['json'] },
-        ],
-      });
-      if (result.canceled || !result.filePath) return { canceled: true };
-      filePath = result.filePath;
-      if (!/\.json$/i.test(filePath)) filePath += '.cabinetws.json';
+      filePath = smokeFile('smoke-project.cabinetws.json');
+      if (!filePath) {
+        const result = await dialog.showSaveDialog({
+          title: 'Save Cabinet WS project',
+          defaultPath: String(options?.suggestedName || 'cabinet.cabinetws.json'),
+          filters: [
+            { name: 'Cabinet WS projects', extensions: ['json'] },
+          ],
+        });
+        if (result.canceled || !result.filePath) return { canceled: true };
+        filePath = result.filePath;
+        if (!/\.json$/i.test(filePath)) filePath += '.cabinetws.json';
+      }
     }
 
     await atomicWrite(filePath, content);
@@ -128,17 +156,19 @@ function registerIpc() {
       throw new Error('STEP export is empty or too large.');
     }
 
-    const result = await dialog.showSaveDialog({
-      title: 'Export STEP assembly',
-      defaultPath: String(options?.suggestedName || 'cabinet.step'),
-      filters: [
-        { name: 'STEP CAD assembly', extensions: ['step', 'stp'] },
-      ],
-    });
-    if (result.canceled || !result.filePath) return { canceled: true };
-
-    let filePath = result.filePath;
-    if (!/\.(step|stp)$/i.test(filePath)) filePath += '.step';
+    let filePath = smokeFile('smoke-export.step');
+    if (!filePath) {
+      const result = await dialog.showSaveDialog({
+        title: 'Export STEP assembly',
+        defaultPath: String(options?.suggestedName || 'cabinet.step'),
+        filters: [
+          { name: 'STEP CAD assembly', extensions: ['step', 'stp'] },
+        ],
+      });
+      if (result.canceled || !result.filePath) return { canceled: true };
+      filePath = result.filePath;
+      if (!/\.(step|stp)$/i.test(filePath)) filePath += '.step';
+    }
     await fs.writeFile(filePath, buffer);
     return { canceled: false, path: filePath, name: path.basename(filePath) };
   });
@@ -249,6 +279,13 @@ function createWindow() {
     if (url.startsWith('https://')) shell.openExternal(url);
   });
 
+  if (smokeRoot) {
+    const log = (event, detail) => fsSync.appendFileSync(path.join(smokeRoot, 'lifecycle.log'), JSON.stringify({ event, detail, time: Date.now() }) + '\n');
+    win.on('unresponsive', () => log('unresponsive'));
+    win.webContents.on('render-process-gone', (_event, details) => log('render-process-gone', details));
+    win.webContents.on('did-fail-load', (_event, code, description) => log('did-fail-load', { code, description }));
+    win.webContents.on('console-message', (_event, details) => log('console', { level: details.level, message: details.message }));
+  }
   const devUrl = process.env.VITE_DEV_SERVER_URL;
   if (devUrl) win.loadURL(devUrl);
   else win.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));

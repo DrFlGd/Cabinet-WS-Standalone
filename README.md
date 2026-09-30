@@ -79,7 +79,7 @@ changelog; keep historical milestone descriptions out of the current-status docs
 Use Node.js 24 and npm 10+ (CI uses Node 24).
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -99,8 +99,9 @@ npm run desktop
 
 The production desktop loads `dist/index.html` locally. Tests cover semantic/model
 behavior and selected integration contracts; passing them does not substitute for
-running the packaged application. A dependency lockfile and `npm ci` remain backlog
-items; the current `std-env` override addresses the known dependency-resolution failure.
+running the packaged application. `package-lock.json` is committed, and CI installs
+the exact dependency graph with `npm ci`; the `std-env` override remains part of
+that locked graph.
 
 ## Shortcuts
 
@@ -117,10 +118,13 @@ On Windows, `npm run desktop:dist` creates a portable x64 executable in `release
 Its filename uses the version in `package.json`, for example
 `Cabinet-WS-Standalone-0.14.1-Windows-x64.exe`.
 
-The Build and Windows Package workflows run tests and production builds for pushes
-to `main` and pull requests. Windows Package also uploads the executable as the
-`cabinet-ws-standalone-windows` artifact. It currently packages but does not launch
-or interact with the executable.
+The Build and Windows Package workflows use `npm ci` and run tests and production
+builds for pushes to `main` and pull requests. Windows Package also uploads the
+executable as the `cabinet-ws-standalone-windows` artifact and launches that portable
+EXE for a packaged smoke test. The smoke test waits for the exact geometry worker,
+saves and opens a schema-v3 project, edits a dimension, saves and reopens it, exports
+STEP, and validates the persisted project and STEP envelope. Smoke-only deterministic
+file paths replace native picker choices; the native picker UI itself is not automated.
 
 The Publish Windows Release workflow accepts a matching `v*` tag or a change to
 `release-request.json` on `main`. The requested version must match `package.json`.

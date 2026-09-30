@@ -4,6 +4,33 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [Unreleased]
+
+### Smoke-test validation follow-up
+
+- Capture the last evaluation, renderer exceptions/console, paused stack, screenshot and Electron/Chromium lifecycle logs when packaged validation fails.
+- Allow bounded 60-second DevTools evaluations during cold exact-geometry startup; keep full workflow validation required.
+- Keep the packaged-workflow roadmap item open until CI verifies the complete sequence.
+
+
+### Added
+
+- Commit `package-lock.json` and add a packaged Windows smoke harness that launches the portable EXE, waits for the exact geometry worker, saves/opens a schema-v3 project, edits a cabinet dimension, saves/reopens, exports STEP, and records hashes/evidence.
+
+### Changed
+
+- Switch build, Windows-package, and release workflows from dependency resolution with `npm install` to deterministic `npm ci`.
+- Use the repository's `electron-builder` script for Windows packaging, and require the packaged smoke test before a Windows release is published.
+
+### Tests
+
+- Exercise the real packaged renderer and Electron IPC path on Windows, including persisted project JSON and STEP-envelope validation. Smoke-only deterministic file targets replace native picker choices so CI does not confuse packaging success with application workflow coverage.
+
+### Compatibility
+
+- No saved-project schema or application-version change. Smoke behavior is activated only by dedicated test environment variables; normal native dialogs and paths are unchanged.
+- Native file-dialog interaction and crash/recovery behavior remain outside this smoke harness.
+
 ## [0.14.1] - 2026-09-29
 
 ### Fixed
