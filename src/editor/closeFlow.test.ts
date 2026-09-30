@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
+import type { CloseDecision } from '../desktop';
 import { handleDesktopCloseRequest } from './closeFlow';
 
 function callbacks() {
   return {
     flushRecovery: vi.fn(async () => undefined),
-    confirmClose: vi.fn(async () => 'cancel' as const),
+    confirmClose: vi.fn(async (): Promise<CloseDecision> => 'cancel'),
     save: vi.fn(async () => true),
     discard: vi.fn(async () => undefined),
     approve: vi.fn(async () => true),
