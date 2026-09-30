@@ -6,6 +6,43 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Fixed
+
+- Ordinary family-generated and Manual Layout drawers no longer inherit hidden 4x3
+  divider-grid recipe defaults. Explicit divider-grid recipes and saved canonical
+  divider settings remain supported, with family compartment counts synchronized
+  separately from internal divider counts.
+- Shared-cabinet tab/slot bottom joints now retain mating tabs on the horizontal
+  member and cut matching full-thickness side receivers with the configured joint
+  fit clearance instead of leaving an unfilled slot.
+- Remove Stackable front/rear interface proxy solids that duplicated the existing
+  cabinet bottom and produced overlapping-surface flicker. Stack interface intent
+  remains attached to the side panels; the reference radiused side profile is still
+  an explicit parity gap.
+
+### Changed
+
+- Treat tab/slot receiver features as registered through cuts in manufacturing
+  exports, consistent with exact worker and STEP geometry.
+- Extend the family capability audit only for the proven shared-cabinet
+  `joint_fit_clearance` ownership; detailed tab count/width/placement and
+  Standalone Drawer joinery parity remain open.
+
+### Tests
+
+- Add regressions covering all 110 recipe divider-enable states, native divider
+  round trips, section-layout drawers, retained tab profiles, receiver clearance and
+  machining depth, full-width bottom behavior, Stackable duplicate-solid removal,
+  manufacturing CUT classification, and STEP-worker tab/slot construction.
+
+### Compatibility
+
+- Project schema remains v3 with no migration. Existing saved canonical divider
+  configurations remain authoritative; recipe-only hidden divider choices are
+  preserved while disabled.
+- No unsupported joinery mode is substituted. The existing advanced tab policy and
+  Standalone Drawer joinery gaps remain documented.
+
 ## [0.14.2] - 2026-09-29
 
 ### Added
