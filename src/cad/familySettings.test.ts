@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { familyStarter, parametersFromFamilyValues } from './familyCatalog';
+import { allFamilyStarters, familyStarter, parametersFromFamilyValues } from './familyCatalog';
 import {
   applyFamilyFieldChange,
   completeFamilyValues,
@@ -87,6 +87,61 @@ describe('v0.14 native family settings', () => {
     const stand = applyFamilyFieldChange('equipment_stand', familyStarter('equipment_stand', 'default').values, 'sizing_mode', 'manual');
     const stand2 = applyFamilyFieldChange('equipment_stand', stand, 'overall_width', 730);
     expect(parametersFromFamilyValues('equipment_stand', stand2).width).toBe(730);
+  });
+
+  it('treats hidden divider compartment defaults as inactive unless the recipe enables the grid', () => {
+    for (const starter of allFamilyStarters()) {
+      const enabled = starter.values.include_drawer_divider_grid === true;
+      if (enabled) {
+        expect(starter.parameters.drawerDividerCount, starter.id).toBe(Math.max(0, Number(starter.values.drawer_divider_columns) - 1));
+        expect(starter.parameters.drawerDividerRows, starter.id).toBe(Math.max(0, Number(starter.values.drawer_divider_rows) - 1));
+      } else {
+        expect(starter.parameters.drawerDividerCount, starter.id).toBe(0);
+        expect(starter.parameters.drawerDividerRows, starter.id).toBe(0);
+      }
+    }
+  });
+
+  it('preserves disabled recipe divider choices and round-trips explicit native divider edits', () => {
+    const starter = familyStarter('utility', 'utility_3_drawer_base');
+    expect(starter.values.include_drawer_divider_grid).toBe(false);
+    expect(starter.values.drawer_divider_columns).toBe(4);
+    expect(starter.values.drawer_divider_rows).toBe(3);
+
+    const unchanged = syncFamilyValuesFromParameters('utility', starter.values, starter.parameters);
+    expect(unchanged.include_drawer_divider_grid).toBe(false);
+    expect(unchanged.drawer_divider_columns).toBe(4);
+    expect(unchanged.drawer_divider_rows).toBe(3);
+
+    const edited = syncFamilyValuesFromParameters('utility', starter.values, {
+      ...starter.parameters,
+      drawerDividerCount: 2,
+      drawerDividerRows: 1,
+    });
+    expect(edited.include_drawer_divider_grid).toBe(true);
+    expect(edited.drawer_divider_columns).toBe(3);
+    expect(edited.drawer_divider_rows).toBe(2);
+    expect(parametersFromFamilyValues('utility', edited).drawerDividerCount).toBe(2);
+    expect(parametersFromFamilyValues('utility', edited).drawerDividerRows).toBe(1);
+  });
+
+  it('maps reference tab-slot fit clearance into the active canonical joinery clearance', () => {
+    const starter = familyStarter('utility', 'default');
+    const values = {
+      ...starter.values,
+      joinery_style: 'tab_slot',
+      joint_fit_clearance: 0.65,
+      dado_fit_clearance: 0.15,
+    };
+    const parameters = parametersFromFamilyValues('utility', values);
+    expect(parameters.dadoFitClearance).toBe(0.65);
+
+    const synced = syncFamilyValuesFromParameters('utility', values, {
+      ...parameters,
+      dadoFitClearance: 0.4,
+    });
+    expect(synced.joint_fit_clearance).toBe(0.4);
+    expect(synced.dado_fit_clearance).toBe(0.15);
   });
 
   it('synchronizes native model edits back into the family recipe', () => {
