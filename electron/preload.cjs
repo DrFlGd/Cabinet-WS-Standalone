@@ -13,11 +13,13 @@ contextBridge.exposeInMainWorld('cabinetDesktop', {
     }
     closeRequestedListener = () => callback();
     ipcRenderer.on('app:close-requested', closeRequestedListener);
+    ipcRenderer.send('app:close-listener-state', true);
   },
   offCloseRequested: () => {
     if (!closeRequestedListener) return;
     ipcRenderer.removeListener('app:close-requested', closeRequestedListener);
     closeRequestedListener = null;
+    ipcRenderer.send('app:close-listener-state', false);
   },
   openDocument: () => ipcRenderer.invoke('document:open'),
   openRecent: (path) => ipcRenderer.invoke('document:open-recent', path),
