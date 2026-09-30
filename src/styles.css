@@ -2475,7 +2475,8 @@ button { color: inherit; }
 .muted,
 .section-layout-helper,
 .context-description,
-.measurement-help,
+.measurement-panel > p,
+.kernel-diagnostics > small,
 .health-check p,
 .health-check em,
 .health-pass p,
@@ -2511,6 +2512,7 @@ button { color: inherit; }
   font-size: 11px;
 }
 
+.design-health-section-heading > span,
 .health-check small,
 .health-more,
 .health-coverage summary,
