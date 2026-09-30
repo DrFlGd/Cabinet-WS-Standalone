@@ -126,6 +126,7 @@ export default function App() {
   const [notice, setNotice] = useState('Ready');
   const [recoveryReady, setRecoveryReady] = useState(false);
   const recoveryAttempted = useRef(false);
+  const closePending = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const viewport = useRef<CadViewportHandle>(null);
 
@@ -242,6 +243,7 @@ export default function App() {
     if (!recoveryReady) return;
 
     const persistRecovery = () => {
+      if (closePending.current) return;
       if (dirty) {
         void writeRecovery(serialized).catch(() => setNotice('Recovery autosave failed'));
       } else {
@@ -249,7 +251,7 @@ export default function App() {
       }
     };
     const flushDirtyRecovery = () => {
-      if (!dirty) return;
+      if (!dirty || closePending.current) return;
       void writeRecovery(serialized).catch(error => {
         console.error('Could not flush recovery during a lifecycle transition.', error);
       });
@@ -272,6 +274,9 @@ export default function App() {
     if (!desktop) return;
 
     return desktop.onCloseRequested(() => {
+      if (closePending.current) return;
+      closePending.current = true;
+
       void handleDesktopCloseRequest({
         dirty,
         flushRecovery: async () => {
@@ -293,7 +298,12 @@ export default function App() {
         },
         approve: () => desktop.resolveClose('approve'),
         cancel: () => desktop.resolveClose('cancel'),
+      }).then(outcome => {
+        if (outcome === 'cancelled' || outcome === 'save-aborted') {
+          closePending.current = false;
+        }
       }).catch(error => {
+        closePending.current = false;
         console.error('Could not complete the desktop close flow.', error);
         setNotice('Could not complete close request');
         void desktop.resolveClose('cancel').catch(() => undefined);
