@@ -2,7 +2,7 @@
 
 This file describes current status and upcoming work. Historical releases and
 implementation details belong in [CHANGELOG.md](CHANGELOG.md) and
-[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.2.
+[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.3.
 
 ## Migration rules
 
