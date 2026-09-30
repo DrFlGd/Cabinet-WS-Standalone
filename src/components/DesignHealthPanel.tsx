@@ -79,7 +79,12 @@ export default function DesignHealthPanel({
 
   return (
     <section className={`design-health-panel ${expanded ? 'expanded' : 'collapsed'} ${report.status}`}>
-      <button className="design-health-summary" type="button" onClick={() => setExpanded(current => !current)}>
+      <button
+        className="design-health-summary"
+        type="button"
+        aria-expanded={expanded}
+        onClick={() => setExpanded(current => !current)}
+      >
         <StatusIcon status={report.status} />
         <span>
           <strong>Design Health · {report.status.toUpperCase()}</strong>
