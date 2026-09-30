@@ -15,7 +15,7 @@ beforeEach(async () => {
   vi.resetModules();
   vi.clearAllMocks();
   shapes = [];
-  const makeShape = () => {
+  const makeShape = (): (typeof shapes)[number] => {
     const shape = { translate: vi.fn(), cut: vi.fn(), delete: vi.fn() };
     shape.translate.mockReturnValue(shape);
     shape.cut.mockImplementation(() => makeShape());
@@ -105,8 +105,9 @@ describe('STEP worker export completeness', () => {
 
     const bottom = source.parts.find(part => part.id === 'carcass:bottom')!;
     expect(bottom.geometry?.kind).toBe('extruded-profile');
-    const bottomSketch = mocks.draw.mock.results[1]?.value;
-    const outlineCalls = bottomSketch.lineTo.mock.calls.map((call: [number[]]) => call[0]);
+    const bottomSketch = mocks.draw.mock.results[1]?.value as { lineTo: ReturnType<typeof vi.fn> } | undefined;
+    expect(bottomSketch).toBeTruthy();
+    const outlineCalls = bottomSketch!.lineTo.mock.calls.map((call: [number[]]) => call[0]);
     expect(outlineCalls.some((point: number[]) => point[0] === 0)).toBe(true);
     expect(outlineCalls.some((point: number[]) => point[0] === bottom.size.x)).toBe(true);
     expect(shapes.some(shape => shape.cut.mock.calls.length > 0)).toBe(true);
