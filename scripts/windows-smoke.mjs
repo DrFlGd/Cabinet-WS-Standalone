@@ -287,7 +287,14 @@ try {
   recordCheck(summary, 'edited schema-v3 project persisted expected width');
 
   await clickButton(client, 'New');
-  await waitForNotice(client, 'New Utility cabinet');
+  await waitFor(
+    client,
+    `Number(document.querySelector('.viewport-dimension-editor label:first-child input')?.value) !== 777`,
+    'new project to replace the edited document',
+    30_000,
+  );
+  summary.checks.push('new project replaced the edited in-memory document');
+
   await clickButton(client, 'Open');
   await waitForNotice(client, 'Opened smoke-project.cabinetws.json');
   await waitFor(
