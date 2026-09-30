@@ -4,7 +4,7 @@ import { PARAMETER_SECTIONS, UTILITY_PARAMETER_SCHEMA, type ParameterDefinition 
 import { partSettingsContext } from '../cad/partContext';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { CabinetFamily, CabinetParameters, CadPart, FamilyRecipeValues, JsonValue } from '../cad/types';
-import type { KernelDiagnostic, KernelSelection } from '../cad/kernel/types';
+import type { KernelDiagnostic } from '../cad/kernel/types';
 import DimensionInput from './DimensionInput';
 import SelectControl from './SelectControl';
 import FamilySettingsPanel from './FamilySettingsPanel';
@@ -20,7 +20,6 @@ type Props = {
   displayUnits: DisplayUnits;
   onChange: (key: keyof CabinetParameters, value: ParameterValue) => void;
   onFamilyValueChange: (key: string, value: JsonValue) => void;
-  topologySelection: KernelSelection | null;
   kernelDiagnostics: KernelDiagnostic[];
   onShowCabinetSettings: () => void;
   onOpenSection: (sectionNodeId: number) => void;
@@ -35,7 +34,6 @@ export default function PropertiesPanel({
   displayUnits,
   onChange,
   onFamilyValueChange,
-  topologySelection,
   kernelDiagnostics,
   onShowCabinetSettings,
   onOpenSection,
@@ -140,10 +138,6 @@ export default function PropertiesPanel({
       ) : normalizedQuery ? (
         <div className="properties-scroll">
           <KernelDiagnostics diagnostics={kernelDiagnostics} />
-          {selected && topologySelection?.partId === selected.id && (
-            <TopologyCard selection={topologySelection} />
-          )}
-
           <section className="property-section property-search-results">
             <div className="property-search-results-heading">
               <h3>Search results</h3>
@@ -164,10 +158,6 @@ export default function PropertiesPanel({
       ) : selected && context ? (
         <div className="properties-scroll">
           <KernelDiagnostics diagnostics={kernelDiagnostics} />
-          {topologySelection?.partId === selected.id && (
-            <TopologyCard selection={topologySelection} />
-          )}
-
           <div className="part-context-toolbar">
             <button type="button" onClick={onShowCabinetSettings}>All cabinet settings</button>
           </div>
@@ -225,17 +215,6 @@ export default function PropertiesPanel({
   );
 }
 
-function TopologyCard({ selection }: { selection: KernelSelection }) {
-  return (
-    <section className="kernel-topology-card">
-      <span className="eyebrow">SEMANTIC TOPOLOGY</span>
-      <strong>{selection.kind === 'face' ? 'Selected face' : 'Selected edge'}</strong>
-      <code>{selection.semanticId}</code>
-      <p>This identity is cabinet-semantic and does not persist a raw OpenCascade topology index.</p>
-    </section>
-  );
-}
-
 function KernelDiagnostics({ diagnostics }: { diagnostics: KernelDiagnostic[] }) {
   if (!diagnostics.length) return null;
   const visible = diagnostics.slice(0, 6);
@@ -245,7 +224,7 @@ function KernelDiagnostics({ diagnostics }: { diagnostics: KernelDiagnostic[] })
   return (
     <section className="kernel-diagnostics">
       <div className="kernel-diagnostics-heading">
-        <strong>Exact CAD diagnostics</strong>
+        <strong>Geometry issues</strong>
         <span>{errors ? `${errors} error${errors === 1 ? '' : 's'}` : ''}{errors && warnings ? ' · ' : ''}{warnings ? `${warnings} warning${warnings === 1 ? '' : 's'}` : ''}</span>
       </div>
       {visible.map((diagnostic, index) => (

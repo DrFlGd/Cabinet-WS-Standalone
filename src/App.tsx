@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
+import { AlertTriangle, Box, CheckCircle2, Database, LoaderCircle } from 'lucide-react';
 import packageMetadata from '../package.json';
 import { DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
 import { buildFamilyCabinetDocument } from './cad/familyModel';
@@ -52,9 +52,11 @@ import MeasurementPanel from './components/MeasurementPanel';
 import DesignHealthPanel from './components/DesignHealthPanel';
 import ShopDocsPanel from './components/ShopDocsPanel';
 import AboutDialog from './components/AboutDialog';
+import HelpDialog from './components/HelpDialog';
 import WorkspaceErrorBoundary from './components/WorkspaceErrorBoundary';
 import { desktopApi, type AppInfo, type RecentProject } from './desktop';
 import { attachRecoveryLifecycle, clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
+import { handleDesktopCloseRequest } from './editor/closeFlow';
 import type { EditorDocument } from './editor/history';
 import { useDocumentHistory } from './editor/useDocumentHistory';
 
@@ -116,6 +118,7 @@ export default function App() {
   const [clipZ, setClipZ] = useState(INITIAL_EDITOR.parameters.height);
   const [hardwareCatalogExpanded, setHardwareCatalogExpanded] = useState(false);
   const [shopDocsOpen, setShopDocsOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [appInfo, setAppInfo] = useState<AppInfo>(FALLBACK_APP_INFO);
   const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
@@ -125,12 +128,14 @@ export default function App() {
   const [notice, setNotice] = useState('Ready');
   const [recoveryReady, setRecoveryReady] = useState(false);
   const recoveryAttempted = useRef(false);
+  const closePending = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const viewport = useRef<CadViewportHandle>(null);
 
   const cadDocument = useMemo(() => toCadDocument(editor), [editor]);
   const serialized = useMemo(() => serializeDocument(cadDocument), [cadDocument]);
   const dirty = serialized !== savedContent;
+  const hasSharedLayout = editor.family !== 'drawer' && editor.family !== 'equipment_stand';
   const selected = selectedId
     ? cadDocument.parts.find(part => part.id === selectedId) ?? null
     : null;
@@ -141,6 +146,13 @@ export default function App() {
     () => computeMeasurement(cadDocument, kernel.result?.parts ?? [], measurementMode, measurementSelections),
     [cadDocument, kernel.result?.parts, measurementMode, measurementSelections],
   );
+  const selectedFaceMeasurement = useMemo(
+    () => kernelSelection?.kind === 'face'
+      ? computeMeasurement(cadDocument, kernel.result?.parts ?? [], 'face', [kernelSelection])
+      : null,
+    [cadDocument, kernel.result?.parts, kernelSelection],
+  );
+  const displayedMeasurement = measurementMode === 'off' ? selectedFaceMeasurement : measurementResult;
   const designHealth = useMemo(
     () => analyzeDesignHealth(cadDocument, {
       kernelDiagnostics: kernel.diagnostics,
@@ -240,6 +252,7 @@ export default function App() {
     if (!recoveryReady) return;
 
     const persistRecovery = () => {
+      if (closePending.current) return;
       if (dirty) {
         void writeRecovery(serialized).catch(() => setNotice('Recovery autosave failed'));
       } else {
@@ -247,7 +260,7 @@ export default function App() {
       }
     };
     const flushDirtyRecovery = () => {
-      if (!dirty) return;
+      if (!dirty || closePending.current) return;
       void writeRecovery(serialized).catch(error => {
         console.error('Could not flush recovery during a lifecycle transition.', error);
       });
@@ -257,12 +270,57 @@ export default function App() {
     const detachLifecycle = attachRecoveryLifecycle({
       dirty,
       flush: flushDirtyRecovery,
+      blockUnload: !desktopApi(),
     });
     return () => {
       window.clearTimeout(timer);
       detachLifecycle();
     };
   }, [dirty, recoveryReady, serialized]);
+
+  useEffect(() => {
+    const desktop = desktopApi();
+    if (!desktop) return;
+
+    desktop.onCloseRequested(() => {
+      if (closePending.current) return;
+      closePending.current = true;
+
+      void handleDesktopCloseRequest({
+        dirty,
+        flushRecovery: async () => {
+          if (!dirty) return;
+          try {
+            await writeRecovery(serialized);
+          } catch (error) {
+            console.error('Could not flush recovery before close.', error);
+          }
+        },
+        confirmClose: () => desktop.confirmClose({ documentName: editor.name }),
+        save: () => saveDocument(false),
+        discard: async () => {
+          try {
+            await clearRecovery();
+          } catch (error) {
+            console.error('Could not clear recovery after explicit discard.', error);
+          }
+        },
+        approve: () => desktop.resolveClose('approve'),
+        cancel: () => desktop.resolveClose('cancel'),
+      }).then(outcome => {
+        if (outcome === 'cancelled' || outcome === 'save-aborted') {
+          closePending.current = false;
+        }
+      }).catch(error => {
+        closePending.current = false;
+        console.error('Could not complete the desktop close flow.', error);
+        setNotice('Could not complete close request');
+        void desktop.resolveClose('cancel').catch(() => undefined);
+      });
+    });
+
+    return () => desktop.offCloseRequested();
+  }, [dirty, editor.name, currentPath, serialized]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -508,18 +566,20 @@ export default function App() {
         });
       }
     }
-    setNotice(`Selected ${selection.kind} · ${selection.semanticId}`);
+    const partName = cadDocument.parts.find(part => part.id === selection.partId)?.name;
+    setNotice(`Selected ${selection.kind}${partName ? ` on ${partName}` : ''}`);
   }
 
   function changeMeasurementMode(mode: MeasurementMode) {
     setMeasurementMode(mode);
     setMeasurementSelections([]);
-    if (mode !== 'off') setNotice(`Measure ${mode} · select semantic geometry in the viewport`);
+    if (mode !== 'off') setNotice(`Measure ${mode} · select faces or edges in the viewer`);
   }
 
   function clearMeasurement() {
     setMeasurementSelections([]);
     setMeasurementMode('off');
+    setKernelSelection(null);
   }
 
   function applyFitSolution(solution: FitSolution) {
@@ -882,7 +942,7 @@ export default function App() {
     }
   }
 
-  async function saveDocument(saveAs = false) {
+  async function saveDocument(saveAs = false): Promise<boolean> {
     const desktop = desktopApi();
 
     try {
@@ -893,22 +953,32 @@ export default function App() {
           suggestedName: suggestedFileName(editor.name),
           saveAs,
         });
-        if (result.canceled) return;
+        if (result.canceled) return false;
 
         setCurrentPath(result.path ?? currentPath);
         setSavedContent(serialized);
-        await clearRecovery();
+        try {
+          await clearRecovery();
+        } catch (error) {
+          console.error('Saved the project but could not clear its recovery copy.', error);
+        }
         await refreshRecent();
         setNotice(`Saved ${result.name ?? editor.name}`);
-        return;
+        return true;
       }
 
       downloadDocument(cadDocument);
       setSavedContent(serialized);
-      await clearRecovery();
+      try {
+        await clearRecovery();
+      } catch (error) {
+        console.error('Downloaded the project but could not clear its recovery copy.', error);
+      }
       setNotice('Downloaded cabinet document');
+      return true;
     } catch (error) {
       setNotice(error instanceof Error ? error.message : 'Could not save document');
+      return false;
     }
   }
 
@@ -962,6 +1032,7 @@ export default function App() {
       onHideSelected={hideSelected}
       onIsolateSelected={isolateSelected}
       onShowAll={showAllParts}
+      onHelp={() => setHelpOpen(true)}
       onAbout={() => setAboutOpen(true)}
     />
     <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
@@ -996,15 +1067,23 @@ export default function App() {
             onToggle={() => setHardwareCatalogExpanded(current => !current)}
             onApply={applyHardware}
           />
-          {editor.family !== 'drawer' && editor.family !== 'equipment_stand' && <SectionLayoutPanel
-            parameters={editor.parameters}
-            thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
-            units={editor.displayUnits}
-            selectedSectionId={sectionSelectedId}
-            onParameterChange={updateParameter}
-            onSelectedSectionChange={setSectionSelectedId}
-            onChange={updateSections}
-          />}
+          <div className={`layout-primary-column ${hasSharedLayout ? 'shared-layout' : 'dedicated-layout'}`}>
+            {hasSharedLayout && <SectionLayoutPanel
+              parameters={editor.parameters}
+              thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
+              units={editor.displayUnits}
+              selectedSectionId={sectionSelectedId}
+              onParameterChange={updateParameter}
+              onSelectedSectionChange={setSectionSelectedId}
+              onChange={updateSections}
+            />}
+            <DesignHealthPanel
+              report={designHealth}
+              parameters={editor.parameters}
+              units={editor.displayUnits}
+              onApplySolution={applyFitSolution}
+            />
+          </div>
           <TreePanel
             document={cadDocument}
             selectedId={selectedId}
@@ -1019,10 +1098,14 @@ export default function App() {
       </div>
 
       <section className="viewport-panel">
-        <div className="viewport-badges">
-          <span><Cpu size={14} /> {kernelBadge(kernel.status, kernel.result?.stats.bodyCount ?? 0)}</span>
-          <span><MousePointer2 size={14} /> Click face · Shift-click edge · Ctrl-click multi-select</span>
-          {selectedIds.size > 0 && <span className="selection-breadcrumb">{selectedIds.size} selected · {selected?.id ?? [...selectedIds][0]}</span>}
+        <div className="viewport-badges" aria-live="polite">
+          {kernel.status === 'loading' && (
+            <span className="viewport-status loading"><LoaderCircle size={14} /> Updating model…</span>
+          )}
+          {kernel.status === 'error' && (
+            <span className="viewport-status error"><AlertTriangle size={14} /> Some parts are using preview geometry</span>
+          )}
+          {selectedIds.size > 0 && <span className="selection-breadcrumb">{selectedIds.size} selected · {selected?.name ?? 'parts'}</span>}
         </div>
         <ViewportDimensionEditor
           parameters={editor.parameters}
@@ -1031,17 +1114,11 @@ export default function App() {
         />
         <MeasurementPanel
           mode={measurementMode}
-          result={measurementResult}
+          result={displayedMeasurement}
           selectionCount={measurementSelections.length}
           units={editor.displayUnits}
           onMode={changeMeasurementMode}
           onClear={clearMeasurement}
-        />
-        <DesignHealthPanel
-          report={designHealth}
-          parameters={editor.parameters}
-          units={editor.displayUnits}
-          onApplySolution={applyFitSolution}
         />
         <CadViewport
           ref={viewport}
@@ -1071,7 +1148,7 @@ export default function App() {
           <DimensionBadge label="D" value={editor.parameters.depth} units={editor.displayUnits} />
           <div><Database size={14} /><strong>{bodyCount}</strong><small>modeled bodies</small></div>
           <div><strong>{hardwareCount}</strong><small>hardware instances</small></div>
-          <p>{kernelFooter(kernel.status, kernel.result?.stats.featureCount ?? 0, kernel.diagnostics.length, familyDefinition(editor.family).name)}</p>
+          <p>{kernelFooter(kernel.status, kernel.diagnostics.length, familyDefinition(editor.family).name)}</p>
         </div>
       </section>
 
@@ -1084,13 +1161,13 @@ export default function App() {
         displayUnits={editor.displayUnits}
         onChange={updateParameter}
         onFamilyValueChange={updateFamilyValue}
-        topologySelection={kernelSelection}
         kernelDiagnostics={kernel.diagnostics}
         onShowCabinetSettings={() => select(null)}
         onOpenSection={openSection}
       />
     </div>
 
+    {helpOpen && <HelpDialog onClose={() => setHelpOpen(false)} />}
     {aboutOpen && <AboutDialog info={appInfo} onClose={() => setAboutOpen(false)} />}
 
     {shopDocsOpen && <ShopDocsPanel
@@ -1158,21 +1235,14 @@ function safeBaseName(value: string) {
   return cleaned || 'cabinet';
 }
 
-function kernelBadge(status: 'idle' | 'loading' | 'ready' | 'error', bodyCount: number) {
-  if (status === 'ready') return `Exact CAD · ${bodyCount} OpenCascade bodies`;
-  if (status === 'error') return `Exact CAD partial · preview fallback active`;
-  if (status === 'loading') return 'Building exact CAD…';
-  return 'Exact CAD idle';
-}
-
 function kernelFooter(
   status: 'idle' | 'loading' | 'ready' | 'error',
-  featureCount: number,
   diagnosticCount: number,
   familyName: string,
 ) {
-  if (status === 'ready') return `${familyName} · v${APP_VERSION} · exact B-Rep · ${featureCount} semantic features · STEP`;
-  if (status === 'error') return `${familyName} · v${APP_VERSION} · exact kernel diagnostics: ${diagnosticCount}`;
-  return `${familyName} · v${APP_VERSION} · OpenCascade worker initializing…`;
+  if (status === 'ready') return `${familyName} · v${APP_VERSION}`;
+  if (status === 'error') return `${familyName} · geometry issue${diagnosticCount === 1 ? '' : 's'}: ${diagnosticCount}`;
+  if (status === 'loading') return `${familyName} · updating model…`;
+  return `${familyName} · starting model…`;
 }
 

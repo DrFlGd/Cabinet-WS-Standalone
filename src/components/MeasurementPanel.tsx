@@ -1,5 +1,5 @@
 import { Ruler, X } from 'lucide-react';
-import type { MeasurementMode, MeasurementResult } from '../cad/measurements';
+import type { MeasurementMetric, MeasurementMode, MeasurementResult } from '../cad/measurements';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 
 type Props = {
@@ -12,20 +12,12 @@ type Props = {
 };
 
 export default function MeasurementPanel({ mode, result, selectionCount, units, onMode, onClear }: Props) {
-  const value = result
-    ? result.unit === 'deg'
-      ? `${result.value.toFixed(2)}°`
-      : result.unit === 'mm2'
-        ? `${formatArea(result.value, units)} ${unitLabel(units)}²`
-        : `${formatDimension(result.value, units)} ${unitLabel(units)}`
-    : null;
-
   return (
     <section className="measurement-panel">
       <div className="measurement-heading">
         <Ruler size={13} />
         <strong>Measure</strong>
-        <button type="button" onClick={onClear} title="Clear measurement"><X size={12} /></button>
+        <button type="button" onClick={onClear} title="Clear measurement" aria-label="Clear measurement"><X size={12} /></button>
       </div>
       <div className="measurement-modes">
         {([
@@ -46,21 +38,53 @@ export default function MeasurementPanel({ mode, result, selectionCount, units, 
       {mode !== 'off' && !result && (
         <p>
           {mode === 'face'
-            ? 'Select one exact face.'
+            ? 'Select one face.'
             : mode === 'angle'
-              ? `Select two exact faces · ${selectionCount}/2`
-              : `Select two semantic faces or edges · ${selectionCount}/2`}
+              ? `Select two faces · ${selectionCount}/2`
+              : `Select two faces or edges · ${selectionCount}/2`}
         </p>
       )}
       {result && (
         <div className="measurement-result">
           <span>{result.title}</span>
-          <strong>{value}</strong>
-          <small>{result.detail}</small>
+          <div className="measurement-primary">
+            {result.primary.map(metric => (
+              <MetricValue key={metric.label} metric={metric} units={units} primary />
+            ))}
+          </div>
+          {!!result.secondary?.length && (
+            <div className="measurement-secondary">
+              {result.secondary.map(metric => (
+                <MetricValue key={metric.label} metric={metric} units={units} />
+              ))}
+            </div>
+          )}
+          {result.detail && <small>{result.detail}</small>}
         </div>
       )}
     </section>
   );
+}
+
+function MetricValue({
+  metric,
+  units,
+  primary = false,
+}: {
+  metric: MeasurementMetric;
+  units: DisplayUnits;
+  primary?: boolean;
+}) {
+  return <div className={primary ? 'primary' : undefined}>
+    <span>{metric.label}</span>
+    <strong>{metric.approximate ? '≈ ' : ''}{formatMetric(metric, units)}</strong>
+  </div>;
+}
+
+function formatMetric(metric: MeasurementMetric, units: DisplayUnits) {
+  if (metric.unit === 'deg') return `${metric.value.toFixed(2)}°`;
+  if (metric.unit === 'mm2') return `${formatArea(metric.value, units)} ${unitLabel(units)}²`;
+  return `${formatDimension(metric.value, units)} ${unitLabel(units)}`;
 }
 
 function formatArea(value: number, units: DisplayUnits) {

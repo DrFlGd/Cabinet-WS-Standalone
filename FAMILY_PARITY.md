@@ -11,7 +11,7 @@ The machine-readable setting inventory is
 [`src/cad/data/familyCapabilityMatrix.json`](src/cad/data/familyCapabilityMatrix.json).
 Frozen reference cases are in
 [`src/cad/data/familyParityReferenceFixtures.json`](src/cad/data/familyParityReferenceFixtures.json).
-The audit deliberately makes no geometry changes.
+Audit status changes made alongside geometry work are limited to behavior proven by focused regression coverage.
 
 ## Status model
 
@@ -36,14 +36,14 @@ rows remain `unverified`; they are not implicitly marked verified.
 
 | Family | Fields | Geometry-driving | Manufacturing-driving | Compatibility-only | Unsupported | Known-gap rows |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Shop Cart | 310 | 80 | 22 | 45 | 163 | 41 |
-| Utility | 310 | 80 | 22 | 45 | 163 | 41 |
-| Benchtop | 222 | 52 | 10 | 37 | 123 | 37 |
-| Stackable | 277 | 59 | 22 | 46 | 150 | 41 |
-| Kitchen | 299 | 83 | 23 | 45 | 148 | 41 |
+| Shop Cart | 310 | 81 | 22 | 45 | 162 | 41 |
+| Utility | 310 | 81 | 22 | 45 | 162 | 41 |
+| Benchtop | 222 | 53 | 10 | 37 | 122 | 37 |
+| Stackable | 277 | 60 | 22 | 46 | 149 | 41 |
+| Kitchen | 299 | 84 | 23 | 45 | 147 | 41 |
 | Standalone Drawer | 161 | 57 | 9 | 26 | 69 | 15 |
 | Equipment Stand | 99 | 43 | 6 | 10 | 40 | 20 |
-| **Total** | **1,678** | **454** | **114** | **254** | **856** | — |
+| **Total** | **1,678** | **459** | **114** | **254** | **851** | — |
 
 These counts are control-ownership coverage, not construction-parity percentages.
 Many unsupported fields are intentionally presentation/export compatibility data,
@@ -97,8 +97,14 @@ depend on the resolved envelope.
   and interlock orientation before treating divider manufacturing output as parity.
 - Reconcile applied-back rabbet construction with the reference instead of extending
   the current proof operation by assumption.
-- Reconcile detailed tab-slot count/spacing/edge policies. The native tab-slot
-  category exists, but many reference controls that define the joint are unowned.
+- The shared-cabinet baseline now retains the mating tabs for the outer-side bottom
+  tab/slot joint and applies `joint_fit_clearance` to the matching through-slot
+  receiver. Reconcile the remaining reference tab count, width, placement, top/shelf/
+  separator, and edge-policy controls before claiming broader tab-slot parity.
+- Implement the actual Stackable radiused side mating profile. The former front/rear
+  proxy rails were removed because they duplicated the cabinet-bottom solid and the
+  reference owns this interface in the side profile; that removal fixes coincident
+  geometry but does not establish Stackable interface parity.
 - Verify adjustable-shelf line boring, handle drilling, face registration, wood
   runner registration, and related hole-depth/spacing controls.
 

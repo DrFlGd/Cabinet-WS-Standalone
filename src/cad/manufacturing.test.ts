@@ -53,6 +53,29 @@ describe('Phase 11 manufacturing geometry', () => {
     expect(operations.filter(operation => operation.kind === 'DADO_GROOVE').some(operation => operation.depthMm !== null)).toBe(true);
   });
 
+  it('exports tab-slot receivers as through cuts at the full side thickness', () => {
+    const { manufacturing } = modelFor({
+      ...utilityStarter('default').parameters,
+      joineryStyle: 'tab_slot',
+      dadoFitClearance: 0.6,
+    });
+    const left = manufacturing.parts.find(part => part.partId === 'carcass:left')!;
+    const receivers = left.operations.filter(operation => operation.label === 'Tab/slot receiver');
+
+    expect(receivers).toHaveLength(2);
+    expect(receivers.every(operation => operation.kind === 'CUT')).toBe(true);
+    expect(receivers.every(operation => operation.through)).toBe(true);
+    expect(receivers.every(operation => operation.depthMm === left.plane.thicknessMm)).toBe(true);
+    expect(receivers.every(operation => operation.face.side === 'through')).toBe(true);
+
+    const bottom = manufacturing.parts.find(part => part.partId === 'carcass:bottom')!;
+    const profile = bottom.operations.find(operation => operation.sourceKind === 'panel-profile')!;
+    expect(profile.kind).toBe('CUT');
+    expect(profile.geometry[0]?.type).toBe('polyline');
+    if (profile.geometry[0]?.type !== 'polyline') throw new Error('Expected tabbed bottom profile polyline');
+    expect(profile.geometry[0].points.length).toBeGreaterThan(4);
+  });
+
   it('exports valid DXF unit metadata and operation layers', () => {
     const { manufacturing } = modelFor({
       ...utilityStarter('default').parameters,

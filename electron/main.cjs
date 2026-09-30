@@ -3,18 +3,27 @@ const fs = require('node:fs/promises');
 const fsSync = require('node:fs');
 const path = require('node:path');
 const { atomicWriteText, clearAtomicText } = require('./atomic-write.cjs');
-const { createRendererRecoveryHandler } = require('./lifecycle.cjs');
+const { createRendererRecoveryHandler, createWindowCloseController } = require('./lifecycle.cjs');
 
 const MAX_DOCUMENT_BYTES = 2_000_000;
 const MAX_STEP_BYTES = 250_000_000;
 const MAX_TEXT_EXPORT_BYTES = 20_000_000;
 const MAX_BINARY_EXPORT_BYTES = 250_000_000;
 const approvedPaths = new Set();
+const closeControllers = new WeakMap();
+const rendererCloseListeners = new WeakSet();
 let isQuitting = false;
 const recoverRenderer = createRendererRecoveryHandler({
   dialog,
   isShuttingDown: () => isQuitting,
+  beforeClose: win => closeControllers.get(win)?.approve(),
 });
+
+function markRendererCloseUnavailable(win) {
+  if (!win) return;
+  rendererCloseListeners.delete(win);
+  closeControllers.get(win)?.rendererUnavailable();
+}
 
 function userFile(name) {
   return path.join(app.getPath('userData'), name);
@@ -77,6 +86,56 @@ function registerIpc() {
     chromium: process.versions.chrome,
     isPackaged: app.isPackaged,
   }));
+
+  ipcMain.on('app:close-listener-state', (event, ready) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    if (!win || win.isDestroyed()) return;
+
+    if (ready === true) {
+      rendererCloseListeners.add(win);
+      return;
+    }
+
+    markRendererCloseUnavailable(win);
+  });
+
+  ipcMain.handle('app:confirm-close', async (event, options) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const documentName = typeof options?.documentName === 'string' && options.documentName.trim()
+      ? options.documentName.trim()
+      : 'Untitled cabinet';
+    const prompt = {
+      type: 'warning',
+      title: 'Unsaved cabinet changes',
+      message: 'Save changes before closing?',
+      detail: `${documentName} has unsaved changes. Save them, discard them, or cancel closing.`,
+      buttons: ['Save', 'Discard', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2,
+      noLink: true,
+    };
+    const result = win
+      ? await dialog.showMessageBox(win, prompt)
+      : await dialog.showMessageBox(prompt);
+    if (result.response === 0) return 'save';
+    if (result.response === 1) return 'discard';
+    return 'cancel';
+  });
+
+  ipcMain.handle('app:resolve-close', async (event, resolution) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const controller = win ? closeControllers.get(win) : null;
+    if (!win || !controller || win.isDestroyed()) return false;
+
+    if (resolution === 'approve') {
+      controller.approve();
+      win.close();
+      return true;
+    }
+
+    controller.cancel();
+    return false;
+  });
 
   ipcMain.handle('document:open', async () => {
     const result = await dialog.showOpenDialog({
@@ -258,7 +317,34 @@ function createWindow() {
     if (url.startsWith('https://')) shell.openExternal(url);
   });
 
+  const closeController = createWindowCloseController({
+    requestClose: () => {
+      if (!win.isDestroyed()) win.webContents.send('app:close-requested');
+    },
+    canRequestClose: () => rendererCloseListeners.has(win),
+    onCancel: () => {
+      isQuitting = false;
+    },
+  });
+  closeControllers.set(win, closeController);
+
+  win.on('close', event => {
+    try {
+      closeController.handleClose(event);
+    } catch (error) {
+      console.error('Could not request a safe Cabinet WS close.', error);
+    }
+  });
+  win.on('closed', () => {
+    rendererCloseListeners.delete(win);
+    closeControllers.delete(win);
+  });
+
+  win.webContents.on('did-start-loading', () => {
+    markRendererCloseUnavailable(win);
+  });
   win.webContents.on('render-process-gone', (_event, details) => {
+    markRendererCloseUnavailable(win);
     void recoverRenderer(win, details);
   });
 

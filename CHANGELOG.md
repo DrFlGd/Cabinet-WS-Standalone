@@ -6,6 +6,96 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Fixed
+
+- Route the native window X and application Exit/Quit path through an explicit clean/dirty close lifecycle instead of letting a dirty renderer `beforeunload` veto desktop shutdown indefinitely.
+- Dirty desktop close now offers Save / Discard / Cancel; Cancel and cancelled/failed saves keep the window open, while successful Save or explicit Discard complete the close without repeated prompts.
+- Track whether the renderer close listener is actually registered: startup/root-error states with no listener now allow native close directly, and listener teardown releases any pending request instead of suppressing later close attempts indefinitely.
+- Suppress recovery autosave/unload writes while an accepted close is completing so stale recovery data cannot be recreated after Save or Discard.
+
+### Changed
+
+- Move Design Health out of the CAD viewport overlay and beneath Manual Layout; dedicated Drawer and Equipment Stand families use the same central slot when the shared layout editor is unavailable.
+- Keep Design Health collapsible with status and error/warning counts visible in the collapsed summary.
+- Introduce shared label/description/caption typography sizes and raise secondary-text readability without enlarging the overall toolbar/control chrome.
+
+### Testing
+
+- Add behavior-level close-flow coverage for clean close, Save, Discard, Cancel, cancelled/failed saves, duplicate close suppression, approved retry, missing-renderer-listener fallback, listener-loss recovery, crash-close bypass, and desktop recovery flush without an unload veto.
+- Add Design Health rendering coverage for collapsible state semantics and visible significant-issue counts.
+- Native packaged-Windows X/Exit interaction remains a separate manual/smoke validation boundary; unit tests and packaging alone do not establish it.
+
+### Compatibility
+
+- No saved-project schema, application/package version, release request, geometry, family/native synchronization, undo/redo, or STEP-export behavior changes.
+
+### Added
+
+- Add a dismissible, keyboard-accessible Viewer Help dialog covering navigation,
+  selection, measurements, direct-edit handles, display units, and editor shortcuts.
+
+### Changed
+
+- Remove always-visible viewer helper objects from ordinary viewing: cabinet W/D/H
+  drag cubes now appear only while Alt is held, and shelf/divider drag handles appear
+  only for the selected editable part.
+- Face selection now shows axis-appropriate Width/Height/Depth for aligned
+  rectangular planar faces, intrinsic long/short sides for rotated rectangles,
+  maximum span for other planar faces, and an explicitly approximate span for
+  non-planar faces; area remains secondary and follows the selected display units.
+- Remove ordinary Semantic Topology selection details, the persistent click-instruction
+  bubble, and the normal Exact CAD status badge. Loading and geometry-error feedback
+  remains visible when actionable.
+- Simplify normal viewport status text while preserving existing STEP export readiness
+  rules and kernel diagnostics on error.
+
+### Testing
+
+- Add regression coverage for rotated planar-face dimensions, non-rectangular and
+  non-planar face presentation, display-unit formatting, mode-specific helper
+  visibility, Help content/accessibility, and removal of persistent technical UI.
+
+### Compatibility
+
+- No saved-project/schema, family/native synchronization, Manual Layout, undo/redo,
+  geometry-generation, or STEP export behavior changes.
+
+
+- Ordinary family-generated and Manual Layout drawers no longer inherit hidden 4x3
+  divider-grid recipe defaults. Explicit divider-grid recipes and saved canonical
+  divider settings remain supported, with family compartment counts synchronized
+  separately from internal divider counts.
+- Shared-cabinet tab/slot bottom joints now retain mating tabs on the horizontal
+  member and cut matching full-thickness side receivers with the configured joint
+  fit clearance instead of leaving an unfilled slot.
+- Remove Stackable front/rear interface proxy solids that duplicated the existing
+  cabinet bottom and produced overlapping-surface flicker. Stack interface intent
+  remains attached to the side panels; the reference radiused side profile is still
+  an explicit parity gap.
+
+### Changed
+
+- Treat tab/slot receiver features as registered through cuts in manufacturing
+  exports, consistent with exact worker and STEP geometry.
+- Extend the family capability audit only for the proven shared-cabinet
+  `joint_fit_clearance` ownership; detailed tab count/width/placement and
+  Standalone Drawer joinery parity remain open.
+
+### Tests
+
+- Add regressions covering all 110 recipe divider-enable states, native divider
+  round trips, section-layout drawers, retained tab profiles, receiver clearance and
+  machining depth, full-width bottom behavior, Stackable duplicate-solid removal,
+  manufacturing CUT classification, and STEP-worker tab/slot construction.
+
+### Compatibility
+
+- Project schema remains v3 with no migration. Existing saved canonical divider
+  configurations remain authoritative; recipe-only hidden divider choices are
+  preserved while disabled.
+- No unsupported joinery mode is substituted. The existing advanced tab policy and
+  Standalone Drawer joinery gaps remain documented.
+
 ## [0.14.2] - 2026-09-29
 
 ### Added

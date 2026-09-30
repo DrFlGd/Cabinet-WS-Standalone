@@ -39,6 +39,21 @@ describe('v0.7 direct CAD interaction shell', () => {
     expect(toolbar).toContain('Clip');
   });
 
+
+  it('keeps ordinary viewing free of persistent helper and topology jargon', () => {
+    const app = readFileSync('src/App.tsx', 'utf8');
+    const viewport = readFileSync('src/cad/CadViewport.tsx', 'utf8');
+    const properties = readFileSync('src/components/PropertiesPanel.tsx', 'utf8');
+    const toolbar = readFileSync('src/components/Toolbar.tsx', 'utf8');
+
+    expect(viewport).toContain('shouldShowViewportHandle');
+    expect(viewport).not.toContain('cad-direct-hint');
+    expect(app).not.toContain('Click face · Shift-click edge');
+    expect(app).not.toContain('Exact CAD ·');
+    expect(properties).not.toContain('SEMANTIC TOPOLOGY');
+    expect(toolbar).toContain('Viewer Help');
+  });
+
   it('keeps v0.8 shelf/divider dragging and semantic measurement document-owned', () => {
     const app = readFileSync('src/App.tsx', 'utf8');
     const viewport = readFileSync('src/cad/CadViewport.tsx', 'utf8');

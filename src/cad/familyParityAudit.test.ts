@@ -76,6 +76,57 @@ describe('family parity audit', () => {
     });
   });
 
+  it('records proven shared-cabinet tab-slot clearance ownership without closing broader parity gaps', () => {
+    const families: CabinetFamily[] = ['shop_cart', 'utility', 'benchtop', 'stackable', 'kitchen'];
+    for (const family of families) {
+      expect(familyCapabilityFor(family, 'joint_fit_clearance'), family).toMatchObject({
+        status: 'geometry-driving',
+        owner: 'family-adapter+native-generator',
+        parity: 'unverified',
+      });
+      expect(familyCapabilityFor(family, 'joinery_style'), family).toMatchObject({
+        status: 'geometry-driving',
+        parity: 'known-gap',
+      });
+    }
+
+    const starter = familyStarter('utility');
+    const values = recipeWithPatch(starter.values, {
+      joinery_style: 'tab_slot',
+      joint_fit_clearance: 0.55,
+    });
+    const parameters = parametersFromFamilyValues('utility', values);
+    const document = buildFamilyCabinetDocument(parameters, 'Tab-slot audit', 'mm', {
+      family: 'utility',
+      starterId: null,
+      familyValues: values,
+    });
+    const graph = buildFeatureGraph(document);
+    const receivers = graph.partFeatures['carcass:left'].filter(feature => feature.semanticRole === 'tab-slot-receiver');
+
+    expect(receivers).toHaveLength(2);
+    expect(receivers.every(feature => feature.parameters.clearance === 0.55)).toBe(true);
+    expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).toBe(true);
+  });
+
+  it('does not reinterpret unsupported Equipment Stand skeleton windows as tab-slot receivers', () => {
+    const starter = familyStarter('equipment_stand', 'equipment_stand_tab_slot_full_back_stand');
+    const document = buildFamilyCabinetDocument(starter.parameters, starter.name, 'mm', {
+      family: starter.family,
+      starterId: starter.id,
+      familyValues: starter.values,
+    });
+    const graph = buildFeatureGraph(document);
+
+    const left = document.parts.find(part => part.id === 'carcass:left')!;
+    expect((left.geometry?.holes ?? []).some(hole => hole.kind === 'rect')).toBe(true);
+    expect(graph.partFeatures['carcass:left'].some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(false);
+    expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).not.toBe(true);
+    expect(familyCapabilityFor('equipment_stand', 'joinery_style')).toMatchObject({
+      parity: 'known-gap',
+    });
+  });
+
   it('classifies helper-resolved drawer stock and measured thickness as geometry-driving', () => {
     const families: CabinetFamily[] = ['shop_cart', 'utility', 'benchtop', 'stackable', 'kitchen', 'drawer'];
     const keys = [

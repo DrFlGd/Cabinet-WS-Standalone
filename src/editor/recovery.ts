@@ -38,11 +38,13 @@ export function attachRecoveryLifecycle({
   flush,
   windowTarget = window,
   documentTarget = document,
+  blockUnload = true,
 }: {
   dirty: boolean;
   flush: () => void;
   windowTarget?: RecoveryWindowTarget;
   documentTarget?: RecoveryDocumentTarget;
+  blockUnload?: boolean;
 }) {
   const onVisibilityChange = () => {
     if (dirty && documentTarget.visibilityState === 'hidden') flush();
@@ -50,6 +52,7 @@ export function attachRecoveryLifecycle({
   const onBeforeUnload = (event: BeforeUnloadEvent) => {
     if (!dirty) return;
     flush();
+    if (!blockUnload) return;
     event.preventDefault();
     event.returnValue = '';
   };

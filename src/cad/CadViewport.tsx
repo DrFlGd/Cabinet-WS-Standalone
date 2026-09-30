@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CabinetDocument, CadPart, ViewPreset } from './types';
 import type { KernelFaceGroup, KernelSelection, TessellatedPart } from './kernel/types';
+import { shouldShowViewportHandle } from './viewportInteraction';
 
 export type CadViewportHandle = {
   setView: (preset: ViewPreset) => void;
@@ -68,6 +69,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
 ) {
   const host = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; partId: string } | null>(null);
+  const [envelopeEditActive, setEnvelopeEditActive] = useState(false);
   const runtime = useRef<{
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera | THREE.OrthographicCamera;
@@ -129,6 +131,24 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
   }), []);
 
   useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Alt') setEnvelopeEditActive(true);
+    };
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (event.key === 'Alt') setEnvelopeEditActive(false);
+    };
+    const onBlur = () => setEnvelopeEditActive(false);
+    window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', onBlur);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!host.current) return;
     const container = host.current;
     const scene = new THREE.Scene();
@@ -182,7 +202,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     const pointer = new THREE.Vector2();
 
     const fit = () => {
-      const box = new THREE.Box3().setFromObject(model);
+      const box = modelBounds(model);
       if (box.isEmpty()) return;
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
@@ -210,7 +230,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     };
 
     const setView = (preset: ViewPreset) => {
-      const box = new THREE.Box3().setFromObject(model);
+      const box = modelBounds(model);
       if (box.isEmpty()) return;
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
@@ -310,7 +330,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       setPointerFromEvent(event);
 
       const directHit = raycaster.intersectObjects(
-        model.children.filter(object => object.userData.directHandleKind),
+        model.children.filter(object => object.visible && object.userData.directHandleKind),
         false,
       )[0];
       if (directHit?.object.userData.directHandleKind === 'shelf') {
@@ -341,7 +361,7 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       }
 
       const handleHit = raycaster.intersectObjects(
-        model.children.filter(object => object.userData.dimensionKey),
+        model.children.filter(object => object.visible && object.userData.dimensionKey),
         false,
       )[0];
       const key = handleHit?.object.userData.dimensionKey as 'width' | 'height' | 'depth' | undefined;
@@ -577,7 +597,9 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       const handle = new THREE.Mesh(new THREE.BoxGeometry(handleSize, handleSize, handleSize), handleMaterial());
       handle.position.set(...spec.position);
       handle.renderOrder = 20;
+      handle.visible = shouldShowViewportHandle('envelope', undefined, selectedId, envelopeEditActive);
       handle.userData.dimensionKey = spec.key;
+      handle.userData.viewportHandleKind = 'envelope';
       rt.model.add(handle);
     }
 
@@ -590,7 +612,9 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         const handle = new THREE.Mesh(new THREE.SphereGeometry(directSize * 0.5, 12, 8), shelfHandleMaterial());
         handle.position.set(part.position.x + part.size.x / 2, Math.max(-directSize, part.position.y - directSize), part.position.z + part.size.z / 2);
         handle.renderOrder = 21;
+        handle.visible = shouldShowViewportHandle('shelf', part.id, selectedId, envelopeEditActive);
         handle.userData.directHandleKind = 'shelf';
+        handle.userData.viewportHandleKind = 'shelf';
         handle.userData.partId = part.id;
         rt.model.add(handle);
       }
@@ -598,7 +622,9 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         const handle = new THREE.Mesh(new THREE.BoxGeometry(directSize, directSize, directSize), dividerHandleMaterial());
         handle.position.set(part.position.x + part.size.x / 2, Math.max(-directSize, part.position.y - directSize), part.position.z + part.size.z / 2);
         handle.renderOrder = 21;
+        handle.visible = shouldShowViewportHandle('divider', part.id, selectedId, envelopeEditActive);
         handle.userData.directHandleKind = 'divider';
+        handle.userData.viewportHandleKind = 'divider';
         handle.userData.partId = part.id;
         handle.userData.dividerAxis = part.metadata.dividerAxis;
         rt.model.add(handle);
@@ -617,13 +643,22 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
     rt.selectionBox.visible = !!mesh;
     if (mesh) rt.selectionBox.box.setFromObject(mesh);
     for (const object of rt.model.children) {
-      if (!(object instanceof THREE.Mesh)) continue;
+      const handleKind = object.userData.viewportHandleKind as 'envelope' | 'shelf' | 'divider' | undefined;
+      if (handleKind) {
+        object.visible = shouldShowViewportHandle(
+          handleKind,
+          object.userData.partId as string | undefined,
+          selectedId,
+          envelopeEditActive,
+        );
+      }
+      if (!(object instanceof THREE.Mesh) || handleKind) continue;
       const material = object.material as THREE.MeshStandardMaterial;
       const selected = selectedIds.has(String(object.userData.partId ?? ''));
       material.emissive.set(selected ? '#0d554c' : '#000000');
       material.emissiveIntensity = selected ? 0.9 : 0;
     }
-  }, [selectedId, selectedIds, kernelSelection, cadDocument]);
+  }, [selectedId, selectedIds, kernelSelection, cadDocument, envelopeEditActive]);
 
   useEffect(() => {
     const rt = runtime.current;
@@ -650,7 +685,6 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
 
   return <div className="cad-viewport-shell" onPointerDown={() => contextMenu && setContextMenu(null)}>
     <div className="cad-viewport" ref={host} />
-    <div className="cad-direct-hint">Turquoise: W/D/H · gold: shelf height · blue: section divider · Ctrl-click multi-select · Shift-click edge</div>
     {contextMenu && contextPart && (
       <div className="cad-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} onPointerDown={event => event.stopPropagation()}>
         <strong>{contextPart.name}</strong>
@@ -677,6 +711,14 @@ function explodeOffset(part: CadPart, explode: number, width: number, depth: num
     y: (part.category === 'front' || part.category === 'drawer' ? -1 : foreAft) * explode * categoryScale,
     z: part.category === 'shelf' ? explode * 0.22 : 0,
   };
+}
+
+function modelBounds(model: THREE.Group) {
+  const box = new THREE.Box3();
+  for (const object of model.children) {
+    if (object.userData.primaryPartMesh && object.visible) box.expandByObject(object);
+  }
+  return box;
 }
 
 function disposeGroup(group: THREE.Group) {

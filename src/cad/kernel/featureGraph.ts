@@ -82,18 +82,28 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
     });
   }
 
+  const tabSlotReceiver = part.metadata?.tabSlotReceivers === true;
   rectHoles.forEach((hole, index) => {
+    const clearance = tabSlotReceiver
+      ? Number(part.metadata?.jointFitClearance ?? document.parameters.dadoFitClearance)
+      : 0;
     features.push({
       id: `feature:${part.id}:pocket:profile:${index + 1}`,
       partId: part.id,
       kind: 'pocket',
-      label: 'Profile cutout',
-      semanticRole: 'through-cutout',
+      label: tabSlotReceiver ? 'Tab/slot receiver' : 'Profile cutout',
+      semanticRole: tabSlotReceiver ? 'tab-slot-receiver' : 'through-cutout',
       axis: part.geometry?.axis === 'x' ? 'x' : 'z',
       position: profilePointToLocal(part, hole.u, hole.v),
       parameters: {
         width: hole.width,
         height: hole.height,
+        ...(tabSlotReceiver ? {
+          clearance,
+          nominalTabWidth: Math.max(0, hole.width - clearance),
+          machiningDepth: part.size.x,
+          sourcePartId: 'carcass:bottom',
+        } : {}),
       },
     });
   });

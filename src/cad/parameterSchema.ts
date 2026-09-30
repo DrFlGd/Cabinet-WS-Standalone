@@ -195,7 +195,7 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
     { value: 'tab_slot', label: 'Tab + slot' },
   ] },
   { key: 'dadoDepth', kind: 'dimension', label: 'Dado depth', description: 'Blind dado depth into cabinet sides.', section: 'Joinery', min: 2, max: 18, step: 0.5, visibleWhen: p => p.joineryStyle === 'dado' },
-  { key: 'dadoFitClearance', kind: 'dimension', label: 'Dado fit clearance', description: 'Added width clearance around the mating panel.', section: 'Joinery', min: 0, max: 2, step: 0.05, visibleWhen: p => p.joineryStyle === 'dado' },
+  { key: 'dadoFitClearance', kind: 'dimension', label: 'Joinery fit clearance', description: 'Added clearance around the mating panel for dado or tab/slot construction.', section: 'Joinery', min: 0, max: 2, step: 0.05, visibleWhen: p => p.joineryStyle === 'dado' || p.joineryStyle === 'tab_slot' },
   { key: 'drawerJoineryStyle', kind: 'select', label: 'Drawer joinery', description: 'Construction for drawer box corners.', section: 'Joinery', visibleWhen: hasDrawers, options: [
     { value: 'butt', label: 'Butt' },
     { value: 'rabbet', label: 'Rabbet' },

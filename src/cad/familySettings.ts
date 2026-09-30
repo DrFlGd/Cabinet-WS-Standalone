@@ -580,7 +580,8 @@ function projectParametersToFamilyValues(
   set('joinery_style', parameters.joineryStyle);
   set('dado_depth', parameters.dadoDepth);
   set('custom_dado_depth', parameters.dadoDepth);
-  set('dado_fit_clearance', parameters.dadoFitClearance);
+  if (parameters.joineryStyle === 'tab_slot') set('joint_fit_clearance', parameters.dadoFitClearance);
+  else set('dado_fit_clearance', parameters.dadoFitClearance);
 
   set('front_mount_style', parameters.frontMountStyle);
   set('front_edge_reveal', parameters.frontEdgeReveal);
@@ -591,8 +592,13 @@ function projectParametersToFamilyValues(
   set('drawer_joinery_style', parameters.drawerJoineryStyle);
   set('drawer_bottom_joinery', parameters.drawerBottomStyle === 'captured' ? 'dado' : 'applied');
   set('drawer_bottom_dado_depth', parameters.drawerBottomGrooveDepth);
-  set('drawer_divider_columns', parameters.drawerDividerCount);
-  set('drawer_divider_rows', parameters.drawerDividerRows);
+  const hasDrawerDividers = parameters.drawerDividerCount > 0 || parameters.drawerDividerRows > 0;
+  set('include_drawer_divider_grid', hasDrawerDividers);
+  if (hasDrawerDividers) {
+    // Family recipes store compartment counts; canonical parameters store internal divider counts.
+    set('drawer_divider_columns', parameters.drawerDividerCount + 1);
+    set('drawer_divider_rows', parameters.drawerDividerRows + 1);
+  }
 
   set('front_facing_style', parameters.faceFrameStyle === 'full' ? 'face_frame' : 'none');
   set('custom_face_frame_thickness', parameters.faceFrameThickness);

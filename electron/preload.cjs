@@ -1,8 +1,26 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+let closeRequestedListener = null;
+
 contextBridge.exposeInMainWorld('cabinetDesktop', {
   platform: process.platform,
   getAppInfo: () => ipcRenderer.invoke('app:info'),
+  confirmClose: (options) => ipcRenderer.invoke('app:confirm-close', options),
+  resolveClose: (resolution) => ipcRenderer.invoke('app:resolve-close', resolution),
+  onCloseRequested: (callback) => {
+    if (closeRequestedListener) {
+      ipcRenderer.removeListener('app:close-requested', closeRequestedListener);
+    }
+    closeRequestedListener = () => callback();
+    ipcRenderer.on('app:close-requested', closeRequestedListener);
+    ipcRenderer.send('app:close-listener-state', true);
+  },
+  offCloseRequested: () => {
+    if (!closeRequestedListener) return;
+    ipcRenderer.removeListener('app:close-requested', closeRequestedListener);
+    closeRequestedListener = null;
+    ipcRenderer.send('app:close-listener-state', false);
+  },
   openDocument: () => ipcRenderer.invoke('document:open'),
   openRecent: (path) => ipcRenderer.invoke('document:open-recent', path),
   saveDocument: (options) => ipcRenderer.invoke('document:save', options),

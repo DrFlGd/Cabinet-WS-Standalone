@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { buildCabinetDocument } from './cabinetModel';
+import { buildFeatureGraph } from './kernel/featureGraph';
 import { utilityStarter } from './utilityStarters';
 
 describe('realtime cabinet rendering features', () => {
@@ -33,7 +34,7 @@ describe('realtime cabinet rendering features', () => {
     expect(holes.filter(hole => hole.kind === 'circle').length).toBeGreaterThan(8);
   });
 
-  it('renders screw and tab-slot joinery as side-panel cutouts', () => {
+  it('models matching tab-slot geometry instead of cutting the mating tab away', () => {
     const screw = buildCabinetDocument({
       ...utilityStarter('default').parameters,
       shelfStyle: 'fixed',
@@ -42,13 +43,57 @@ describe('realtime cabinet rendering features', () => {
     const screwHoles = screw.parts.find(part => part.id === 'carcass:left')?.geometry?.holes ?? [];
     expect(screwHoles.filter(hole => hole.kind === 'circle')).toHaveLength(4);
 
+    const source = utilityStarter('default').parameters;
+    const clearance = 0.6;
     const tabSlot = buildCabinetDocument({
-      ...utilityStarter('default').parameters,
+      ...source,
       shelfStyle: 'fixed',
       joineryStyle: 'tab_slot',
+      dadoFitClearance: clearance,
     });
-    const slots = tabSlot.parts.find(part => part.id === 'carcass:left')?.geometry?.holes ?? [];
-    expect(slots.filter(hole => hole.kind === 'rect')).toHaveLength(2);
+    const side = tabSlot.parts.find(part => part.id === 'carcass:left')!;
+    const bottom = tabSlot.parts.find(part => part.id === 'carcass:bottom')!;
+    const slots = (side.geometry?.holes ?? []).filter(hole => hole.kind === 'rect');
+    expect(slots).toHaveLength(2);
+
+    expect(bottom.geometry?.kind).toBe('extruded-profile');
+    expect(bottom.geometry?.axis).toBe('z');
+    expect(bottom.size.x).toBe(source.width);
+    expect(bottom.geometry?.outline.some(point => point.u === 0)).toBe(true);
+    expect(bottom.geometry?.outline.some(point => point.u === source.width)).toBe(true);
+
+    const tabWidth = Number(bottom.metadata?.tabWidth);
+    expect(tabWidth).toBeGreaterThan(0);
+    for (const slot of slots) {
+      if (slot.kind !== 'rect') throw new Error('Expected rectangular tab-slot receiver');
+      expect(slot.width).toBeCloseTo(tabWidth + clearance);
+      expect(slot.height).toBeCloseTo(side.size.x + clearance);
+    }
+
+    const graph = buildFeatureGraph(tabSlot);
+    for (const id of ['carcass:left', 'carcass:right']) {
+      const receivers = graph.partFeatures[id].filter(feature => feature.semanticRole === 'tab-slot-receiver');
+      expect(receivers).toHaveLength(2);
+      expect(receivers.every(feature => feature.parameters.sourcePartId === 'carcass:bottom')).toBe(true);
+      expect(receivers.every(feature => feature.parameters.clearance === clearance)).toBe(true);
+      expect(receivers.every(feature => feature.parameters.machiningDepth === side.size.x)).toBe(true);
+    }
+    expect(graph.partFeatures['carcass:bottom'].some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(false);
+  });
+
+  it('does not invent side slots for the full-width bottom mode', () => {
+    const source = utilityStarter('default').parameters;
+    const document = buildCabinetDocument({
+      ...source,
+      joineryStyle: 'tab_slot',
+      bottomWidthStyle: 'full_width',
+    });
+    const side = document.parts.find(part => part.id === 'carcass:left')!;
+    const bottom = document.parts.find(part => part.id === 'carcass:bottom')!;
+
+    expect((side.geometry?.holes ?? []).filter(hole => hole.kind === 'rect')).toHaveLength(0);
+    expect(bottom.geometry).toBeUndefined();
+    expect(bottom.size.x).toBe(source.width);
   });
 
   it('adds visible dado recess features to both cabinet sides', () => {

@@ -147,7 +147,11 @@ export function parametersFromFamilyValues(
 
     joineryStyle: enumOr(v.joinery_style, ['butt', 'screw', 'dado', 'tab_slot'] as const, defaults.joineryStyle),
     dadoDepth: numberOr(v.dado_depth, v.custom_dado_depth, defaults.dadoDepth),
-    dadoFitClearance: numberOr(v.dado_fit_clearance, defaults.dadoFitClearance),
+    dadoFitClearance: numberOr(
+      v.joinery_style === 'tab_slot' ? v.joint_fit_clearance : undefined,
+      v.dado_fit_clearance,
+      defaults.dadoFitClearance,
+    ),
 
     frontMountStyle: enumOr(v.front_mount_style, ['overlay', 'inset_flush'] as const, defaults.frontMountStyle),
     frontEdgeReveal: numberOr(v.front_edge_reveal, defaults.frontEdgeReveal),
@@ -161,8 +165,12 @@ export function parametersFromFamilyValues(
     drawerJoineryStyle: drawerJoineryOr(v.drawer_joinery_style, defaults.drawerJoineryStyle),
     drawerBottomStyle: v.drawer_bottom_joinery === 'dado' ? 'captured' : defaults.drawerBottomStyle,
     drawerBottomGrooveDepth: numberOr(v.drawer_bottom_dado_depth, v.drawer_bottom_inset, defaults.drawerBottomGrooveDepth),
-    drawerDividerCount: intOr(v.drawer_divider_columns, defaults.drawerDividerCount),
-    drawerDividerRows: intOr(v.drawer_divider_rows, defaults.drawerDividerRows),
+    drawerDividerCount: booleanOr(v.include_drawer_divider_grid, false)
+      ? Math.max(0, intOr(v.drawer_divider_columns, 1) - 1)
+      : 0,
+    drawerDividerRows: booleanOr(v.include_drawer_divider_grid, false)
+      ? Math.max(0, intOr(v.drawer_divider_rows, 1) - 1)
+      : 0,
     drawerFrontRegistration: defaults.drawerFrontRegistration,
 
     faceFrameStyle: v.front_facing_style === 'face_frame' ? 'full' : 'none',
