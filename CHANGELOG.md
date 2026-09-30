@@ -6,6 +6,29 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Fixed
+
+- Route the native window X and application Exit/Quit path through an explicit clean/dirty close lifecycle instead of letting a dirty renderer `beforeunload` veto desktop shutdown indefinitely.
+- Dirty desktop close now offers Save / Discard / Cancel; Cancel and cancelled/failed saves keep the window open, while successful Save or explicit Discard complete the close without repeated prompts.
+- Suppress recovery autosave/unload writes while an accepted close is completing so stale recovery data cannot be recreated after Save or Discard.
+
+### Changed
+
+- Move Design Health out of the CAD viewport overlay and beneath Manual Layout; dedicated Drawer and Equipment Stand families use the same central slot when the shared layout editor is unavailable.
+- Keep Design Health collapsible with status and error/warning counts visible in the collapsed summary.
+- Introduce shared label/description/caption typography sizes and raise secondary-text readability without enlarging the overall toolbar/control chrome.
+
+### Testing
+
+- Add behavior-level close-flow coverage for clean close, Save, Discard, Cancel, cancelled/failed saves, duplicate close suppression, approved retry, crash-close bypass, and desktop recovery flush without an unload veto.
+- Add Design Health rendering coverage for collapsible state semantics and visible significant-issue counts.
+- Native packaged-Windows X/Exit interaction remains a separate manual/smoke validation boundary; unit tests and packaging alone do not establish it.
+
+### Compatibility
+
+- No saved-project schema, application/package version, release request, geometry, family/native synchronization, undo/redo, or STEP-export behavior changes.
+
+
 ## [0.14.2] - 2026-09-29
 
 ### Added
