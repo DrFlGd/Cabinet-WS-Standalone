@@ -62,6 +62,11 @@ available for interactive inspection; it does not make a failed export successfu
   exact bevels and purchased slide/runner hardware integration remain incomplete.
 - The applied-back rabbet remains a proof operation; back-panel construction needs
   reconciliation. Chamfer/bevel and edge-treatment feature geometry is deferred.
+- Shared-cabinet outer-side bottom tab/slot joints retain their mating tabs and
+  through-slot receivers, but reference tab count/width/placement policies and
+  additional joined members are not yet full parity.
+- Stackable no longer emits duplicate bottom-overlapping interface proxy solids; the
+  reference's radiused mating side profile is still incomplete.
 - Hardware catalog coverage originated with 84 Utility-compatible profiles;
   verified family-specific and face-frame mounting coverage needs expansion.
 - Sheet nesting is a deterministic heuristic, not a global optimizer. Stock,
