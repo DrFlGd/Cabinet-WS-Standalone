@@ -12,16 +12,44 @@ The project follows milestone versions while the standalone CAD architecture is 
 - Add frozen Cabinet Workshop reference fixtures for Utility modular fit solving, Standalone Drawer joinery/divider machining, and Equipment Stand French-cleat construction.
 - Add a prioritized family-parity audit documenting confirmed gaps and verification boundaries.
 
-### Tests
+- Added React root/modeling-workspace error boundaries with an actionable recovery
+  screen instead of allowing renderer failures to leave a blank workspace.
+- Added Electron renderer-crash handling that keeps recovery data and offers Reload
+  workspace or Close; clean exit and application shutdown bypass the crash prompt.
+- Added an About dialog backed by Electron runtime application/version information,
+  with package metadata as the browser-preview fallback.
+
+### Changed
+
+- Recovery autosave now flushes when the document becomes hidden and makes a
+  best-effort flush on unload, matching the reference application's lifecycle intent.
+- Atomic project/recovery writes use unique staging filenames, and recovery writes
+  and clears share one per-destination operation queue so a pending write cannot
+  recreate stale recovery data after a clear.
+- Version text in the workspace now comes from package metadata instead of duplicated
+  hard-coded release strings.
+
+### Testing
 
 - Add behavioral gap regressions that compare Standalone outcomes with independent reference expectations instead of treating starter construction alone as parity evidence.
 - Add behavioral ownership regressions for helper-resolved measured drawer stock/thickness and Kitchen `section_nodes`, preventing indirect runtime mappings from being mislabeled unsupported.
 - Lock the current Utility fit-target no-op, drawer joinery mode collapse, divider-mounting machining no-op, and rectangular French-cleat behavior so later fixes must update the audit explicitly.
 
+- Added behavioral tests for renderer crash/reload decisions, crash-dialog fallback,
+  browser and desktop recovery storage, concurrent atomic recovery writes, ordered
+  write/clear recovery operations, error-boundary fallback rendering, and
+  About/version rendering.
+- Packaged Windows crash/recovery interaction remains unverified; CI packaging is not
+  described as an application smoke test.
+
 ### Compatibility
 
-- No project schema, package version, geometry implementation, or release-request change.
-- The capability matrix reports ownership and known gaps; unmarked settings remain unverified rather than implicitly parity-complete. Indirect helper/layout ownership is counted explicitly rather than inferred only from direct property syntax.
+- The capability matrix records ownership and known gaps; unmarked settings remain unverified.
+
+- No saved-project schema change. Existing schema-v3 files and v1/v2 migrations are
+  unchanged.
+- Recovery continues to use the existing `recovery.cabinetws.json` desktop file and
+  browser recovery key; no recovery-data migration is required.
 
 ## [0.14.1] - 2026-09-29
 

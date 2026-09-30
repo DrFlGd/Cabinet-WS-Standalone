@@ -146,6 +146,32 @@ its source documentation/manufacturing changes. Persistence and reconciliation a
 backlog work. Tool/machine/postprocessor types exist, but compensated tool-center
 paths and a verified postprocessor do not. G-code remains disabled.
 
+## Desktop lifecycle and recovery
+
+Electron owns native file access and renderer lifecycle. The renderer keeps a single
+recovery document in the Electron user-data directory (or localStorage in browser
+preview mode). Recovery is read before autosave is enabled. Dirty documents are
+debounced to recovery storage and are also flushed when the document becomes hidden
+and when an unload is attempted. Native recovery write and clear operations are serialized per destination,
+and each write uses a unique staging filename before rename. A clear queued after a
+pending write executes after that write, so stale recovery data cannot be recreated
+after the clear completes.
+
+The React root and modeling workspace are protected by error boundaries. A workspace
+render/lifecycle failure keeps the current recovery copy, attempts one last recovery
+write from the current serialized document, and replaces the failed UI with an
+actionable reload screen rather than a blank renderer.
+
+Electron listens for abnormal renderer termination. It does not clear recovery data:
+the user can reload the workspace, which re-enters the normal recovery flow, or close
+the window. Clean exit and application shutdown do not trigger the crash dialog.
+The crash handler is dependency-injected and covered by behavioral tests without
+requiring a packaged renderer process.
+
+Runtime application information is exposed through a narrow preload IPC method.
+The About dialog uses Electron `app.getVersion()` in desktop mode and package
+metadata in browser preview, avoiding independently maintained version strings.
+
 ## Regression boundaries
 
 Tests should verify document behavior: family/native edit sequences, repeated
@@ -157,3 +183,5 @@ STEP worker tests inject body/cut/serialization failures and check rejection and
 cleanup. These tests isolate transaction behavior with mocked geometry APIs; exact
 OpenCascade and packaged Electron execution need dedicated integration/smoke checks.
 CI currently runs Vitest, TypeScript/Vite builds and Windows portable packaging.
+Renderer-crash recovery is exercised with mocked Electron lifecycle objects; packaged
+EXE crash/recovery interaction still requires dedicated smoke coverage.

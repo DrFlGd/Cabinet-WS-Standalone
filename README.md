@@ -25,6 +25,8 @@ every legacy construction or machining option has verified native geometry parit
   DXF/SVG/drilling files, reviewed manufacturing packages, and sheet nesting.
 - Schema-v3 project files, v1/v2 migration, legacy web import, native file dialogs,
   recent projects, dirty-state protection, autosave/recovery, and undo/redo.
+- Workspace error containment, renderer-crash reload/recovery handling, and an About
+  dialog that reports the runtime application version and desktop runtime.
 - Millimeter-native geometry with millimeter/inch input and display.
 
 ## Editing and project compatibility
@@ -66,8 +68,9 @@ available for interactive inspection; it does not make a failed export successfu
   when the model changes; they are not persisted in the project file.
 - No compensated toolpaths or G-code are generated. Nominal manufacturing geometry
   and nesting clearance are not machine motion.
-- Windows packages are unsigned. Packaged-app interaction/smoke testing and an
-  application error boundary remain outstanding.
+- Windows packages are unsigned. Packaged-app interaction/smoke testing remains
+  outstanding; automated renderer-crash/recovery coverage does not substitute for
+  launching and exercising the packaged executable.
 
 See [ROADMAP.md](ROADMAP.md) for the prioritized backlog and acceptance criteria,
 [ARCHITECTURE.md](ARCHITECTURE.md) for ownership/contracts, and

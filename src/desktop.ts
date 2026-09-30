@@ -15,6 +15,15 @@ export type RecoveryResult = {
   updatedAt: number;
 } | null;
 
+export type AppInfo = {
+  name: string;
+  version: string;
+  platform: string;
+  electron?: string;
+  chromium?: string;
+  isPackaged: boolean;
+};
+
 export type RecentProject = {
   path: string;
   name: string;
@@ -23,6 +32,7 @@ export type RecentProject = {
 
 export type CabinetDesktopApi = {
   platform: string;
+  getAppInfo(): Promise<AppInfo>;
   openDocument(): Promise<DesktopFileResult | null>;
   openRecent(path: string): Promise<DesktopFileResult | null>;
   saveDocument(options: {

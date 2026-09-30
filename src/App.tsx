@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, CheckCircle2, Cpu, Database, MousePointer2 } from 'lucide-react';
+import packageMetadata from '../package.json';
 import { DEFAULT_PARAMETERS, sanitizeParameters, stockThickness } from './cad/cabinetModel';
 import { buildFamilyCabinetDocument } from './cad/familyModel';
 import { FAMILY_DEFINITIONS, familyDefinition, familyStarter, familyStarters } from './cad/familyCatalog';
@@ -50,12 +51,22 @@ import TreePanel from './components/TreePanel';
 import MeasurementPanel from './components/MeasurementPanel';
 import DesignHealthPanel from './components/DesignHealthPanel';
 import ShopDocsPanel from './components/ShopDocsPanel';
-import { desktopApi, type RecentProject } from './desktop';
-import { clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
+import AboutDialog from './components/AboutDialog';
+import WorkspaceErrorBoundary from './components/WorkspaceErrorBoundary';
+import { desktopApi, type AppInfo, type RecentProject } from './desktop';
+import { attachRecoveryLifecycle, clearRecovery, readRecovery, writeRecovery } from './editor/recovery';
 import type { EditorDocument } from './editor/history';
 import { useDocumentHistory } from './editor/useDocumentHistory';
 
 type ParameterValue = CabinetParameters[keyof CabinetParameters];
+
+const APP_VERSION = packageMetadata.version;
+const FALLBACK_APP_INFO: AppInfo = {
+  name: 'Cabinet WS Standalone',
+  version: APP_VERSION,
+  platform: 'browser',
+  isPackaged: false,
+};
 
 const defaultStarter = familyStarter('utility', 'default');
 const INITIAL_EDITOR: EditorDocument = {
@@ -105,6 +116,8 @@ export default function App() {
   const [clipZ, setClipZ] = useState(INITIAL_EDITOR.parameters.height);
   const [hardwareCatalogExpanded, setHardwareCatalogExpanded] = useState(false);
   const [shopDocsOpen, setShopDocsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [appInfo, setAppInfo] = useState<AppInfo>(FALLBACK_APP_INFO);
   const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
   const [sectionSelectedId, setSectionSelectedId] = useState(0);
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
@@ -156,6 +169,20 @@ export default function App() {
 
   useEffect(() => {
     void refreshRecent();
+  }, []);
+
+  useEffect(() => {
+    const desktop = desktopApi();
+    if (!desktop) return;
+    let active = true;
+    void desktop.getAppInfo()
+      .then(info => {
+        if (active) setAppInfo(info);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -211,25 +238,31 @@ export default function App() {
 
   useEffect(() => {
     if (!recoveryReady) return;
-    const timer = window.setTimeout(() => {
+
+    const persistRecovery = () => {
       if (dirty) {
         void writeRecovery(serialized).catch(() => setNotice('Recovery autosave failed'));
       } else {
-        void clearRecovery();
+        void clearRecovery().catch(() => setNotice('Recovery cleanup failed'));
       }
-    }, 650);
-    return () => window.clearTimeout(timer);
-  }, [dirty, recoveryReady, serialized]);
-
-  useEffect(() => {
-    if (!dirty) return;
-    const warn = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = '';
     };
-    window.addEventListener('beforeunload', warn);
-    return () => window.removeEventListener('beforeunload', warn);
-  }, [dirty]);
+    const flushDirtyRecovery = () => {
+      if (!dirty) return;
+      void writeRecovery(serialized).catch(error => {
+        console.error('Could not flush recovery during a lifecycle transition.', error);
+      });
+    };
+
+    const timer = window.setTimeout(persistRecovery, 650);
+    const detachLifecycle = attachRecoveryLifecycle({
+      dirty,
+      flush: flushDirtyRecovery,
+    });
+    return () => {
+      window.clearTimeout(timer);
+      detachLifecycle();
+    };
+  }, [dirty, recoveryReady, serialized]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -879,9 +912,16 @@ export default function App() {
     }
   }
 
-  return <main className="app-shell">
+  return <WorkspaceErrorBoundary onError={() => {
+    if (recoveryReady && dirty) {
+      void writeRecovery(serialized).catch(error => {
+        console.error('Could not flush recovery after workspace error.', error);
+      });
+    }
+  }}>
+  <main className="app-shell">
     <header className="app-header">
-      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>{familyDefinition(editor.family).shortCode} CAD · v0.14.1</small></div></div>
+      <div className="brand"><span className="brand-mark"><Box size={22} /></span><div><strong>Cabinet WS</strong><small>{familyDefinition(editor.family).shortCode} CAD · v{APP_VERSION}</small></div></div>
       <div className="document-name">
         <input aria-label="Document name" value={editor.name} onChange={event => updateName(event.target.value)} />
         <span className={dirty ? 'dirty-label' : ''}>{dirty ? '● Modified' : '✓ Saved'} · {currentPath ? fileName(currentPath) : 'Unsaved project'}</span>
@@ -922,6 +962,7 @@ export default function App() {
       onHideSelected={hideSelected}
       onIsolateSelected={isolateSelected}
       onShowAll={showAllParts}
+      onAbout={() => setAboutOpen(true)}
     />
     <input ref={fileInput} hidden type="file" accept=".json,.cabinetws.json,.cabinet.json" onChange={event => { void openBrowserFile(event.target.files?.[0]); }} />
 
@@ -1050,6 +1091,8 @@ export default function App() {
       />
     </div>
 
+    {aboutOpen && <AboutDialog info={appInfo} onClose={() => setAboutOpen(false)} />}
+
     {shopDocsOpen && <ShopDocsPanel
       document={cadDocument}
       docs={shopDocs}
@@ -1070,7 +1113,8 @@ export default function App() {
       onExportManufacturingPackage={exportManufacturingPackage}
       onExportProductionText={(content, suggestedName, kind) => { void saveTextExport(content, suggestedName, kind); }}
     />}
-  </main>;
+  </main>
+  </WorkspaceErrorBoundary>;
 }
 
 function ViewportDimensionEditor({
@@ -1127,8 +1171,8 @@ function kernelFooter(
   diagnosticCount: number,
   familyName: string,
 ) {
-  if (status === 'ready') return `${familyName} · v0.14.1 · exact B-Rep · ${featureCount} semantic features · STEP`;
-  if (status === 'error') return `${familyName} · v0.14.1 · exact kernel diagnostics: ${diagnosticCount}`;
-  return `${familyName} · v0.14.1 · OpenCascade worker initializing…`;
+  if (status === 'ready') return `${familyName} · v${APP_VERSION} · exact B-Rep · ${featureCount} semantic features · STEP`;
+  if (status === 'error') return `${familyName} · v${APP_VERSION} · exact kernel diagnostics: ${diagnosticCount}`;
+  return `${familyName} · v${APP_VERSION} · OpenCascade worker initializing…`;
 }
 
