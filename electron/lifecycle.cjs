@@ -13,6 +13,7 @@ function createRendererRecoveryHandler({
   dialog,
   logger = console,
   isShuttingDown = () => false,
+  beforeClose = () => {},
 }) {
   if (!dialog || typeof dialog.showMessageBox !== 'function') {
     throw new Error('A dialog implementation is required.');
@@ -45,6 +46,7 @@ function createRendererRecoveryHandler({
         return 'reloaded';
       }
 
+      beforeClose(win);
       win.close();
       return 'closed';
     } catch (error) {
@@ -60,7 +62,55 @@ function createRendererRecoveryHandler({
   };
 }
 
+
+function createWindowCloseController({
+  requestClose,
+  onCancel = () => {},
+}) {
+  if (typeof requestClose !== 'function') {
+    throw new Error('A close-request callback is required.');
+  }
+
+  let approved = false;
+  let pending = false;
+
+  return {
+    handleClose(event) {
+      if (approved) return 'approved';
+      event?.preventDefault?.();
+      if (pending) return 'pending';
+
+      pending = true;
+      try {
+        requestClose();
+        return 'requested';
+      } catch (error) {
+        pending = false;
+        throw error;
+      }
+    },
+    approve() {
+      approved = true;
+      pending = false;
+      return 'approved';
+    },
+    cancel() {
+      if (approved) return 'approved';
+      pending = false;
+      onCancel();
+      return 'cancelled';
+    },
+    isApproved() {
+      return approved;
+    },
+    isPending() {
+      return pending;
+    },
+  };
+}
+
 module.exports = {
   createRendererRecoveryHandler,
+  createWindowCloseController,
   rendererFailureDetail,
 };
