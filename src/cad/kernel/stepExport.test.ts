@@ -107,7 +107,7 @@ describe('STEP worker export completeness', () => {
     expect(bottom.geometry?.kind).toBe('extruded-profile');
     const bottomSketch = mocks.draw.mock.results[1]?.value as { lineTo: ReturnType<typeof vi.fn> } | undefined;
     expect(bottomSketch).toBeTruthy();
-    const outlineCalls = bottomSketch!.lineTo.mock.calls.map((call: [number[]]) => call[0]);
+    const outlineCalls = bottomSketch!.lineTo.mock.calls.map(call => call[0] as number[]);
     expect(outlineCalls.some((point: number[]) => point[0] === 0)).toBe(true);
     expect(outlineCalls.some((point: number[]) => point[0] === bottom.size.x)).toBe(true);
     expect(shapes.some(shape => shape.cut.mock.calls.length > 0)).toBe(true);
