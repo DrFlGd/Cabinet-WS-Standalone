@@ -8,6 +8,10 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ### Added
 
+- Add a machine-readable family capability matrix covering all 1,678 retained settings with geometry-driving, manufacturing-driving, compatibility-only, or unsupported ownership status.
+- Add frozen Cabinet Workshop reference fixtures for Utility modular fit solving, Standalone Drawer joinery/divider machining, and Equipment Stand French-cleat construction.
+- Add a prioritized family-parity audit documenting confirmed gaps and verification boundaries.
+
 - Added React root/modeling-workspace error boundaries with an actionable recovery
   screen instead of allowing renderer failures to leave a blank workspace.
 - Added Electron renderer-crash handling that keeps recovery data and offers Reload
@@ -27,6 +31,10 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ### Testing
 
+- Add behavioral gap regressions that compare Standalone outcomes with independent reference expectations instead of treating starter construction alone as parity evidence.
+- Add behavioral ownership regressions for helper-resolved measured drawer stock/thickness and Kitchen `section_nodes`, preventing indirect runtime mappings from being mislabeled unsupported.
+- Lock the current Utility fit-target no-op, drawer joinery mode collapse, divider-mounting machining no-op, and rectangular French-cleat behavior so later fixes must update the audit explicitly.
+
 - Added behavioral tests for renderer crash/reload decisions, crash-dialog fallback,
   browser and desktop recovery storage, concurrent atomic recovery writes, ordered
   write/clear recovery operations, error-boundary fallback rendering, and
@@ -35,6 +43,8 @@ The project follows milestone versions while the standalone CAD architecture is 
   described as an application smoke test.
 
 ### Compatibility
+
+- The capability matrix records ownership and known gaps; unmarked settings remain unverified.
 
 - No saved-project schema change. Existing schema-v3 files and v1/v2 migrations are
   unchanged.

@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "standaloneBaseCommit": "5a03133fac30644e0d7cb035f2d8a7b147e1bef3",
+  "referenceCommit": "2255216ef7808895ec404bf34a0fb8f8a7b8abe4",
+  "fixtures": [
+    {
+      "id": "utility-modular-fit-target",
+      "family": "utility",
+      "purpose": "Independent numeric oracle for Cabinet Workshop modular-grid drawer fit solving.",
+      "reference": {
+        "path": "public/engine/utility_v29_modular_target_report.txt",
+        "inputs": {
+          "target_dimension_mode": "modular_grid",
+          "target_dimension_policy": "exact",
+          "target_module_pitch_x": 42,
+          "target_module_count_x": 10,
+          "target_module_edge_clearance_x": 1,
+          "target_module_pitch_y": 42,
+          "target_module_count_y": 8,
+          "target_module_edge_clearance_y": 1
+        },
+        "expected": {
+          "cabinetOutsideMm": {
+            "width": 520,
+            "depth": 384,
+            "height": 900
+          },
+          "drawerInsideClearMm": {
+            "width": 422,
+            "depth": 338,
+            "height": 116.8
+          }
+        }
+      },
+      "standaloneExpectation": "known-gap",
+      "note": "The retained target controls currently do not resize the Utility cabinet envelope."
+    },
+    {
+      "id": "drawer-joinery-distinct-modes",
+      "family": "drawer",
+      "starterId": "default",
+      "purpose": "Reference drawer joinery modes are distinct construction choices.",
+      "reference": {
+        "path": "public/engine/v5/src/modular_organization/data/scad/drawer.scad",
+        "inputs": {
+          "drawer_joinery_style": [
+            "dado",
+            "tab_slot"
+          ]
+        },
+        "expected": {
+          "behavior": "dado and tab_slot select distinct drawer_joint_geometry modes"
+        }
+      },
+      "standaloneExpectation": "known-gap",
+      "note": "The adapter currently maps both modes to native rabbet drawer joinery."
+    },
+    {
+      "id": "drawer-divider-mounting-machining",
+      "family": "drawer",
+      "starterId": "drawer_450_mm_opening_4x3_divider_grid",
+      "purpose": "Reference divider mounting changes drawer machining, not just recipe metadata.",
+      "reference": {
+        "path": "public/engine/v5/src/modular_organization/data/scad/drawer.scad",
+        "inputs": {
+          "drawer_divider_mounting": [
+            "freestanding",
+            "bottom_only",
+            "bottom_and_perimeter"
+          ],
+          "drawer_divider_bottom_groove_depth": 2.5,
+          "drawer_divider_perimeter_groove_depth": 3
+        },
+        "expected": {
+          "behavior": "bottom_only adds bottom locating grooves; bottom_and_perimeter adds bottom grooves plus drawer-wall end grooves"
+        }
+      },
+      "standaloneExpectation": "known-gap",
+      "note": "Standalone currently generates the divider pieces but ignores mounting/groove semantics."
+    },
+    {
+      "id": "equipment-french-cleat-angle",
+      "family": "equipment_stand",
+      "starterId": "equipment_stand_skeletonized_wall_stand",
+      "purpose": "Reference French-cleat angle changes the manufactured cleat profile.",
+      "reference": {
+        "path": "public/engine/v5/src/modular_organization/data/scad/equipment_stand.scad",
+        "inputs": {
+          "cleat_angle": [
+            30,
+            55
+          ]
+        },
+        "expected": {
+          "behavior": "cleat profile uses cleat_thickness * tan(cleat_angle) and is cut with mo_cleat_profile"
+        }
+      },
+      "standaloneExpectation": "known-gap",
+      "note": "Standalone records cleatAngle metadata on rectangular rails; it does not bevel the rail."
+    }
+  ]
+}
