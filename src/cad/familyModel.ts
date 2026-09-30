@@ -464,16 +464,18 @@ function augmentStackable(document: CabinetDocument) {
   );
   const material = 'Carcass stock (' + round(t) + ' mm)';
 
-  document.parts.push(
-    nativePart('stack:interface:front', 'Stack Interface Front', 'frame', { x: t, y: 0, z: 0 }, { x: p.width - 2 * t, y: interfaceDepth, z: t }, darkWood, material, {
-      family: 'stackable',
-      interface: true,
-    }),
-    nativePart('stack:interface:rear', 'Stack Interface Rear', 'frame', { x: t, y: p.depth - interfaceDepth, z: 0 }, { x: p.width - 2 * t, y: interfaceDepth, z: t }, darkWood, material, {
-      family: 'stackable',
-      interface: true,
-    }),
-  );
+  // The reference stack interface is a mating side-panel profile, not extra rails.
+  // Keep its intent attached to the owning sides without adding coincident solids
+  // over the cabinet bottom while that detailed profile remains a parity gap.
+  for (const id of ['carcass:left', 'carcass:right']) {
+    const side = document.parts.find(part => part.id === id);
+    if (!side) continue;
+    side.metadata = {
+      ...(side.metadata ?? {}),
+      stackInterface: true,
+      stackInterfaceDepth: interfaceDepth,
+    };
+  }
 
   if (booleanOr(values.include_stack_base, true)) {
     const baseH = Math.max(t, numberOr(values.stack_base_height, 70));
