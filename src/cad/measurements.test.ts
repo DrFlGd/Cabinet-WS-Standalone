@@ -99,7 +99,7 @@ describe('semantic measurements', () => {
     ]);
 
     expect(result?.primary[0]).toMatchObject({ label: 'Maximum span', unit: 'mm' });
-    expect(result?.primary[0].value).toBeCloseTo(Math.hypot(60, 60));
+    expect(result?.primary[0].value).toBeCloseTo(84.85, 2);
     expect(result?.secondary?.[0]).toMatchObject({ label: 'Area', unit: 'mm2' });
   });
 
