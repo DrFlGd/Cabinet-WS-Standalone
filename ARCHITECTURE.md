@@ -28,7 +28,8 @@ native-to-recipe synchronization. These modules must not import editor or render
 state. `familyModel.ts` dispatches semantic generation:
 
 - Shop Cart, Utility, Benchtop, Stackable and Kitchen share the cabinet generator.
-- Stackable adds interface/base parts.
+- Stackable carries interface intent on its owning side panels and adds its separate
+  base part; the detailed radiused mating side profile remains a parity gap.
 - Drawer and Equipment Stand have dedicated generators.
 
 The recipe and native model are related but not interchangeable: some recipe fields
@@ -70,6 +71,19 @@ eviction policy; bounding it is a known performance task.
 The feature vocabulary includes panel blanks, profiles, dados, rabbets, grooves,
 pockets, holes/patterns, hardware references and assembly transforms. Chamfer/bevel
 and edge-treatment kinds are reserved; their exact behavior is not complete.
+
+For the shared-cabinet baseline tab/slot joint, the semantic horizontal member owns
+the retained mating tabs in its finished profile. The side-panel feature graph owns
+matching through-slot receivers, including fit clearance and full-thickness machining
+depth. Preview profile geometry, exact worker construction, manufacturing projection,
+and STEP export therefore derive from the same semantic part/feature intent. Detailed
+reference tab count/width/placement policies and additional joined members remain
+separate parity work.
+
+Physical parts must not be duplicated to improve presentation. Coincident display
+depth treatment is reserved for intentional nonphysical overlays such as registered
+machining features; overlapping fabricated solids are corrected in the semantic
+assembly instead of being offset or depth-biased in Three.js.
 
 Semantic face/edge IDs map generated topology back to cabinet roles. Measurements
 bind to these identities: distance uses reference centers/midpoints, face size uses
