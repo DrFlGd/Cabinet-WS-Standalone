@@ -30,9 +30,15 @@ export type RecentProject = {
   updatedAt: number;
 };
 
+export type CloseDecision = 'save' | 'discard' | 'cancel';
+export type CloseResolution = 'approve' | 'cancel';
+
 export type CabinetDesktopApi = {
   platform: string;
   getAppInfo(): Promise<AppInfo>;
+  confirmClose(options: { documentName: string }): Promise<CloseDecision>;
+  resolveClose(resolution: CloseResolution): Promise<boolean>;
+  onCloseRequested(callback: () => void): () => void;
   openDocument(): Promise<DesktopFileResult | null>;
   openRecent(path: string): Promise<DesktopFileResult | null>;
   saveDocument(options: {
