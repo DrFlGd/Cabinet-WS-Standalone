@@ -4,6 +4,43 @@ All notable changes to Cabinet WS Standalone are recorded here.
 
 The project follows milestone versions while the standalone CAD architecture is being built. Entries describe user-visible behavior, file-format changes, compatibility work, testing, packaging, and deliberate deferrals.
 
+## [Unreleased]
+
+### Added
+
+- Added React root/modeling-workspace error boundaries with an actionable recovery
+  screen instead of allowing renderer failures to leave a blank workspace.
+- Added Electron renderer-crash handling that keeps recovery data and offers Reload
+  workspace or Close; clean exit and application shutdown bypass the crash prompt.
+- Added an About dialog backed by Electron runtime application/version information,
+  with package metadata as the browser-preview fallback.
+
+### Changed
+
+- Recovery autosave now flushes when the document becomes hidden and makes a
+  best-effort flush on unload, matching the reference application's lifecycle intent.
+- Atomic project/recovery writes use unique staging filenames, and recovery writes
+  and clears share one per-destination operation queue so a pending write cannot
+  recreate stale recovery data after a clear.
+- Version text in the workspace now comes from package metadata instead of duplicated
+  hard-coded release strings.
+
+### Testing
+
+- Added behavioral tests for renderer crash/reload decisions, crash-dialog fallback,
+  browser and desktop recovery storage, concurrent atomic recovery writes, ordered
+  write/clear recovery operations, error-boundary fallback rendering, and
+  About/version rendering.
+- Packaged Windows crash/recovery interaction remains unverified; CI packaging is not
+  described as an application smoke test.
+
+### Compatibility
+
+- No saved-project schema change. Existing schema-v3 files and v1/v2 migrations are
+  unchanged.
+- Recovery continues to use the existing `recovery.cabinetws.json` desktop file and
+  browser recovery key; no recovery-data migration is required.
+
 ## [0.14.1] - 2026-09-29
 
 ### Fixed

@@ -28,3 +28,37 @@ export async function clearRecovery() {
   if (desktop) return desktop.clearRecovery();
   localStorage.removeItem(BROWSER_RECOVERY_KEY);
 }
+
+
+type RecoveryWindowTarget = Pick<Window, 'addEventListener' | 'removeEventListener'>;
+type RecoveryDocumentTarget = Pick<Document, 'addEventListener' | 'removeEventListener' | 'visibilityState'>;
+
+export function attachRecoveryLifecycle({
+  dirty,
+  flush,
+  windowTarget = window,
+  documentTarget = document,
+}: {
+  dirty: boolean;
+  flush: () => void;
+  windowTarget?: RecoveryWindowTarget;
+  documentTarget?: RecoveryDocumentTarget;
+}) {
+  const onVisibilityChange = () => {
+    if (dirty && documentTarget.visibilityState === 'hidden') flush();
+  };
+  const onBeforeUnload = (event: BeforeUnloadEvent) => {
+    if (!dirty) return;
+    flush();
+    event.preventDefault();
+    event.returnValue = '';
+  };
+
+  documentTarget.addEventListener('visibilitychange', onVisibilityChange);
+  if (dirty) windowTarget.addEventListener('beforeunload', onBeforeUnload);
+
+  return () => {
+    documentTarget.removeEventListener('visibilitychange', onVisibilityChange);
+    if (dirty) windowTarget.removeEventListener('beforeunload', onBeforeUnload);
+  };
+}

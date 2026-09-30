@@ -53,14 +53,16 @@ scope, not a claim that the Windows application has been manually verified.
 
 ## Next: dependable build and desktop baseline
 
-- Commit a dependency lockfile and switch all CI workflows to `npm ci`.
-- Launch the packaged Windows EXE in smoke tests: load the geometry worker, open a
+- [ ] Commit a dependency lockfile and switch all CI workflows to `npm ci`.
+- [ ] Launch the packaged Windows EXE in smoke tests: load the geometry worker, open a
   representative project, edit, save/reopen, and export.
-- Add modeling-workspace error boundaries and actionable recovery UI.
-- Exercise autosave/recovery across crashes and migrations; add About/version info.
+- [x] Add root/modeling-workspace error boundaries with actionable reload/recovery UI.
+- [x] Add lifecycle-triggered recovery flushes, renderer-crash reload handling,
+  behavioral recovery tests, and runtime About/version info.
 
-Acceptance: reproducible installs, green renderer/package checks, and a packaged
-application smoke test that verifies a real project workflow.
+Acceptance remains: reproducible installs, green renderer/package checks, and a
+packaged application smoke test that verifies a real project workflow. Source-level
+and mocked lifecycle coverage must not be reported as a packaged-EXE smoke test.
 
 ## Then: verified family parity
 
