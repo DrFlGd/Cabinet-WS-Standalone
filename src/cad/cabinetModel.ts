@@ -63,6 +63,7 @@ export function buildCabinetDocument(
     joinery: p.joineryStyle,
     dadoDepth: p.dadoDepth,
     dadoFitClearance: p.dadoFitClearance,
+    jointFitClearance: p.dadoFitClearance,
   };
 
   const leftNotch = p.sideToeKickCutout === 'left' || p.sideToeKickCutout === 'both';
@@ -100,8 +101,10 @@ export function buildCabinetDocument(
     ),
   );
 
-  const bottomX = p.bottomWidthStyle === 'full_width' ? 0 : t;
-  const bottomWidth = p.bottomWidthStyle === 'full_width' ? W : W - 2 * t;
+  const bottomHasSideTabs = p.joineryStyle === 'tab_slot' && p.bottomWidthStyle !== 'full_width';
+  const bottomX = bottomHasSideTabs || p.bottomWidthStyle === 'full_width' ? 0 : t;
+  const bottomWidth = bottomHasSideTabs || p.bottomWidthStyle === 'full_width' ? W : W - 2 * t;
+  const tabSpec = carcassTabSpec(p, D);
   parts.push(
     part(
       'carcass:bottom',
@@ -111,7 +114,16 @@ export function buildCabinetDocument(
       { x: bottomWidth, y: D, z: t },
       wood,
       carcassMaterial,
-      { ...carcassMeta, bottomWidthStyle: p.bottomWidthStyle },
+      {
+        ...carcassMeta,
+        bottomWidthStyle: p.bottomWidthStyle,
+        ...(bottomHasSideTabs ? {
+          tabSlotMatingTabs: true,
+          tabCountPerSide: tabSpec.centers.length,
+          tabWidth: tabSpec.tabWidth,
+        } : {}),
+      },
+      bottomHasSideTabs ? tabbedHorizontalPanelGeometry(p, W, D, t) : undefined,
     ),
   );
 
@@ -784,6 +796,62 @@ function addFaceFrameParts(parts: CadPart[], p: CabinetParameters, thickness: nu
     darkWood, material, { ...meta, frameRole: 'center-rail', openingBoundary: z },
   )));
 }
+function carcassTabSpec(p: CabinetParameters, depth: number) {
+  const clearance = Math.max(0, p.dadoFitClearance);
+  const tabWidth = Math.min(36, Math.max(18, depth * 0.08));
+  return {
+    clearance,
+    tabWidth,
+    centers: [depth * 0.25, depth * 0.65],
+  };
+}
+
+function tabbedHorizontalPanelGeometry(
+  p: CabinetParameters,
+  width: number,
+  depth: number,
+  thickness: number,
+): CadPart['geometry'] {
+  const { centers, tabWidth } = carcassTabSpec(p, depth);
+  const bodyLeft = thickness;
+  const bodyRight = width - thickness;
+  const spans = centers
+    .map(center => ({
+      start: Math.max(0, center - tabWidth / 2),
+      end: Math.min(depth, center + tabWidth / 2),
+    }))
+    .filter(span => span.end > span.start)
+    .sort((a, b) => a.start - b.start);
+  const outline: { u: number; v: number }[] = [];
+  const push = (u: number, v: number) => {
+    const last = outline.at(-1);
+    if (!last || last.u !== u || last.v !== v) outline.push({ u, v });
+  };
+
+  push(bodyLeft, 0);
+  push(bodyRight, 0);
+  for (const span of spans) {
+    push(bodyRight, span.start);
+    push(width, span.start);
+    push(width, span.end);
+    push(bodyRight, span.end);
+  }
+  push(bodyRight, depth);
+  push(bodyLeft, depth);
+  for (const span of [...spans].reverse()) {
+    push(bodyLeft, span.end);
+    push(0, span.end);
+    push(0, span.start);
+    push(bodyLeft, span.start);
+  }
+
+  return {
+    kind: 'extruded-profile',
+    axis: 'z',
+    outline,
+  };
+}
+
 function sidePanelGeometry(
   p: CabinetParameters,
   base: number,
@@ -842,17 +910,17 @@ function sidePanelHoles(
     for (const y of ys) for (const z of zs) holes.push({ kind: 'circle', u: y, v: z, radius: 3 });
   }
 
-  if (p.joineryStyle === 'tab_slot') {
-    const slotWidth = Math.min(36, Math.max(18, depth * 0.08));
-    const slotHeight = stockThickness(p.carcassStock, p.materialThickness) + p.dadoFitClearance;
-    const ys = [depth * 0.25, depth * 0.65];
-    for (const y of ys) {
+  if (p.joineryStyle === 'tab_slot' && p.bottomWidthStyle !== 'full_width') {
+    const spec = carcassTabSpec(p, depth);
+    const slotWidth = spec.tabWidth + spec.clearance;
+    const slotHeight = stockThickness(p.carcassStock, p.materialThickness) + spec.clearance;
+    for (const y of spec.centers) {
       holes.push({
         kind: 'rect',
-        u: Math.max(2, y - slotWidth / 2),
-        v: Math.max(2, base - p.dadoFitClearance / 2),
+        u: y - slotWidth / 2,
+        v: base - spec.clearance / 2,
         width: slotWidth,
-        height: Math.max(4, slotHeight),
+        height: slotHeight,
       });
     }
   }
