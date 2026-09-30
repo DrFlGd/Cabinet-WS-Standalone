@@ -78,6 +78,26 @@ describe('v0.13 seven-family parity catalog', () => {
     expect(document.parts.filter(part => part.category === 'divider').length).toBeGreaterThanOrEqual(3);
   });
 
+  it('keeps ordinary family and Manual Layout drawers free of organizer dividers', () => {
+    const ordinary = familyStarter('utility', 'utility_3_drawer_base');
+    const ordinaryDocument = buildFamilyCabinetDocument(ordinary.parameters, ordinary.name, 'mm', {
+      family: ordinary.family,
+      starterId: ordinary.id,
+      familyValues: ordinary.values,
+    });
+    expect(ordinaryDocument.parts.some(part => part.id.includes(':organizer:'))).toBe(false);
+
+    const layout = familyStarter('kitchen', 'photo_section_cabinet');
+    const layoutDocument = buildFamilyCabinetDocument(layout.parameters, layout.name, 'mm', {
+      family: layout.family,
+      starterId: layout.id,
+      familyValues: layout.values,
+    });
+    expect(layoutDocument.parameters.layoutMode).toBe('sections');
+    expect(layoutDocument.parts.some(part => part.id.includes(':drawer:'))).toBe(true);
+    expect(layoutDocument.parts.some(part => part.id.includes(':organizer:'))).toBe(false);
+  });
+
   it('ports all Benchtop drawer-count examples through the native drawer construction', () => {
     const starter = familyStarter('benchtop', 'benchtop_wide_8_drawer');
     const document = buildFamilyCabinetDocument(starter.parameters, starter.name, 'mm', {
@@ -91,7 +111,7 @@ describe('v0.13 seven-family parity catalog', () => {
     expect(document.parts.filter(part => /:box:left$/.test(part.id))).toHaveLength(8);
   });
 
-  it('ports Stackable drawer, open, and door module semantics with stack interfaces', () => {
+  it('ports Stackable modules without duplicate interface solids over the cabinet bottom', () => {
     for (const id of ['stackable_2_drawer', 'stackable_open_module', 'stackable_door_module']) {
       const starter = familyStarter('stackable', id);
       const document = buildFamilyCabinetDocument(starter.parameters, starter.name, 'mm', {
@@ -100,9 +120,20 @@ describe('v0.13 seven-family parity catalog', () => {
         familyValues: starter.values,
       });
 
-      expect(document.parts.some(part => part.id === 'stack:interface:front'), id).toBe(true);
-      expect(document.parts.some(part => part.id === 'stack:interface:rear'), id).toBe(true);
+      expect(document.parts.some(part => part.id === 'stack:interface:front'), id).toBe(false);
+      expect(document.parts.some(part => part.id === 'stack:interface:rear'), id).toBe(false);
       expect(document.parts.some(part => part.id === 'stack:base'), id).toBe(true);
+      for (const sideId of ['carcass:left', 'carcass:right']) {
+        const side = document.parts.find(part => part.id === sideId);
+        expect(side?.metadata?.stackInterface, id + ':' + sideId).toBe(true);
+        expect(Number(side?.metadata?.stackInterfaceDepth), id + ':' + sideId).toBeGreaterThan(0);
+      }
+
+      const bottom = document.parts.find(part => part.id === 'carcass:bottom')!;
+      const base = document.parts.find(part => part.id === 'stack:base')!;
+      const zOverlap = Math.min(bottom.position.z + bottom.size.z, base.position.z + base.size.z)
+        - Math.max(bottom.position.z, base.position.z);
+      expect(zOverlap, id).toBeLessThanOrEqual(0);
     }
 
     const open = familyStarter('stackable', 'stackable_open_module');
@@ -147,6 +178,8 @@ describe('v0.13 seven-family parity catalog', () => {
     expect(document.parts.some(part => part.id === 'drawer:1:box:left')).toBe(true);
     expect(document.parts.some(part => part.id === 'drawer:1:bottom')).toBe(true);
     expect(document.parts.filter(part => part.category === 'divider')).toHaveLength(5);
+    expect(grid.parameters.drawerDividerCount).toBe(3);
+    expect(grid.parameters.drawerDividerRows).toBe(2);
 
     const inside = familyStarter('drawer', 'drawer_420_x_336_x_85_inside_clear');
     expect(inside.parameters.width).toBeGreaterThan(420);
