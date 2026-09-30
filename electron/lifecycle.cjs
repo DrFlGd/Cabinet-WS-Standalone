@@ -65,6 +65,7 @@ function createRendererRecoveryHandler({
 
 function createWindowCloseController({
   requestClose,
+  canRequestClose = () => true,
   onCancel = () => {},
 }) {
   if (typeof requestClose !== 'function') {
@@ -77,6 +78,12 @@ function createWindowCloseController({
   return {
     handleClose(event) {
       if (approved) return 'approved';
+      if (!canRequestClose()) {
+        approved = true;
+        pending = false;
+        return 'fallback-approved';
+      }
+
       event?.preventDefault?.();
       if (pending) return 'pending';
 
@@ -96,6 +103,13 @@ function createWindowCloseController({
     },
     cancel() {
       if (approved) return 'approved';
+      pending = false;
+      onCancel();
+      return 'cancelled';
+    },
+    rendererUnavailable() {
+      if (approved) return 'approved';
+      if (!pending) return 'idle';
       pending = false;
       onCancel();
       return 'cancelled';
