@@ -38,7 +38,8 @@ export type CabinetDesktopApi = {
   getAppInfo(): Promise<AppInfo>;
   confirmClose(options: { documentName: string }): Promise<CloseDecision>;
   resolveClose(resolution: CloseResolution): Promise<boolean>;
-  onCloseRequested(callback: () => void): () => void;
+  onCloseRequested(callback: () => void): void;
+  offCloseRequested(): void;
   openDocument(): Promise<DesktopFileResult | null>;
   openRecent(path: string): Promise<DesktopFileResult | null>;
   saveDocument(options: {
