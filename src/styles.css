@@ -256,12 +256,12 @@ button { color: inherit; }
 .part-card dt { color: #76868f; }
 .part-card dd { margin: 0; color: #d7dfe3; text-align: right; overflow-wrap: anywhere; }
 .muted { color: var(--muted); font-size: 10px; line-height: 1.55; }
-@media (max-width: 1320px) {
+@media (max-width: 1500px) {
   .workspace,
   .workspace.hardware-browser-expanded,
   .workspace.parts-browser-expanded,
   .workspace.hardware-browser-expanded.parts-browser-expanded {
-    grid-template-columns: minmax(300px, 31vw) minmax(300px,1fr) minmax(275px, 27vw);
+    grid-template-columns: clamp(320px, 28vw, 410px) minmax(300px,1fr) clamp(275px, 22vw, 330px);
   }
   .layout-navigation-row,
   .layout-navigation-row.hardware-open,
