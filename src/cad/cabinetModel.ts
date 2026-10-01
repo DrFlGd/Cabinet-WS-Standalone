@@ -1,8 +1,10 @@
-import type { CabinetDocument, CabinetParameters, CadPart, CadProfileHole, SectionNode, StockChoice } from './types';
+import type { CabinetDocument, CabinetParameters, CadPart, CadProfileHole, SectionNode, StockChoice, FamilyRecipeValues } from './types';
 import type { DisplayUnits } from './units';
 import { makeUtilityDefaults, UTILITY_STARTERS } from './utilityStarters';
 import { cloneSectionNodes, sectionLayoutErrors, sectionPanels, sectionRects, sectionRoot, treeErrors } from './sections';
 import { applyHardwareDrilling, buildHardwareInstances, hardwareParts } from './hardware';
+import { joinPanels } from './panelJoinery';
+import { completeDrawerJoinery } from './completeDrawerJoinery';
 import { drawerCrossPanelSpan, drawerSideCornerFeatures } from './drawerJoinery';
 
 export const DEFAULT_PARAMETERS: CabinetParameters = makeUtilityDefaults();
@@ -48,6 +50,7 @@ export function buildCabinetDocument(
   parameters: CabinetParameters,
   name = 'Utility Cabinet',
   displayUnits: DisplayUnits = 'mm',
+  familyValues: FamilyRecipeValues = {},
 ): CabinetDocument {
   const p = sanitizeParameters(parameters);
   const W = p.width;
@@ -104,10 +107,8 @@ export function buildCabinetDocument(
     ),
   );
 
-  const bottomHasSideTabs = p.joineryStyle === 'tab_slot' && p.bottomWidthStyle !== 'full_width';
-  const bottomX = bottomHasSideTabs || p.bottomWidthStyle === 'full_width' ? 0 : t;
-  const bottomWidth = bottomHasSideTabs || p.bottomWidthStyle === 'full_width' ? W : W - 2 * t;
-  const tabSpec = carcassTabSpec(p, D);
+  const bottomX = p.bottomWidthStyle === 'full_width' ? 0 : t;
+  const bottomWidth = p.bottomWidthStyle === 'full_width' ? W : W - 2 * t;
   parts.push(
     part(
       'carcass:bottom',
@@ -120,13 +121,7 @@ export function buildCabinetDocument(
       {
         ...carcassMeta,
         bottomWidthStyle: p.bottomWidthStyle,
-        ...(bottomHasSideTabs ? {
-          tabSlotMatingTabs: true,
-          tabCountPerSide: tabSpec.centers.length,
-          tabWidth: tabSpec.tabWidth,
-        } : {}),
       },
-      bottomHasSideTabs ? tabbedHorizontalPanelGeometry(p, W, D, t) : undefined,
     ),
   );
 
@@ -288,7 +283,14 @@ export function buildCabinetDocument(
     );
   }
 
-  applyJoineryRenderFeatures(parts, p, t, base);
+  const structural = parts.filter(part =>
+    (part.category === 'carcass' || part.category === 'divider' ||
+      (part.category === 'back' && p.backStyle !== 'panel') || part.category === 'shelf') &&
+    !(part.category === 'shelf' && p.shelfStyle === 'adjustable'));
+  const style = p.joineryStyle === 'butt' && familyValues.include_butt_registration_holes ? 'screw' : p.joineryStyle;
+  joinPanels(structural, style, p.dadoDepth,
+    p.joineryStyle === 'tab_slot' ? Number(familyValues.joint_fit_clearance ?? p.dadoFitClearance) : p.dadoFitClearance, familyValues);
+  completeDrawerJoinery(parts, p, familyValues);
   const hardware = buildHardwareInstances(parts, p);
   applyHardwareDrilling(parts, hardware, p);
   parts.push(...hardwareParts(hardware));
@@ -818,62 +820,6 @@ function addFaceFrameParts(parts: CadPart[], p: CabinetParameters, thickness: nu
     darkWood, material, { ...meta, frameRole: 'center-rail', openingBoundary: z },
   )));
 }
-function carcassTabSpec(p: CabinetParameters, depth: number) {
-  const clearance = Math.max(0, p.dadoFitClearance);
-  const tabWidth = Math.min(36, Math.max(18, depth * 0.08));
-  return {
-    clearance,
-    tabWidth,
-    centers: [depth * 0.25, depth * 0.65],
-  };
-}
-
-function tabbedHorizontalPanelGeometry(
-  p: CabinetParameters,
-  width: number,
-  depth: number,
-  thickness: number,
-): CadPart['geometry'] {
-  const { centers, tabWidth } = carcassTabSpec(p, depth);
-  const bodyLeft = thickness;
-  const bodyRight = width - thickness;
-  const spans = centers
-    .map(center => ({
-      start: Math.max(0, center - tabWidth / 2),
-      end: Math.min(depth, center + tabWidth / 2),
-    }))
-    .filter(span => span.end > span.start)
-    .sort((a, b) => a.start - b.start);
-  const outline: { u: number; v: number }[] = [];
-  const push = (u: number, v: number) => {
-    const last = outline[outline.length - 1];
-    if (!last || last.u !== u || last.v !== v) outline.push({ u, v });
-  };
-
-  push(bodyLeft, 0);
-  push(bodyRight, 0);
-  for (const span of spans) {
-    push(bodyRight, span.start);
-    push(width, span.start);
-    push(width, span.end);
-    push(bodyRight, span.end);
-  }
-  push(bodyRight, depth);
-  push(bodyLeft, depth);
-  for (const span of [...spans].reverse()) {
-    push(bodyLeft, span.end);
-    push(0, span.end);
-    push(0, span.start);
-    push(bodyLeft, span.start);
-  }
-
-  return {
-    kind: 'extruded-profile',
-    axis: 'z',
-    outline,
-  };
-}
-
 function sidePanelGeometry(
   p: CabinetParameters,
   base: number,
@@ -926,75 +872,8 @@ function sidePanelHoles(
     }
   }
 
-  if (p.joineryStyle === 'screw') {
-    const ys = [Math.min(70, depth * 0.2), Math.max(80, depth - Math.min(70, depth * 0.2))];
-    const zs = [Math.max(12, base + stockThickness(p.carcassStock, p.materialThickness) / 2), Math.max(20, height - stockThickness(p.carcassStock, p.materialThickness) / 2)];
-    for (const y of ys) for (const z of zs) holes.push({ kind: 'circle', u: y, v: z, radius: 3 });
-  }
-
-  if (p.joineryStyle === 'tab_slot' && p.bottomWidthStyle !== 'full_width') {
-    const spec = carcassTabSpec(p, depth);
-    const slotWidth = spec.tabWidth + spec.clearance;
-    const materialThickness = stockThickness(p.carcassStock, p.materialThickness);
-    const slotBottom = Math.max(0, base - spec.clearance / 2);
-    const slotTop = Math.min(height, base + materialThickness + spec.clearance / 2);
-    const slotHeight = Math.max(0, slotTop - slotBottom);
-    for (const y of spec.centers) {
-      holes.push({
-        kind: 'rect',
-        u: y - slotWidth / 2,
-        v: slotBottom,
-        width: slotWidth,
-        height: slotHeight,
-      });
-    }
-  }
 
   return holes;
-}
-
-function applyJoineryRenderFeatures(
-  parts: CadPart[],
-  p: CabinetParameters,
-  thickness: number,
-  base: number,
-) {
-  if (p.joineryStyle !== 'dado') return;
-
-  const left = parts.find(candidate => candidate.id === 'carcass:left');
-  const right = parts.find(candidate => candidate.id === 'carcass:right');
-  if (!left || !right) return;
-
-  const candidates = parts.filter(candidate =>
-    candidate.id === 'carcass:bottom' ||
-    candidate.category === 'shelf' ||
-    (candidate.category === 'divider' && candidate.size.z <= thickness * 1.5)
-  );
-  const depth = Math.min(Math.max(0.5, p.dadoDepth), Math.max(0.5, thickness - 0.5));
-  const clearance = Math.max(0, p.dadoFitClearance);
-
-  for (const candidate of candidates) {
-    if (candidate.position.z < base - 1 || candidate.position.z > p.height - thickness + 1) continue;
-    const featureDepth = Math.min(p.depth, Math.max(20, candidate.size.y));
-    const z = Math.max(0, candidate.position.z - clearance / 2);
-    const h = Math.max(1, candidate.size.z + clearance);
-    const feature = {
-      kind: 'dado' as const,
-      sourcePartId: candidate.id,
-      position: { x: Math.max(0, thickness - depth - 0.4), y: Math.max(0, candidate.position.y), z },
-      size: { x: depth + 0.8, y: featureDepth, z: h },
-      color: '#51351f',
-      opacity: 0.78,
-    };
-    left.renderFeatures = [...(left.renderFeatures ?? []), feature];
-    right.renderFeatures = [
-      ...(right.renderFeatures ?? []),
-      {
-        ...feature,
-        position: { ...feature.position, x: -0.4 },
-      },
-    ];
-  }
 }
 
 export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetParameters {

@@ -100,16 +100,11 @@ describe('STEP worker export completeness', () => {
     ]);
 
     const receiverFeatures = graph.partFeatures['carcass:left'].filter(feature => feature.semanticRole === 'tab-slot-receiver');
-    expect(receiverFeatures).toHaveLength(2);
+    expect(receiverFeatures.length).toBeGreaterThan(2);
     expect(receiverFeatures.every(feature => feature.parameters.machiningDepth === source.parts[0].size.x)).toBe(true);
 
     const bottom = source.parts.find(part => part.id === 'carcass:bottom')!;
-    expect(bottom.geometry?.kind).toBe('extruded-profile');
-    const bottomSketch = mocks.draw.mock.results[1]?.value as { lineTo: ReturnType<typeof vi.fn> } | undefined;
-    expect(bottomSketch).toBeTruthy();
-    const outlineCalls = bottomSketch!.lineTo.mock.calls.map(call => call[0] as number[]);
-    expect(outlineCalls.some((point: number[]) => point[0] === 0)).toBe(true);
-    expect(outlineCalls.some((point: number[]) => point[0] === bottom.size.x)).toBe(true);
+    expect(bottom.renderFeatures?.some(feature => feature.semanticRole === 'tab-outline')).toBe(true);
     expect(shapes.some(shape => shape.cut.mock.calls.length > 0)).toBe(true);
   });
 

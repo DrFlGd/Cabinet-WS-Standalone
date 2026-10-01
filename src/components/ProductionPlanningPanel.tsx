@@ -9,6 +9,11 @@ import {
   type ProductionConfiguration,
   type SheetGrainAxis,
 } from '../cad/production';
+import {
+  productionStockSummary,
+  reconcileProductionSelection,
+  type ProductionViewSelection,
+} from '../cad/productionSelection';
 import type { ShopDocumentation } from '../cad/shopDocs';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import DimensionInput from './DimensionInput';
@@ -41,19 +46,23 @@ export default function ProductionPlanningPanel({
     () => buildToolpathPlan(plan, manufacturing, configuration),
     [plan, manufacturing, configuration],
   );
-  const [selectedSheetId, setSelectedSheetId] = useState(plan.sheets[0]?.id ?? '');
+  const [selection, setSelection] = useState<ProductionViewSelection>(() =>
+    reconcileProductionSelection(plan, { stockId: plan.stocks[0]?.id ?? '', sheetId: '' })
+  );
 
   useEffect(() => {
     setConfiguration(createDefaultProductionConfiguration(docs));
   }, [manufacturing.signature, docs]);
 
   useEffect(() => {
-    if (!plan.sheets.some(sheet => sheet.id === selectedSheetId)) {
-      setSelectedSheetId(plan.sheets[0]?.id ?? '');
-    }
-  }, [plan.sheets, selectedSheetId]);
+    setSelection(current => reconcileProductionSelection(plan, current));
+  }, [plan]);
 
-  const selectedSheet = plan.sheets.find(sheet => sheet.id === selectedSheetId) ?? plan.sheets[0] ?? null;
+  const selectedSummary = productionStockSummary(plan, selection.stockId);
+  const selectedStock = selectedSummary?.stock ?? null;
+  const selectedSheets = selectedSummary?.sheets ?? [];
+  const selectedSheet = selectedSheets.find(sheet => sheet.id === selection.sheetId) ?? selectedSheets[0] ?? null;
+  const unassignedParts = plan.unplaced.filter(part => part.stockDefinitionId === null);
   const clearance = Math.max(
     configuration.settings.partSpacingMm,
     configuration.settings.kerfMm,
@@ -82,6 +91,10 @@ export default function ProductionPlanningPanel({
       ...current,
       stocks: current.stocks.map((stock, candidate) => candidate === index ? { ...stock, ...patch } : stock),
     }));
+  }
+
+  function selectStock(stockId: string) {
+    setSelection(reconcileProductionSelection(plan, { stockId, sheetId: '' }));
   }
 
   function addRemnant(stockIndex: number) {
@@ -140,71 +153,134 @@ export default function ProductionPlanningPanel({
 
     <section className="production-stock-section">
       <h3>Sheet stock definitions</h3>
-      <div className="production-stock-grid">{configuration.stocks.map((stock, stockIndex) => <article key={stock.id}>
-        <header><div><strong>{stock.material}</strong><span>{formatDimension(stock.thicknessMm, units)} {unitLabel(units)} stock</span></div><small>{stock.quantity === null ? 'unlimited planning sheets' : stock.quantity + ' sheets max'}</small></header>
-        <div className="production-stock-fields">
-          <label><span>Sheet width</span><DimensionInput value={stock.widthMm} units={units} min={100} onChange={value => updateStock(stockIndex, { widthMm: value })} /></label>
-          <label><span>Sheet height</span><DimensionInput value={stock.heightMm} units={units} min={100} onChange={value => updateStock(stockIndex, { heightMm: value })} /></label>
-          <label><span>Margin</span><DimensionInput value={stock.marginMm} units={units} min={0} onChange={value => updateStock(stockIndex, { marginMm: value })} /></label>
-          <label><span>Sheet grain</span><SelectControl
-            ariaLabel={'Sheet grain for ' + stock.material}
-            value={stock.grainAxis}
-            options={[
-              { value: 'x', label: 'Along sheet width (X)' },
-              { value: 'y', label: 'Along sheet height (Y)' },
-              { value: 'none', label: 'No directional grain' },
-            ]}
-            onChange={value => updateStock(stockIndex, { grainAxis: value as SheetGrainAxis })}
-          /></label>
-          <label><span>Quantity</span><input className="production-quantity" type="number" min="0" value={stock.quantity ?? ''} placeholder="∞" onChange={event => updateStock(stockIndex, { quantity: event.target.value === '' ? null : Math.max(0, Math.floor(Number(event.target.value) || 0)) })} /></label>
+      {configuration.stocks.length ? <div className="production-stock-table-wrap">
+        <div className="production-stock-table" role="table" aria-label="Sheet stock definitions">
+          <div className="production-stock-columns" role="row">
+            <span role="columnheader">Stock / material</span>
+            <span role="columnheader">Width</span>
+            <span role="columnheader">Height</span>
+            <span role="columnheader">Margin</span>
+            <span role="columnheader">Grain</span>
+            <span role="columnheader">Qty</span>
+            <span role="columnheader">Remnants</span>
+          </div>
+          {configuration.stocks.map((stock, stockIndex) => <article
+            className={'production-stock-row' + (selection.stockId === stock.id ? ' selected' : '')}
+            key={stock.id}
+            role="rowgroup"
+          >
+            <div className="production-stock-row-main" role="row">
+              <button
+                type="button"
+                className="production-stock-identity"
+                onClick={() => selectStock(stock.id)}
+                aria-pressed={selection.stockId === stock.id}
+              >
+                <strong>{stock.material}</strong>
+                <span>{formatDimension(stock.thicknessMm, units)} {unitLabel(units)} stock</span>
+                <small>{stock.quantity === null ? 'Unlimited sheets' : stock.quantity + ' sheets max'}</small>
+              </button>
+              <label><span>Width</span><DimensionInput value={stock.widthMm} units={units} min={100} onChange={value => updateStock(stockIndex, { widthMm: value })} /></label>
+              <label><span>Height</span><DimensionInput value={stock.heightMm} units={units} min={100} onChange={value => updateStock(stockIndex, { heightMm: value })} /></label>
+              <label><span>Margin</span><DimensionInput value={stock.marginMm} units={units} min={0} onChange={value => updateStock(stockIndex, { marginMm: value })} /></label>
+              <label><span>Grain</span><SelectControl
+                ariaLabel={'Sheet grain for ' + stock.material}
+                value={stock.grainAxis}
+                options={[
+                  { value: 'x', label: 'Along sheet width (X)' },
+                  { value: 'y', label: 'Along sheet height (Y)' },
+                  { value: 'none', label: 'No directional grain' },
+                ]}
+                onChange={value => updateStock(stockIndex, { grainAxis: value as SheetGrainAxis })}
+              /></label>
+              <label><span>Quantity</span><input className="production-quantity" type="number" min="0" value={stock.quantity ?? ''} placeholder="∞" onChange={event => updateStock(stockIndex, { quantity: event.target.value === '' ? null : Math.max(0, Math.floor(Number(event.target.value) || 0)) })} /></label>
+              <div className="production-stock-actions">
+                <button type="button" onClick={() => addRemnant(stockIndex)}><Plus size={13} /> Add remnant</button>
+              </div>
+            </div>
+            <div className="production-remnants">
+              {stock.remnants.map((remnant, remnantIndex) => <div className="production-remnant-row" key={remnant.id}>
+                <span>{remnant.label}</span>
+                <DimensionInput value={remnant.widthMm} units={units} min={50} onChange={value => updateRemnant(stockIndex, remnantIndex, { widthMm: value })} />
+                <span>×</span>
+                <DimensionInput value={remnant.heightMm} units={units} min={50} onChange={value => updateRemnant(stockIndex, remnantIndex, { heightMm: value })} />
+                <button type="button" aria-label={'Remove ' + remnant.label} onClick={() => removeRemnant(stockIndex, remnantIndex)}><Trash2 size={13} /></button>
+              </div>)}
+              {!stock.remnants.length && <small>No remnants entered. Add only stock that is actually available.</small>}
+            </div>
+          </article>)}
         </div>
-        <div className="production-remnants">
-          <div className="production-remnant-heading"><strong>Remnants</strong><button type="button" onClick={() => addRemnant(stockIndex)}><Plus size={12} /> Add remnant</button></div>
-          {stock.remnants.map((remnant, remnantIndex) => <div className="production-remnant-row" key={remnant.id}>
-            <span>{remnant.label}</span>
-            <DimensionInput value={remnant.widthMm} units={units} min={50} onChange={value => updateRemnant(stockIndex, remnantIndex, { widthMm: value })} />
-            <span>×</span>
-            <DimensionInput value={remnant.heightMm} units={units} min={50} onChange={value => updateRemnant(stockIndex, remnantIndex, { heightMm: value })} />
-            <button type="button" aria-label={'Remove ' + remnant.label} onClick={() => removeRemnant(stockIndex, remnantIndex)}><Trash2 size={12} /></button>
-          </div>)}
-          {!stock.remnants.length && <small>No remnants entered. Add only stock that is actually available.</small>}
-        </div>
-      </article>)}</div>
+      </div> : <p className="shop-empty">No fabricated material groups are available for sheet planning.</p>}
     </section>
 
-    <section className="production-summary-grid">
-      <article><strong>{plan.placementCount}</strong><span>placed parts</span></article>
-      <article><strong>{plan.sheetCount}</strong><span>full sheets</span></article>
-      <article><strong>{plan.remnantCount}</strong><span>remnants used</span></article>
-      <article><strong>{(plan.overallUtilization * 100).toFixed(1)}%</strong><span>usable-area utilization</span></article>
-      <article className={plan.unplaced.length ? 'warning' : ''}><strong>{plan.unplaced.length}</strong><span>unplaced parts</span></article>
+    <p className="production-plan-total">
+      Overall plan: {plan.placementCount} placed parts across {plan.sheetCount} full sheets and {plan.remnantCount} remnants · {plan.unplaced.length} unplaced.
+    </p>
+
+    <section className="production-sheet-toolbar">
+      <label className="production-sheet-filter">
+        <span>Stock / material</span>
+        <SelectControl
+          ariaLabel="Production stock material"
+          value={selectedStock?.id ?? ''}
+          options={plan.stocks.map(stock => ({
+            value: stock.id,
+            label: stock.material + ' · ' + formatDimension(stock.thicknessMm, units) + ' ' + unitLabel(units),
+          }))}
+          onChange={selectStock}
+          disabled={!plan.stocks.length}
+        />
+      </label>
+      <label className="production-sheet-filter">
+        <span>Sheet</span>
+        <SelectControl
+          ariaLabel="Nested sheet for selected stock"
+          value={selectedSheet?.id ?? ''}
+          options={selectedSheets.map(sheet => ({
+            value: sheet.id,
+            label: sheet.label + ' · ' + (sheet.utilization * 100).toFixed(1) + '%',
+          }))}
+          onChange={sheetId => setSelection(current => ({ ...current, sheetId }))}
+          disabled={!selectedSheets.length}
+        />
+      </label>
+      <div className="production-sheet-actions">
+        <button type="button" onClick={() => onExportText(productionPlanJson(plan), 'production-plan.json', 'json')}><Download size={13} /> Plan JSON</button>
+        {selectedSheet && <>
+          <button type="button" onClick={() => onExportText(selectedSheet.dxf, safeName(selectedSheet.label) + '.dxf', 'dxf')}><Download size={13} /> Sheet DXF</button>
+          <button type="button" onClick={() => onExportText(selectedSheet.svg, safeName(selectedSheet.label) + '.svg', 'svg')}><Download size={13} /> Sheet SVG</button>
+          <button type="button" onClick={() => onExportText(selectedSheet.registrationJson, safeName(selectedSheet.label) + '-registration.json', 'json')}><Download size={13} /> Registration</button>
+        </>}
+      </div>
     </section>
 
-    {plan.unplaced.length > 0 && <section className="production-unplaced">
-      <h3>Unplaced parts</h3>
-      {plan.unplaced.map(part => <button type="button" key={part.partId} onClick={() => onSelectPart(part.partId)}>
+    {selectedSummary && <section className="production-selected-stock-summary" aria-live="polite">
+      <header>
+        <div><strong>{selectedSummary.stock.material}</strong><span>{formatDimension(selectedSummary.stock.thicknessMm, units)} {unitLabel(units)} stock</span></div>
+        <small>{selectedSummary.sheets.length ? selectedSummary.sheets.length + ' used stock piece' + (selectedSummary.sheets.length === 1 ? '' : 's') : 'No placed sheets for this stock'}</small>
+      </header>
+      <div className="production-summary-grid">
+        <article><strong>{selectedSummary.placementCount}</strong><span>placed parts</span></article>
+        <article><strong>{selectedSummary.fullSheetCount}</strong><span>full sheets</span></article>
+        <article><strong>{selectedSummary.remnantCount}</strong><span>remnants used</span></article>
+        <article><strong>{(selectedSummary.utilization * 100).toFixed(1)}%</strong><span>usable-area utilization</span></article>
+        <article className={selectedSummary.unplaced.length ? 'warning' : ''}><strong>{selectedSummary.unplaced.length}</strong><span>unplaced for stock</span></article>
+      </div>
+    </section>}
+
+    {!!selectedSummary?.unplaced.length && <section className="production-unplaced">
+      <h3>Unplaced for selected stock</h3>
+      {selectedSummary.unplaced.map(part => <button type="button" key={part.partId} onClick={() => onSelectPart(part.partId)}>
         <strong>{part.partNumber}</strong><span>{part.reason}</span>
       </button>)}
     </section>}
 
-    <section className="production-sheet-toolbar">
-      <SelectControl
-        ariaLabel="Nested sheet"
-        value={selectedSheet?.id ?? ''}
-        options={plan.sheets.map(sheet => ({
-          value: sheet.id,
-          label: sheet.label + ' · ' + (sheet.utilization * 100).toFixed(1) + '%',
-        }))}
-        onChange={setSelectedSheetId}
-        disabled={!plan.sheets.length}
-      />
-      <button type="button" onClick={() => onExportText(productionPlanJson(plan), 'production-plan.json', 'json')}><Download size={13} /> Plan JSON</button>
-      {selectedSheet && <>
-        <button type="button" onClick={() => onExportText(selectedSheet.dxf, safeName(selectedSheet.label) + '.dxf', 'dxf')}><Download size={13} /> Sheet DXF</button>
-        <button type="button" onClick={() => onExportText(selectedSheet.svg, safeName(selectedSheet.label) + '.svg', 'svg')}><Download size={13} /> Sheet SVG</button>
-        <button type="button" onClick={() => onExportText(selectedSheet.registrationJson, safeName(selectedSheet.label) + '-registration.json', 'json')}><Download size={13} /> Registration</button>
-      </>}
-    </section>
+    {!!unassignedParts.length && <section className="production-unplaced">
+      <h3>Parts without compatible stock</h3>
+      {unassignedParts.map(part => <button type="button" key={part.partId} onClick={() => onSelectPart(part.partId)}>
+        <strong>{part.partNumber}</strong><span>{part.material} · {formatDimension(part.thicknessMm, units)} {unitLabel(units)} · {part.reason}</span>
+      </button>)}
+    </section>}
 
     {selectedSheet ? <div className="production-sheet-review">
       <section className="production-sheet-preview">
@@ -212,13 +288,15 @@ export default function ProductionPlanningPanel({
         <img src={svgDataUri(selectedSheet.svg)} alt={'Nested sheet preview for ' + selectedSheet.label} />
       </section>
       <section className="production-placement-list">
-        <h3>Semantic placements</h3>
+        <h3>Placements</h3>
         {selectedSheet.placements.map(placement => <button type="button" key={placement.id} onClick={() => onSelectPart(placement.partId)}>
           <div><strong>{placement.partNumber}</strong><span>{placement.partId}</span></div>
           <small>{formatDimension(placement.xMm, units)}, {formatDimension(placement.yMm, units)} {unitLabel(units)} · {placement.rotationDeg}° · {placement.operationIds.length} ops</small>
         </button>)}
       </section>
-    </div> : <p className="shop-empty">No valid sheet placements are available for the current stock definitions.</p>}
+    </div> : selectedStock
+      ? <p className="production-stock-empty">No sheet placements are available for {selectedStock.material} at {formatDimension(selectedStock.thicknessMm, units)} {unitLabel(units)}. Review its quantity, size, margin, grain, and unplaced parts above.</p>
+      : <p className="shop-empty">No valid stock definitions are available for production planning.</p>}
 
     <section className="production-machine-boundary">
       <div><Cpu size={18} /><div><strong>{configuration.machineProfile.label}</strong><p>{toolpathPlan.message}</p></div></div>

@@ -206,7 +206,7 @@ describe('drawer corner joinery parity', () => {
     );
   });
 
-  it('keeps tab-slot intent explicit instead of substituting rabbet geometry', () => {
+  it('models mating drawer tabs and slots without substituting rabbet geometry', () => {
     const starter = familyStarter('drawer');
     const values = {
       ...starter.values,
@@ -224,12 +224,7 @@ describe('drawer corner joinery parity', () => {
     expect(parameters.drawerJoineryStyle).toBe('tab_slot');
     expect(parameters.drawerJointFitClearance).toBe(0.55);
     expect(left.renderFeatures?.some(feature => feature.kind === 'rabbet')).toBe(false);
-    expect(analyzeDesignHealth(document).checks).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        id: 'drawer-tab-slot-not-modeled',
-        severity: 'warning',
-        category: 'coverage',
-      }),
-    ]));
+    expect(left.renderFeatures?.some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(true);
+    expect(analyzeDesignHealth(document).checks.some(check => check.id === 'drawer-tab-slot-not-modeled')).toBe(false);
   });
 });

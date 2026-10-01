@@ -30,6 +30,8 @@ export type CadPartGeometry = {
 };
 
 export type CadRenderFeature = {
+  semanticRole?: 'tab-slot-receiver' | 'tab-outline';
+  clearance?: number;
   kind: 'dado' | 'rabbet' | 'slot' | 'drill';
   axis?: 'x' | 'y' | 'z';
   sourcePartId?: string;

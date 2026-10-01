@@ -24,7 +24,13 @@ describe('Phase 12 production planning', () => {
   it('creates explicit sheet stock definitions for semantic material groups', () => {
     const { docs, configuration } = fixture();
 
-    expect(configuration.stocks.length).toBe(docs.materialGroups.length);
+    const compatibilityKeys = new Set(docs.materialGroups.map(group =>
+      group.material + '|' + group.thickness.toFixed(4)
+    ));
+    expect(configuration.stocks.length).toBe(compatibilityKeys.size);
+    expect(new Set(configuration.stocks.map(stock =>
+      stock.material + '|' + stock.thicknessMm.toFixed(4)
+    )).size).toBe(configuration.stocks.length);
     expect(configuration.stocks.every(stock => stock.widthMm > 0 && stock.heightMm > 0)).toBe(true);
     expect(configuration.stocks.every(stock => stock.marginMm >= 0)).toBe(true);
     expect(configuration.stocks.some(stock => stock.grainAxis === 'x')).toBe(true);

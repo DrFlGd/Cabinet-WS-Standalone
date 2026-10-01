@@ -22,7 +22,7 @@ type ReferenceFixture = {
     inputs: Record<string, unknown>;
     expected: Record<string, unknown>;
   };
-  standaloneExpectation: 'known-gap';
+  standaloneExpectation: 'known-gap' | 'focused-implemented';
 };
 
 const fixtures = (rawFixtures as { fixtures: ReferenceFixture[] }).fixtures;
@@ -68,7 +68,7 @@ describe('family parity audit', () => {
     });
     expect(familyCapabilityFor('drawer', 'drawer_joinery_style')).toMatchObject({
       status: 'geometry-driving',
-      parity: 'known-gap',
+      parity: 'unverified',
     });
     expect(familyCapabilityFor('equipment_stand', 'cleat_angle')).toMatchObject({
       status: 'unsupported',
@@ -104,12 +104,12 @@ describe('family parity audit', () => {
     const graph = buildFeatureGraph(document);
     const receivers = graph.partFeatures['carcass:left'].filter(feature => feature.semanticRole === 'tab-slot-receiver');
 
-    expect(receivers).toHaveLength(2);
+    expect(receivers.length).toBeGreaterThan(2);
     expect(receivers.every(feature => feature.parameters.clearance === 0.55)).toBe(true);
     expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).toBe(true);
   });
 
-  it('does not reinterpret unsupported Equipment Stand skeleton windows as tab-slot receivers', () => {
+  it('keeps Equipment Stand windows distinct from new joint receivers', () => {
     const starter = familyStarter('equipment_stand', 'equipment_stand_tab_slot_full_back_stand');
     const document = buildFamilyCabinetDocument(starter.parameters, starter.name, 'mm', {
       family: starter.family,
@@ -120,8 +120,9 @@ describe('family parity audit', () => {
 
     const left = document.parts.find(part => part.id === 'carcass:left')!;
     expect((left.geometry?.holes ?? []).some(hole => hole.kind === 'rect')).toBe(true);
-    expect(graph.partFeatures['carcass:left'].some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(false);
-    expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).not.toBe(true);
+    expect(graph.partFeatures['carcass:left'].some(feature => feature.semanticRole === 'through-cutout')).toBe(true);
+    expect(graph.partFeatures['carcass:left'].some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(true);
+    expect(document.parts.find(part => part.id === 'carcass:bottom')?.metadata?.tabSlotMatingTabs).toBe(true);
     expect(familyCapabilityFor('equipment_stand', 'joinery_style')).toMatchObject({
       parity: 'known-gap',
     });
@@ -271,7 +272,7 @@ describe('family parity audit', () => {
     ).toBe(false);
   });
 
-  it('keeps divider mounting and groove-depth no-op behavior explicit until machining parity lands', () => {
+  it('applies independent divider bottom and perimeter groove depths', () => {
     const starter = familyStarter('drawer', 'drawer_450_mm_opening_4x3_divider_grid');
     const bottomOnly = recipeWithPatch(starter.values, {
       drawer_divider_mounting: 'bottom_only',
@@ -297,8 +298,8 @@ describe('family parity audit', () => {
       { family: 'drawer', starterId: starter.id, familyValues: perimeter },
     );
 
-    expect(geometrySnapshot(bottomDocument)).toEqual(geometrySnapshot(perimeterDocument));
-    expect(buildFeatureGraph(bottomDocument)).toEqual(buildFeatureGraph(perimeterDocument));
+    expect(geometrySnapshot(bottomDocument)).not.toEqual(geometrySnapshot(perimeterDocument));
+    expect(buildFeatureGraph(bottomDocument)).not.toEqual(buildFeatureGraph(perimeterDocument));
   });
 
   it('keeps French-cleat angle metadata separate from the still-rectangular Standalone geometry', () => {

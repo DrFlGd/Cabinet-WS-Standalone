@@ -1,0 +1,71 @@
+name: Visual Responsive Workspace
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  responsive-screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install
+      - run: npm run build
+      - name: Capture minimum supported window
+        env:
+          RESPONSIVE_VISUAL_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --directory dist >/tmp/responsive-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.1
+          done
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts minimum
+      - name: Capture laptop window
+        env:
+          RESPONSIVE_VISUAL_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --directory dist >/tmp/responsive-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.1
+          done
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts laptop
+      - name: Capture maximized desktop window
+        env:
+          RESPONSIVE_VISUAL_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --directory dist >/tmp/responsive-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.1
+          done
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts desktop
+      - name: Capture 125 percent scale-pressure window
+        env:
+          RESPONSIVE_VISUAL_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --directory dist >/tmp/responsive-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.1
+          done
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts scaled
+      - uses: actions/upload-artifact@v4
+        with:
+          name: responsive-workspace-visual-validation
+          path: responsive-visual-artifacts/*
+          if-no-files-found: error

@@ -297,17 +297,6 @@ function checkJoineryMaterial(
 function checkDrawerConstruction(document: CabinetDocument, checks: DesignHealthCheck[]) {
   const p = document.parameters;
 
-  if (p.drawerJoineryStyle === 'tab_slot') {
-    checks.push({
-      id: 'drawer-tab-slot-not-modeled',
-      severity: 'warning',
-      category: 'coverage',
-      title: 'Drawer tab/slot corner geometry is not modeled yet',
-      message: 'The tab/slot drawer style is preserved from the family recipe, but Standalone does not yet add mating front/back tabs and side slots.',
-      suggestion: 'Do not manufacture this drawer corner style from Standalone until tab/slot geometry is implemented and verified.',
-    });
-  }
-
   if (p.drawerJoineryStyle === 'screw') {
     const drawerSides = document.parts.filter(part =>
       part.category === 'drawer' && /:box:(left|right)$/.test(part.id)

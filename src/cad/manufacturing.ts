@@ -346,7 +346,7 @@ function operationFromFeature(
   }
 
   if (feature.kind === 'pocket') {
-    const throughCutout = feature.semanticRole === 'through-cutout' || feature.semanticRole === 'tab-slot-receiver';
+    const throughCutout = feature.semanticRole === 'through-cutout' || feature.semanticRole === 'tab-slot-receiver' || feature.semanticRole === 'tab-outline';
     const depth = throughCutout ? plane.thicknessMm : featureDepth(plane, feature);
     return {
       id: 'manufacturing:' + feature.id,
@@ -518,7 +518,7 @@ function featureDepth(plane: ManufacturingPlane, feature: CadFeature) {
 }
 
 function isThrough(plane: ManufacturingPlane, feature: CadFeature, depth: number | null) {
-  if (feature.semanticRole === 'through-cutout' || feature.semanticRole === 'tab-slot-receiver') return true;
+  if (feature.semanticRole === 'through-cutout' || feature.semanticRole === 'tab-slot-receiver' || feature.semanticRole === 'tab-outline') return true;
   return depth !== null && depth >= plane.thicknessMm - 0.01;
 }
 

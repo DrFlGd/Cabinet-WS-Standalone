@@ -2,7 +2,7 @@
 
 This file describes current status and upcoming work. Historical releases and
 implementation details belong in [CHANGELOG.md](CHANGELOG.md) and
-[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.3.
+[ARCHITECTURE.md](ARCHITECTURE.md). The package baseline is v0.14.4.
 
 ## Migration rules
 
@@ -129,3 +129,11 @@ reference fixtures. Priorities are fit-target sizing, drawer construction/machin
 Equipment Stand mounting geometry, and clear feedback for unsupported controls.
 This audit does not certify full family parity. Reproducible installs and packaged
 Windows smoke coverage in PR #21 remain deferred from v0.14.2.
+
+## Joinery integration checkpoint
+
+- [x] Extend paired screw/dado/tab-slot construction to generated structural panel contacts.
+- [x] Drawer tabs, captured-bottom insertion and organizer mounting/interlocks.
+- [x] Reference tab spacing/placement controls and manufacturing cut ownership.
+- [x] Focused real OpenCascade intersection, STEP and project round-trip regressions.
+- [ ] Validate additional saved shop projects and specialized stacking/cleat configurations; full legacy-library parity remains a separate sign-off.

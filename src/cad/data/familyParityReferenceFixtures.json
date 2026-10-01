@@ -58,8 +58,8 @@
           "behavior": "screw drills through side pilot guides; dado cuts blind side receivers and extends front/back members into them; tab_slot cuts through side slots and adds matching front/back tabs"
         }
       },
-      "standaloneExpectation": "known-gap",
-      "note": "Standalone now preserves all reference mode names and implements screw and dado corner geometry. Drawer tab-slot intent is preserved without rabbet substitution, but its mating tabs/side slots remain unimplemented."
+      "standaloneExpectation": "focused-implemented",
+      "note": "Distinct screw/dado/tab-slot modes now have mating geometry and focused real-kernel/STEP regressions."
     },
     {
       "id": "drawer-divider-mounting-machining",
@@ -81,8 +81,8 @@
           "behavior": "bottom_only adds bottom locating grooves; bottom_and_perimeter adds bottom grooves plus drawer-wall end grooves"
         }
       },
-      "standaloneExpectation": "known-gap",
-      "note": "Standalone currently generates the divider pieces but ignores mounting/groove semantics."
+      "standaloneExpectation": "focused-implemented",
+      "note": "Independent bottom/perimeter grooves and interlocks drive geometry; representative assembled solids and project persistence are tested."
     },
     {
       "id": "equipment-french-cleat-angle",

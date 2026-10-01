@@ -42,8 +42,8 @@ describe('realtime cabinet rendering features', () => {
       shelfStyle: 'fixed',
       joineryStyle: 'screw',
     });
-    const screwHoles = screw.parts.find(part => part.id === 'carcass:left')?.geometry?.holes ?? [];
-    expect(screwHoles.filter(hole => hole.kind === 'circle')).toHaveLength(4);
+    const screwHoles = screw.parts.find(part => part.id === 'carcass:left')?.renderFeatures ?? [];
+    expect(screwHoles.filter(hole => hole.kind === 'drill').length).toBeGreaterThan(4);
 
     const source = utilityStarter('default').parameters;
     const clearance = 0.6;
@@ -55,32 +55,25 @@ describe('realtime cabinet rendering features', () => {
     });
     const side = tabSlot.parts.find(part => part.id === 'carcass:left')!;
     const bottom = tabSlot.parts.find(part => part.id === 'carcass:bottom')!;
-    const slots = (side.geometry?.holes ?? []).filter(hole => hole.kind === 'rect');
-    expect(slots).toHaveLength(2);
-
-    expect(bottom.geometry?.kind).toBe('extruded-profile');
-    expect(bottom.geometry?.axis).toBe('z');
+    const slots = (side.renderFeatures ?? []).filter(f => f.semanticRole === 'tab-slot-receiver' && f.sourcePartId === bottom.id);
+    expect(slots.length).toBeGreaterThan(0);
     expect(bottom.size.x).toBe(source.width);
-    expect(bottom.geometry?.outline.some(point => point.u === 0)).toBe(true);
-    expect(bottom.geometry?.outline.some(point => point.u === source.width)).toBe(true);
-
-    const tabWidth = Number(bottom.metadata?.tabWidth);
-    expect(tabWidth).toBeGreaterThan(0);
+    expect(bottom.position.x).toBe(0);
+    expect(bottom.renderFeatures?.some(f => f.semanticRole === 'tab-outline')).toBe(true);
     for (const slot of slots) {
-      if (slot.kind !== 'rect') throw new Error('Expected rectangular tab-slot receiver');
-      expect(slot.width).toBeCloseTo(tabWidth + clearance);
-      expect(slot.height).toBeCloseTo(side.size.x + clearance);
+      expect(slot.size.y).toBeCloseTo(35 + clearance);
+      expect(slot.size.z).toBeCloseTo(side.size.x + clearance);
     }
 
     const graph = buildFeatureGraph(tabSlot);
     for (const id of ['carcass:left', 'carcass:right']) {
-      const receivers = graph.partFeatures[id].filter(feature => feature.semanticRole === 'tab-slot-receiver');
-      expect(receivers).toHaveLength(2);
+      const receivers = graph.partFeatures[id].filter(feature => feature.semanticRole === 'tab-slot-receiver' && feature.parameters.sourcePartId === bottom.id);
+      expect(receivers).toHaveLength(slots.length);
       expect(receivers.every(feature => feature.parameters.sourcePartId === 'carcass:bottom')).toBe(true);
       expect(receivers.every(feature => feature.parameters.clearance === clearance)).toBe(true);
       expect(receivers.every(feature => feature.parameters.machiningDepth === side.size.x)).toBe(true);
     }
-    expect(graph.partFeatures['carcass:bottom'].some(feature => feature.semanticRole === 'tab-slot-receiver')).toBe(false);
+    expect(graph.partFeatures['carcass:bottom'].some(feature => feature.semanticRole === 'tab-slot-receiver' && ['carcass:left', 'carcass:right'].includes(String(feature.parameters.sourcePartId)))).toBe(false);
   });
 
   it('does not invent side slots for the full-width bottom mode', () => {

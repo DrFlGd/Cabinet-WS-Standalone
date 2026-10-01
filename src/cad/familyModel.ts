@@ -1,5 +1,7 @@
 import { buildCabinetDocument, sanitizeParameters } from './cabinetModel';
 import { applyHardwareDrilling, buildHardwareInstances, hardwareParts } from './hardware';
+import { completeDrawerJoinery } from './completeDrawerJoinery';
+import { joinPanels } from './panelJoinery';
 import { drawerCrossPanelSpan, drawerSideCornerFeatures } from './drawerJoinery';
 import { cloneRecipe } from './familyCatalog';
 import type {
@@ -41,7 +43,7 @@ export function buildFamilyCabinetDocument(
     return buildEquipmentStand(parameters, name, displayUnits, starterId, familyValues);
   }
 
-  const document = buildCabinetDocument(parameters, name, displayUnits);
+  const document = buildCabinetDocument(parameters, name, displayUnits, familyValues);
   document.family = family;
   document.starterId = starterId;
   document.familyValues = familyValues;
@@ -209,6 +211,7 @@ function buildStandaloneDrawer(
     ));
   }
 
+  completeDrawerJoinery(parts, p, familyValues);
   const hardware = buildHardwareInstances(parts, p);
   applyHardwareDrilling(parts, hardware, p);
   parts.push(...hardwareParts(hardware));
@@ -388,6 +391,7 @@ function buildEquipmentStand(
     addFrenchCleats(parts, values, W, H, D, t, material);
   }
 
+  joinPanels(parts.filter(part => ['carcass', 'back'].includes(part.category) && part.id !== 'wall-cleat'), p.joineryStyle, p.dadoDepth, p.dadoFitClearance, familyValues);
   return {
     version: 3,
     id: 'cabinet-root',

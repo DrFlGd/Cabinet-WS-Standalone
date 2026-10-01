@@ -10,7 +10,9 @@ describe('Phase 12 production planning integration', () => {
     expect(panel).toContain('>Production</button>');
     expect(panel).toContain('<ProductionPlanningPanel');
     expect(productionPanel).toContain('Sheet nesting & production planning');
-    expect(productionPanel).toContain('Semantic placements');
+    expect(productionPanel).toContain('Production stock material');
+    expect(productionPanel).toContain('Nested sheet for selected stock');
+    expect(productionPanel).toContain('productionStockSummary');
     expect(productionPanel).toContain('Sheet DXF');
     expect(productionPanel).toContain('Registration');
   });

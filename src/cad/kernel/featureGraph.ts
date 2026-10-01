@@ -130,8 +130,8 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
       id: `feature:${part.id}:${stableSuffix}`,
       partId: part.id,
       kind: feature.kind === 'slot' ? 'pocket' : feature.kind === 'drill' ? 'hole' : feature.kind,
-      label: renderFeatureLabel(feature.kind),
-      semanticRole: feature.kind,
+      label: feature.semanticRole === 'tab-slot-receiver' ? 'Tab/slot receiver' : renderFeatureLabel(feature.kind),
+      semanticRole: feature.semanticRole ?? feature.kind,
       position: { ...feature.position },
       size: { ...feature.size },
       axis: feature.axis ?? inferFeatureAxis(feature.size),
@@ -139,6 +139,10 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
         width: feature.size.x,
         depth: feature.size.y,
         height: feature.size.z,
+        ...(feature.semanticRole === 'tab-slot-receiver' ? {
+          clearance: feature.clearance ?? 0,
+          machiningDepth: part.size[feature.axis ?? 'x'],
+        } : {}),
         ...(feature.sourcePartId ? { sourcePartId: feature.sourcePartId } : {}),
       },
     });

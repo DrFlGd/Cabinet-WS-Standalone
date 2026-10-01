@@ -5,7 +5,7 @@ reference. It is an evidence baseline for future parity work, not a claim that t
 legacy implementation should be copied architecturally.
 
 **Audit origin base:** `5a03133fac30644e0d7cb035f2d8a7b147e1bef3` (v0.14.1)  
-**Current implementation checkpoint:** `85552dddaeacfb9f84c8e7725fbe56dd31cfcffb` (v0.14.3) plus the focused joinery changes on this branch  
+**Current implementation checkpoint:** v0.14.4 integration  
 **Cabinet Workshop reference:** `2255216ef7808895ec404bf34a0fb8f8a7b8abe4`
 
 The machine-readable setting inventory is
@@ -37,14 +37,14 @@ rows remain `unverified`; they are not implicitly marked verified.
 
 | Family | Fields | Geometry-driving | Manufacturing-driving | Compatibility-only | Unsupported | Known-gap rows |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Shop Cart | 310 | 85 | 22 | 45 | 158 | 42 |
-| Utility | 310 | 85 | 22 | 45 | 158 | 42 |
-| Benchtop | 222 | 56 | 10 | 37 | 119 | 38 |
-| Stackable | 277 | 64 | 22 | 46 | 145 | 42 |
-| Kitchen | 299 | 88 | 23 | 45 | 143 | 42 |
-| Standalone Drawer | 161 | 61 | 9 | 26 | 65 | 16 |
-| Equipment Stand | 99 | 43 | 6 | 10 | 40 | 20 |
-| **Total** | **1,678** | **482** | **114** | **254** | **828** | — |
+| Shop Cart | 310 | 122 | 21 | 45 | 122 | 25 |
+| Utility | 310 | 122 | 21 | 45 | 122 | 25 |
+| Benchtop | 222 | 92 | 10 | 37 | 83 | 21 |
+| Stackable | 277 | 101 | 21 | 46 | 109 | 25 |
+| Kitchen | 299 | 125 | 22 | 45 | 107 | 25 |
+| Standalone Drawer | 161 | 85 | 8 | 26 | 42 | 6 |
+| Equipment Stand | 99 | 53 | 6 | 10 | 30 | 13 |
+| **Total** | 1678 | 700 | 109 | 254 | 615 | 140 |
 
 These counts are control-ownership coverage, not construction-parity percentages.
 Many unsupported fields are intentionally presentation/export compatibility data,
@@ -63,12 +63,12 @@ claims can be reviewed without depending on mutable `main`.
    and tab-slot construction between each drawer side and the box front/back.
    Standalone now preserves those recipe values and implements screw pilot guides
    plus blind dado receivers/mating-member extension in both shared-cabinet drawers
-   and the dedicated Drawer family. Tab-slot intent is preserved without rabbet
-   substitution, but matching drawer-side slots and front/back tabs remain missing.
+   and the dedicated Drawer family. Integration now adds matching drawer-side slots
+   and front/back tabs without rabbet substitution.
 3. **Drawer divider mounting.** Cabinet Workshop changes machining between
    freestanding, bottom-only, and bottom-plus-perimeter divider grids and uses
-   independent groove depths. Standalone currently generates divider pieces but
-   does not vary drawer machining for those settings.
+   independent groove depths. Standalone now generates opposing interlocks and the selected bottom/perimeter
+   grooves with independent depths.
 4. **Equipment Stand French cleats.** Cabinet Workshop constructs an angle-dependent
    cleat profile. Standalone currently stores `cleatAngle` metadata on rectangular
    rails, and the dedicated Equipment Stand document has no purchased hardware
@@ -79,32 +79,23 @@ change when the corresponding gaps are implemented.
 
 ## Joinery coverage checkpoint
 
-The table below is a construction checklist, not a percentage score. **Implemented**
-means the current semantic generator owns both the stated geometry or machining
-operation and its mating relationship. **Partial** means some receiver/operation
-intent exists but the reference construction is not complete. **Verified (focused)**
-means the committed regression suite checks the reference formula/relationship; it
-does not replace real OpenCascade or saved-project parity validation.
+The release integration implements shared contact-based mating joints. Each receiver
+and its mating extension comes from the same resolved joint; machining features carry
+source-part ownership into exact CAD and manufacturing output.
 
-| Family | Mating part pair | Butt | Screw | Dado | Tab-slot |
-| --- | --- | --- | --- | --- | --- |
-| Shop Cart / Utility / Benchtop / Stackable / Kitchen | outer side ↔ joined bottom | Implemented baseline | Partial — side pilot pattern exists but does not yet own all reference screw controls | Partial — side receiver path exists; full mating/tolerance parity not established | **Implemented limited baseline** — v0.14.3 outer-side/bottom tabs + matching side slots with fit clearance; reference count/width/placement policy still missing |
-| Shop Cart / Utility / Benchtop / Stackable / Kitchen | outer side ↔ full top / top stretchers | Butt assembly exists | Partial side drilling only | Missing complete mating dado construction | Missing |
-| Shop Cart / Utility / Benchtop / Stackable / Kitchen | outer side ↔ fixed shelf / horizontal divider | Butt assembly exists | Missing reference screw construction | Partial receiver machining; matching reference mating construction not proven | Missing |
-| Shop Cart / Utility / Benchtop / Stackable / Kitchen | outer side ↔ drawer separator/stretcher | Butt assembly exists | Missing | Partial where represented as horizontal divider; reference separator policy not complete | Missing |
-| Shop Cart / Utility / Benchtop / Stackable / Kitchen | drawer side ↔ box front/back | Implemented | **Implemented; verified (focused)** — measured side stock, reference edge-margin placement, through DRILL operations | **Implemented; verified (focused)** — independent depth/clearance, mirrored side receivers, front/back extension, DADO_GROOVE operations | **Missing** — intent/clearance retained; no substitute geometry |
-| Shop Cart / Utility / Benchtop / Stackable / Kitchen | drawer walls ↔ captured bottom | Existing groove construction | independent of corner screw mode | Existing captured-bottom groove; exact reference depth/fit parity still unverified | independent of corner tab-slot mode; bottom groove remains separate |
-| Shop Cart / Utility / Benchtop / Stackable / Kitchen | drawer bottom/walls ↔ organizer dividers | Pieces exist | — | Missing reference bottom/perimeter mounting grooves and independent depths | Missing reference interlock/mounting behavior |
-| Standalone Drawer | side ↔ box front/back | Implemented | **Implemented; verified (focused)** | **Implemented; verified (focused)** | **Missing** — preserved as explicit coverage warning |
-| Standalone Drawer | walls ↔ captured bottom | Existing groove construction | independent | Existing groove construction; full reference parity unverified | independent |
-| Standalone Drawer | bottom/walls ↔ organizer dividers | Pieces exist | — | Missing bottom/perimeter mounting grooves and custom placement | Missing interlock/mounting behavior |
-| Equipment Stand | frame/cleat members | Family-specific frame construction; not covered by drawer work | Reference-specific fastener behavior remains unverified | No drawer dado scope | Reference frame/tab policy remains unsupported/known-gap |
+| Construction | Implemented behavior | Validation |
+| --- | --- | --- |
+| Shared carcass bottom/top/stretchers, fixed shelves, section dividers, structural back, rear rails and toe-kick | Screw guides; blind dados with mating extensions; tabs with through slots | Real OpenCascade carcass/section solids, pairwise intersection checks, STEP |
+| Equipment Stand rectangular frame contacts | Same screw/dado/tab-slot engine; skeleton windows remain separate cutouts | Semantic regressions; specialized mounting hardware remains outside this scope |
+| Shared and dedicated drawer corners | Distinct butt/screw/dado/tab-slot construction; mirrored receivers | Real screw/dado cuts and assembled tab-slot drawer solids |
+| Captured drawer bottom | Four correctly mirrored grooves and an inserted bottom | Assembled drawer intersection checks |
+| Drawer organizer grid | Equal-clear/custom positions, measured thickness, opposing half-lap slots, optional bottom/perimeter dados with independent depths | Mounted-grid solid intersections and save/reopen |
+| Tab policies | Adaptive/fixed counts; width/web/margins; location custom/edge-biased/stack-safe centers; receiver fit; closed-corner relief | Reference spacing oracles and manufacturing through-cut regressions |
 
-Additional reference carcass joints remain outside this slice: structural-back tongues/
-receivers, toe-kick joints, rear stretchers, detailed top/shelf/separator tab policy,
-slot corner relief, and per-location tab-count/width overrides. The v0.14.3
-outer-side/bottom tab-slot joint must not be generalized into a claim of complete
-tab-slot parity.
+This is focused construction validation, not certification of every legacy recipe.
+Only panels generated by the current family/layout model can participate. Full-width
+bottom compatibility, unusual intersections, specialized cleat profiles, and every
+possible CNC relief/stacking configuration still need representative shop validation.
 
 ## Prioritized parity gaps
 
@@ -124,12 +115,10 @@ depend on the resolved envelope.
 
 ### P2 — construction and machining semantics
 
-- Drawer corner screw and dado now preserve distinct reference intent and drive
-  measured-stock geometry/machining. Finish drawer tab-slot by adding true
-  front/back tab profiles and matching side slots; do not substitute rabbet or
-  proxy solids.
-- Implement divider mounting, custom divider placement, groove depths/clearances,
-  and interlock orientation before treating divider manufacturing output as parity.
+- Drawer screw/dado/tab-slot and divider machining are implemented; extend the
+  focused regression fixtures with additional saved shop projects.
+- Validate unusual divider placements and relief/tool combinations against
+  additional reference projects.
 - Reconcile applied-back rabbet construction with the reference instead of extending
   the current proof operation by assumption.
 - The shared-cabinet baseline now retains the mating tabs for the outer-side bottom
