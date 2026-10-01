@@ -41,7 +41,7 @@ export function drawerCrossPanelSpan(
   };
 }
 
-export function drawerScrewHeights({
+export function drawerScrewPlacement({
   boxHeight,
   edgeMargin,
   diameter,
@@ -63,9 +63,18 @@ export function drawerScrewHeights({
       : edgeMargin,
   );
   const high = boxHeight - edgeMargin;
+  const heights = high - low >= diameter + 4 ? [low, high] : [(low + high) / 2];
 
-  if (high - low >= diameter + 4) return [low, high];
-  return [(low + high) / 2];
+  return {
+    low,
+    high,
+    heights,
+    valid: diameter > 0 && edgeMargin >= diameter && high >= low,
+  };
+}
+
+export function drawerScrewHeights(options: Parameters<typeof drawerScrewPlacement>[0]) {
+  return drawerScrewPlacement(options).heights;
 }
 
 export function drawerSideCornerFeatures(
