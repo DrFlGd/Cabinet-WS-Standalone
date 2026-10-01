@@ -2784,6 +2784,20 @@ button { color: inherit; }
   display: flex;
   justify-content: flex-start;
 }
+.production-stock-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid #3b474e;
+  border-radius: 5px;
+  background: #252c31;
+  color: #ccd6da;
+  cursor: pointer;
+}
+.production-stock-actions button:hover {
+  border-color: #4d6068;
+  background: #2c353b;
+}
 .production-remnants {
   margin: 0 10px 9px 208px;
   padding-top: 8px;
