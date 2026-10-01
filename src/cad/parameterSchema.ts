@@ -204,7 +204,7 @@ export const UTILITY_PARAMETER_SCHEMA: ParameterDefinition[] = [
     { value: 'rabbet', label: 'Rabbet · Standalone legacy' },
     { value: 'lock_rabbet', label: 'Lock rabbet · Standalone legacy' },
   ] },
-  { key: 'drawerDadoDepth', kind: 'dimension', label: 'Drawer dado depth', description: 'Blind depth of front/back receiver dados in each drawer side.', section: 'Joinery', min: 0.5, max: 18, step: 0.5, visibleWhen: p => hasDrawers(p) && p.drawerJoineryStyle === 'dado' },
+  { key: 'drawerDadoDepth', kind: 'dimension', label: 'Drawer dado depth', description: 'Blind depth of front/back receiver dados in each drawer side.', section: 'Joinery', min: 0, max: 18, step: 0.5, visibleWhen: p => hasDrawers(p) && p.drawerJoineryStyle === 'dado' },
   { key: 'drawerDadoFitClearance', kind: 'dimension', label: 'Drawer dado clearance', description: 'Added width/height clearance around the front/back member in drawer-side dados.', section: 'Joinery', min: 0, max: 2, step: 0.05, visibleWhen: p => hasDrawers(p) && (p.drawerJoineryStyle === 'dado' || p.drawerBottomStyle === 'captured') },
   { key: 'drawerJointFitClearance', kind: 'dimension', label: 'Drawer tab/slot clearance', description: 'Reference fit clearance retained for drawer tab + slot; mating tab geometry remains pending.', section: 'Joinery', min: 0, max: 2, step: 0.05, visibleWhen: p => hasDrawers(p) && p.drawerJoineryStyle === 'tab_slot' },
   { key: 'drawerScrewHoleDiameter', kind: 'dimension', label: 'Drawer screw guide diameter', description: 'Through pilot-guide diameter in each drawer side for screw corner joinery.', section: 'Joinery', min: 1, max: 8, step: 0.1, visibleWhen: p => hasDrawers(p) && p.drawerJoineryStyle === 'screw' },
