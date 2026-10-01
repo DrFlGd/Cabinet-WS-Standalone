@@ -127,7 +127,8 @@ describe('drawer corner joinery parity', () => {
     const graph = buildFeatureGraph(document);
     const cornerHoles = graph.partFeatures[left.id].filter(feature =>
       feature.kind === 'hole' &&
-      (feature.sourcePartId === 'drawer:1:box:front' || feature.sourcePartId === 'drawer:1:box:back')
+      (feature.parameters.sourcePartId === 'drawer:1:box:front' ||
+        feature.parameters.sourcePartId === 'drawer:1:box:back')
     );
     expect(cornerHoles).toHaveLength(cornerDrills.length);
     expect(cornerHoles.every(feature => feature.axis === 'x')).toBe(true);
