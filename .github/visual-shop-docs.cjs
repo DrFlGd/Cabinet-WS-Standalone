@@ -106,20 +106,33 @@ async function afterValidation(win, expectedMaterial) {
 }
 
 app.whenReady().then(async () => {
+  const hardTimeout = setTimeout(() => {
+    console.error('VISUAL_VALIDATION hard timeout');
+    app.exit(2);
+  }, 90000);
   try {
+    console.log('VISUAL_VALIDATION app ready', { mode, cwd: process.cwd(), outputDir });
     if (mode === 'before') {
+      console.log('VISUAL_VALIDATION opening baseline wide');
       const wide = await openProduction(1440, 1000);
+      console.log('VISUAL_VALIDATION capturing baseline wide');
       await capture(wide, 'before-wide');
       wide.destroy();
 
+      console.log('VISUAL_VALIDATION opening baseline narrow');
+      console.log('VISUAL_VALIDATION opening updated narrow');
       const narrow = await openProduction(760, 900);
+      console.log('VISUAL_VALIDATION capturing baseline narrow');
       await capture(narrow, 'before-narrow');
       narrow.destroy();
       console.log('VISUAL_VALIDATION ' + JSON.stringify({ mode, captured: ['before-wide', 'before-narrow'] }));
     } else {
+      console.log('VISUAL_VALIDATION opening updated wide');
       const wide = await openProduction(1440, 1000);
+      console.log('VISUAL_VALIDATION capturing updated stock 1');
       await capture(wide, 'after-wide-stock-1');
       const secondMaterial = await selectSecondStock(wide);
+      console.log('VISUAL_VALIDATION selected second stock', secondMaterial);
       const validation = await afterValidation(wide, secondMaterial);
       await capture(wide, 'after-wide-stock-2');
       wide.destroy();
@@ -138,8 +151,10 @@ app.whenReady().then(async () => {
         captured: ['after-wide-stock-1', 'after-wide-stock-2', 'after-narrow-stock-2'],
       }));
     }
+    clearTimeout(hardTimeout);
     app.quit();
   } catch (error) {
+    clearTimeout(hardTimeout);
     console.error(error);
     app.exit(1);
   }
