@@ -1,0 +1,48 @@
+name: Visual Shimmer Validation
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shimmer-screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install
+      - run: npm test
+      - run: npm run build
+      - name: Capture compact shimmer scenarios
+        env:
+          SHIMMER_VISUAL_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --directory dist >/tmp/shimmer-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.1
+          done
+          timeout 90s xvfb-run -a -s "-screen 0 1920x1200x24" ./node_modules/.bin/electron --no-sandbox .github/visual-shimmer.cjs shimmer-visual-artifacts compact
+      - name: Capture wide shimmer scenarios
+        env:
+          SHIMMER_VISUAL_URL: http://127.0.0.1:4173
+        run: |
+          python3 -m http.server 4173 --directory dist >/tmp/shimmer-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
+            sleep 0.1
+          done
+          timeout 90s xvfb-run -a -s "-screen 0 1920x1200x24" ./node_modules/.bin/electron --no-sandbox .github/visual-shimmer.cjs shimmer-visual-artifacts wide
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shimmer-visual-validation
+          path: shimmer-visual-artifacts/*
+          if-no-files-found: error
