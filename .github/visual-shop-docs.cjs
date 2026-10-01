@@ -2,9 +2,13 @@ const { app, BrowserWindow } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const outputDir = path.resolve(process.argv[2] || 'visual-artifacts');
-const mode = process.argv[3] || 'after';
+const outputArg = process.argv.at(-2) || 'visual-artifacts';
+const mode = process.argv.at(-1) || 'after';
+const outputDir = path.resolve(outputArg);
 fs.mkdirSync(outputDir, { recursive: true });
+
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('use-angle', 'swiftshader');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
