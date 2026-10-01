@@ -137,10 +137,15 @@ describe('drawer corner joinery parity', () => {
     const docs = buildShopDocumentation(document, health);
     const manufacturing = buildManufacturingModel(document, docs, health);
     const leftManufacturing = manufacturing.parts.find(part => part.partId === left.id)!;
-    const drillOps = leftManufacturing.operations.filter(operation => operation.kind === 'DRILL');
-    expect(drillOps.length).toBeGreaterThanOrEqual(cornerDrills.length);
-    expect(drillOps.filter(operation => operation.sourceKind === 'hole').every(operation =>
-      operation.through && operation.depthMm === 9
+    const cornerFeatureIds = new Set(cornerHoles.map(feature => feature.id));
+    const drillOps = leftManufacturing.operations.filter(operation =>
+      operation.kind === 'DRILL' &&
+      operation.featureId !== undefined &&
+      cornerFeatureIds.has(operation.featureId)
+    );
+    expect(drillOps).toHaveLength(cornerDrills.length);
+    expect(drillOps.every(operation =>
+      operation.sourceKind === 'hole' && operation.through && operation.depthMm === 9
     )).toBe(true);
   });
 
