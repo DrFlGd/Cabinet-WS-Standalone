@@ -88,6 +88,7 @@ export type NestedSheet = {
 };
 
 export type UnplacedPart = {
+  stockDefinitionId: string | null;
   partId: string;
   partNumber: string;
   material: string;
@@ -317,7 +318,7 @@ export function buildProductionPlan(
     );
 
     if (!stock) {
-      unplaced.push(unplacedPart(item, 'No compatible sheet stock definition for material/thickness.'));
+      unplaced.push(unplacedPart(item, null, 'No compatible sheet stock definition for material/thickness.'));
       continue;
     }
 
@@ -362,7 +363,7 @@ export function buildProductionPlan(
       const rotationNote = rotations.length
         ? 'No remaining stock piece can fit the part with required margins/spacing.'
         : 'Grain/rotation constraints prevent a valid orientation on this stock.';
-      unplaced.push(unplacedPart(item, rotationNote));
+      unplaced.push(unplacedPart(item, stock.id, rotationNote));
     }
   }
 
@@ -922,8 +923,9 @@ function sanitizeStock(stock: SheetStockDefinition): SheetStockDefinition {
   };
 }
 
-function unplacedPart(item: NestPart, reason: string): UnplacedPart {
+function unplacedPart(item: NestPart, stockDefinitionId: string | null, reason: string): UnplacedPart {
   return {
+    stockDefinitionId,
     partId: item.part.partId,
     partNumber: item.part.partNumber,
     material: item.part.material,
