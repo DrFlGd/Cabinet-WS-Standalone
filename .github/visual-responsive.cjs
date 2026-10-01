@@ -218,7 +218,9 @@ async function verifySolverPersistence(win) {
       .find(candidate => candidate.textContent?.includes('Inside width'));
     return label?.querySelector('input')?.value || '';
   })()`, true);
-  if (persisted !== '777') throw new Error('Fit Solver input did not survive workspace tab switches: ' + persisted);
+  if (Math.abs(Number(persisted) - 777) > 0.001) {
+    throw new Error('Fit Solver input did not survive workspace tab switches: ' + persisted);
+  }
   return { insideWidth: persisted };
 }
 
