@@ -163,6 +163,11 @@ export function parametersFromFamilyValues(
     drawerCustomWeights: numberArrayOr(v.drawer_height_weights, defaults.drawerCustomWeights),
 
     drawerJoineryStyle: drawerJoineryOr(v.drawer_joinery_style, defaults.drawerJoineryStyle),
+    drawerDadoDepth: numberOr(v.drawer_dado_depth, defaults.drawerDadoDepth),
+    drawerDadoFitClearance: numberOr(v.drawer_dado_fit_clearance, defaults.drawerDadoFitClearance),
+    drawerJointFitClearance: numberOr(v.drawer_joint_fit_clearance, defaults.drawerJointFitClearance),
+    drawerScrewHoleDiameter: numberOr(v.drawer_screw_hole_diameter, defaults.drawerScrewHoleDiameter),
+    drawerScrewEdgeMargin: numberOr(v.drawer_screw_edge_margin, defaults.drawerScrewEdgeMargin),
     drawerBottomStyle: v.drawer_bottom_joinery === 'dado' ? 'captured' : defaults.drawerBottomStyle,
     drawerBottomGrooveDepth: numberOr(v.drawer_bottom_dado_depth, v.drawer_bottom_inset, defaults.drawerBottomGrooveDepth),
     drawerDividerCount: booleanOr(v.include_drawer_divider_grid, false)
@@ -475,8 +480,11 @@ function baseStyleOr(
 }
 
 function drawerJoineryOr(value: unknown, fallback: CabinetParameters['drawerJoineryStyle']) {
-  if (value === 'dado' || value === 'tab_slot' || value === 'screw') return 'rabbet';
-  return enumOr(value, ['butt', 'rabbet', 'lock_rabbet'] as const, fallback);
+  return enumOr(
+    value,
+    ['butt', 'screw', 'dado', 'tab_slot', 'rabbet', 'lock_rabbet'] as const,
+    fallback,
+  );
 }
 
 function numberOr(...values: unknown[]) {
