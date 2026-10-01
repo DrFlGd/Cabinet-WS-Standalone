@@ -1,0 +1,35 @@
+name: Visual Shop Docs Validation
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm install
+      - run: npm run build
+      - uses: actions/checkout@v6
+        with:
+          ref: 85552dddaeacfb9f84c8e7725fbe56dd31cfcffb
+          path: visual-baseline
+      - name: Build v0.14.3 baseline with installed dependencies
+        working-directory: visual-baseline
+        run: ../node_modules/.bin/tsc -b && ../node_modules/.bin/vite build
+      - name: Capture baseline Shop Docs
+        working-directory: visual-baseline
+        run: xvfb-run -a ../node_modules/.bin/electron ../.github/visual-shop-docs.cjs ../visual-artifacts before
+      - name: Capture and validate updated Shop Docs
+        run: xvfb-run -a ./node_modules/.bin/electron .github/visual-shop-docs.cjs visual-artifacts after
+      - uses: actions/upload-artifact@v4
+        with:
+          name: shop-docs-visual-validation
+          path: visual-artifacts/*.png
+          if-no-files-found: error
