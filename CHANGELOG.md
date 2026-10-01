@@ -6,6 +6,30 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Fixed
+
+- Preserve Cabinet Workshop drawer corner joinery modes instead of mapping recipe `screw`, `dado`, and `tab_slot` choices to the same Standalone rabbet construction.
+- Implement drawer-side screw pilot guides for both front and back joints using measured drawer stock, the recipe hole diameter/edge margin, and captured-bottom groove avoidance; register the cuts through the exact feature graph and manufacturing DRILL output.
+- Implement blind drawer-side front/back dados with independent drawer dado depth/fit clearance and extend each mating box front/back into the receivers by the same depth, including mirrored left/right geometry.
+- Apply the same screw/dado corner generator to shared-cabinet drawers and the dedicated Standalone Drawer family.
+
+### Changed
+
+- Add canonical drawer dado depth/clearance and screw-guide parameters so family/native synchronization preserves those geometry-driving controls through saved edits.
+- Preserve `tab_slot` drawer intent and fit clearance without substituting rabbet geometry; Design Health now warns that mating drawer tabs/side slots remain unimplemented.
+- Update the family capability matrix/reference fixture and `FAMILY_PARITY.md` with a joint-by-joint checklist that distinguishes implemented, focused-verified, partial, and missing construction.
+
+### Testing
+
+- Add drawer joinery regressions for adapter preservation, measured stock, dado receiver/mating dimensions, mirrored side features, reference screw-guide placement, manufacturing operation depth/through state, shared-cabinet behavior, and explicit tab-slot gap handling.
+- Extract the production exact-shape builder without changing its operations and exercise representative screw/dado drawer-side solids with the real Replicad/OpenCascade WASM plus STEP serialization.
+- Shimmering diagnosis remains image-driven and is not claimed fixed until the reported visual reproduction is supplied and validated.
+
+### Compatibility
+
+- No schema/application version or release-request change. Existing schema-v3 projects and v1/v2 migration remain supported; legacy Standalone `rabbet` and `lock_rabbet` drawer values remain accepted.
+
+
 ## [0.14.3] - 2026-09-30
 
 ### Fixed
