@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { buildCabinetDocument } from './cabinetModel';
+import { familyStarter } from './familyCatalog';
+import { buildFamilyCabinetDocument } from './familyModel';
 import { buildFeatureGraph } from './kernel/featureGraph';
 import { utilityStarter } from './utilityStarters';
 
@@ -122,6 +124,34 @@ describe('realtime cabinet rendering features', () => {
     }
   });
 
+  it('keeps screenshot-like open-top frame members physically distinct', () => {
+    const utility = buildCabinetDocument(utilityStarter('utility_door_base').parameters);
+    expectNoPositiveVolumeOverlap(
+      utility.parts.filter(part => ['carcass:left', 'carcass:right', 'carcass:top-front', 'carcass:top-rear'].includes(part.id)),
+    );
+
+    const stand = familyStarter('equipment_stand', 'equipment_stand_solid_side_utility_stand');
+    const equipment = buildFamilyCabinetDocument(stand.parameters, stand.name, 'mm', {
+      family: 'equipment_stand',
+      starterId: stand.id,
+      familyValues: stand.values,
+    });
+    const frame = equipment.parts.filter(part =>
+      ['carcass:left', 'carcass:right', 'carcass:top-front', 'carcass:top-rear'].includes(part.id)
+    );
+
+    expect(frame.map(part => part.id).sort()).toEqual([
+      'carcass:left',
+      'carcass:right',
+      'carcass:top-front',
+      'carcass:top-rear',
+    ]);
+    expectNoPositiveVolumeOverlap(frame);
+    expect(new Set(frame.map(part => part.position.z + part.size.z))).toEqual(
+      new Set([equipment.parameters.height]),
+    );
+  });
+
   it('models drawer boxes for section-driven layouts too', () => {
     const document = buildCabinetDocument(utilityStarter('utility_wide_3_section_drawers').parameters);
 
@@ -129,3 +159,29 @@ describe('realtime cabinet rendering features', () => {
     expect(document.parts.some(part => part.id === 'section:4:drawer:4:box:bottom')).toBe(true);
   });
 });
+
+
+function expectNoPositiveVolumeOverlap(parts: Array<{
+  id: string;
+  position: { x: number; y: number; z: number };
+  size: { x: number; y: number; z: number };
+}>) {
+  for (let a = 0; a < parts.length; a += 1) {
+    for (let b = a + 1; b < parts.length; b += 1) {
+      const first = parts[a];
+      const second = parts[b];
+      const overlap = {
+        x: Math.min(first.position.x + first.size.x, second.position.x + second.size.x) -
+          Math.max(first.position.x, second.position.x),
+        y: Math.min(first.position.y + first.size.y, second.position.y + second.size.y) -
+          Math.max(first.position.y, second.position.y),
+        z: Math.min(first.position.z + first.size.z, second.position.z + second.size.z) -
+          Math.max(first.position.z, second.position.z),
+      };
+      expect(
+        overlap.x > 1e-6 && overlap.y > 1e-6 && overlap.z > 1e-6,
+        `${first.id} overlaps ${second.id}: ${JSON.stringify(overlap)}`,
+      ).toBe(false);
+    }
+  }
+}
