@@ -49,9 +49,20 @@ async function chooseSelect(win, ariaLabel, optionText) {
 }
 
 async function capture(win, name) {
+  const before = await canvasMetrics(win);
+  win.webContents.invalidate();
+  await win.webContents.executeJavaScript(
+    `new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))`,
+    true,
+  );
+  await delay(180);
   const image = await win.webContents.capturePage();
+  const after = await canvasMetrics(win);
+  if (JSON.stringify(before) !== JSON.stringify(after)) {
+    throw new Error(name + ' state changed during capture: ' + JSON.stringify({ before, after }));
+  }
   fs.writeFileSync(path.join(outputDir, name + '.png'), image.toPNG());
-  return canvasMetrics(win);
+  return after;
 }
 
 async function waitForDocumentState(win, familyText, documentName) {
@@ -75,7 +86,7 @@ async function openApp(width, height) {
   const win = new BrowserWindow({
     width,
     height,
-    show: false,
+    show: true,
     backgroundColor: '#171a1d',
     webPreferences: {
       contextIsolation: true,
@@ -170,6 +181,7 @@ async function canvasMetrics(win) {
       selected: document.querySelector('.selection-breadcrumb')?.textContent || '',
       explode: document.querySelector('.explode-control output')?.textContent || '',
       partsCollapsed: Boolean(document.querySelector('.tree-panel.collapsed')) && !document.querySelector('.tree-panel.expanded'),
+      displayMode: document.querySelector('[aria-label="Display mode"]')?.textContent || '',
     };
   })()`, true);
 }
