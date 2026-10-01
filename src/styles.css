@@ -42,6 +42,8 @@ button { color: inherit; }
 .toolbar > .explode-control,
 .toolbar > .icon-button,
 .toolbar > .toolbar-divider { flex: 0 0 auto; }
+.toolbar::-webkit-scrollbar { height: 4px; }
+.toolbar::-webkit-scrollbar-thumb { border-radius: 999px; background: #445159; }
 .toolbar-group { display: flex; gap: 5px; }
 .toolbar button, .icon-button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid transparent; border-radius: 5px; background: transparent; padding: 6px 9px; cursor: pointer; color: #cbd4d9; font-size: 12px; }
 .toolbar button:hover, .icon-button:hover { background: #2b3238; border-color: #3a444c; color: white; }
@@ -2611,6 +2613,13 @@ button { color: inherit; }
 .family-settings-root,
 .property-section[id^="settings-model-"] {
   scroll-margin-top: 8px;
+}
+.family-category-empty {
+  margin: 0;
+  padding: 9px 10px 11px;
+  color: #7f9098;
+  font-size: var(--font-ui-description);
+  line-height: var(--line-ui-description);
 }
 
 @media (max-height: 760px) {
