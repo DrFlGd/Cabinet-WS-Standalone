@@ -79,7 +79,9 @@ async function selectPart(win, partId) {
   await win.webContents.executeJavaScript(`document.querySelector('.tree-select[title="${partId}"]')?.click()`, true);
   await delay(300);
   await win.webContents.executeJavaScript(`document.querySelector('[aria-label="Collapse parts browser"]')?.click()`, true);
-  await delay(500);
+  await delay(300);
+  await win.webContents.executeJavaScript(`document.querySelector('button[title="Fit model"]')?.click()`, true);
+  await delay(600);
 }
 
 async function setExplode(win, value) {
@@ -93,7 +95,9 @@ async function setExplode(win, value) {
     return true;
   })()`, true);
   if (!changed) throw new Error('Could not set explode');
-  await delay(500);
+  await delay(300);
+  await win.webContents.executeJavaScript(`document.querySelector('button[title="Fit model"]')?.click()`, true);
+  await delay(700);
 }
 
 async function canvasMetrics(win) {
