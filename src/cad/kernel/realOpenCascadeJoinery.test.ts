@@ -56,14 +56,16 @@ describe('real OpenCascade drawer joinery', () => {
           starterId: null,
           familyValues: testCase.values,
         });
-        const left = document.parts.find(part => part.id === 'drawer:1:box:left')!;
         const graph = buildFeatureGraph(document);
-        const diagnostics: { severity: 'warning' | 'error'; code: string; message: string; partId?: string; featureId?: string }[] = [];
-        const shape = buildExactShape(left, graph.partFeatures[left.id], diagnostics);
+        for (const sideName of ['left', 'right'] as const) {
+          const side = document.parts.find(part => part.id === `drawer:1:box:${sideName}`)!;
+          const diagnostics: { severity: 'warning' | 'error'; code: string; message: string; partId?: string; featureId?: string }[] = [];
+          const shape = buildExactShape(side, graph.partFeatures[side.id], diagnostics);
 
-        expect(diagnostics, testCase.label).toEqual([]);
-        expect(shape.faces.length, testCase.label).toBeGreaterThan(6);
-        shapes.push({ shape, name: `drawer-left-${testCase.label}`, color: left.color });
+          expect(diagnostics, `${testCase.label}-${sideName}`).toEqual([]);
+          expect(shape.faces.length, `${testCase.label}-${sideName}`).toBeGreaterThan(6);
+          shapes.push({ shape, name: `drawer-${sideName}-${testCase.label}`, color: side.color });
+        }
       }
 
       const blob = exportSTEP(shapes, { unit: 'MM', modelUnit: 'MM' });
