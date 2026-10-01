@@ -111,32 +111,42 @@ async function canvasMetrics(win) {
   })()`, true);
 }
 
+async function captureScenario(win, label) {
+  await chooseSelect(win, 'Cabinet family', 'Utility');
+  await chooseSelect(win, 'Utility cabinet starter', 'Door Base');
+  await setExplode(win, 0);
+  await capture(win, label + '-utility-normal');
+  await selectPart(win, 'carcass:top-front');
+  await capture(win, label + '-utility-selected');
+  await setExplode(win, 110);
+  await capture(win, label + '-utility-exploded');
+
+  await setExplode(win, 0);
+  await chooseSelect(win, 'Cabinet family', 'Equipment stand');
+  await chooseSelect(win, 'Equipment stand starter', 'Solid-Side Utility Stand');
+  await capture(win, label + '-equipment-normal');
+  await selectPart(win, 'carcass:top-front');
+  await capture(win, label + '-equipment-selected');
+  await setExplode(win, 110);
+  await capture(win, label + '-equipment-exploded');
+
+  return canvasMetrics(win);
+}
+
 app.whenReady().then(async () => {
   let win;
   try {
-    const scenario = process.argv[4] || 'wide';
-    const size = scenario === 'compact' ? [1200, 800] : [1600, 1000];
-    win = await openApp(size[0], size[1]);
+    win = await openApp(1200, 800);
+    const validation = {
+      compact: await captureScenario(win, 'compact'),
+    };
 
-    await chooseSelect(win, 'Utility cabinet starter', 'Door Base');
-    await capture(win, scenario + '-utility-normal');
-    await selectPart(win, 'carcass:top-front');
-    await capture(win, scenario + '-utility-selected');
-    await setExplode(win, 110);
-    await capture(win, scenario + '-utility-exploded');
+    win.setSize(1600, 1000);
+    await delay(800);
+    validation.wide = await captureScenario(win, 'wide');
 
-    await setExplode(win, 0);
-    await chooseSelect(win, 'Cabinet family', 'Equipment stand');
-    await chooseSelect(win, 'Equipment stand starter', 'Solid-Side Utility Stand');
-    await capture(win, scenario + '-equipment-normal');
-    await selectPart(win, 'carcass:top-front');
-    await capture(win, scenario + '-equipment-selected');
-    await setExplode(win, 110);
-    await capture(win, scenario + '-equipment-exploded');
-
-    const metrics = await canvasMetrics(win);
-    fs.writeFileSync(path.join(outputDir, 'metrics-' + scenario + '.json'), JSON.stringify(metrics, null, 2));
-    console.log('SHIMMER_VISUAL_OK ' + scenario + ' ' + JSON.stringify(metrics));
+    fs.writeFileSync(path.join(outputDir, 'metrics.json'), JSON.stringify(validation, null, 2));
+    console.log('SHIMMER_VISUAL_OK ' + JSON.stringify(validation));
     win.destroy();
     app.quit();
   } catch (error) {
