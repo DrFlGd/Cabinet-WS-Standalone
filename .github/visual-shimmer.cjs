@@ -51,6 +51,24 @@ async function chooseSelect(win, ariaLabel, optionText) {
 async function capture(win, name) {
   const image = await win.webContents.capturePage();
   fs.writeFileSync(path.join(outputDir, name + '.png'), image.toPNG());
+  return canvasMetrics(win);
+}
+
+async function waitForDocumentState(win, familyText, documentName) {
+  await waitFor(
+    win,
+    `document.querySelector('.viewport-footer p')?.textContent?.includes(${JSON.stringify(familyText)})`,
+    'footer family ' + familyText,
+    30000,
+  );
+  await waitFor(
+    win,
+    `document.querySelector('input[aria-label="Document name"]')?.value === ${JSON.stringify(documentName)}`,
+    'document name ' + documentName,
+    30000,
+  );
+  await waitFor(win, `!document.querySelector('.viewport-status.loading')`, 'kernel idle for ' + documentName, 30000);
+  await delay(700);
 }
 
 async function openApp(width, height) {
@@ -82,35 +100,45 @@ async function selectPart(win, partId, expectedName) {
     return true;
   })()`, true);
   if (!opened) throw new Error('Could not open parts browser');
-  await waitFor(win, `document.querySelector('.tree-select[title="${partId}"]')`, partId);
-  await win.webContents.executeJavaScript(`document.querySelector('.tree-select[title="${partId}"]')?.click()`, true);
+
+  await waitFor(win, `document.querySelector('.tree-panel.expanded .tree-select[title="${partId}"]')`, partId);
+  await win.webContents.executeJavaScript(
+    `document.querySelector('.tree-panel.expanded .tree-select[title="${partId}"]')?.click()`,
+    true,
+  );
   await waitFor(
     win,
     `document.querySelector('.selection-breadcrumb')?.textContent?.includes(${JSON.stringify(expectedName)})`,
     'selection breadcrumb for ' + expectedName,
   );
 
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const closed = await win.webContents.executeJavaScript(
-      `Boolean(document.querySelector('[aria-label="Open parts browser"]'))`,
-      true,
-    );
-    if (closed) break;
-    await win.webContents.executeJavaScript(
-      `document.querySelector('[aria-label="Collapse parts browser"]')?.click()`,
-      true,
-    );
-    await delay(250);
-  }
-  await waitFor(win, `document.querySelector('[aria-label="Open parts browser"]')`, 'parts drawer closed');
+  const collapsed = await win.webContents.executeJavaScript(`(() => {
+    const button = document.querySelector('.tree-panel.expanded [aria-label="Collapse parts browser"]');
+    if (!button) return false;
+    button.click();
+    return true;
+  })()`, true);
+  if (!collapsed) throw new Error('Could not collapse parts browser');
+
+  await waitFor(
+    win,
+    `Boolean(document.querySelector('.tree-panel.collapsed [aria-label="Open parts browser"]')) && !document.querySelector('.tree-panel.expanded')`,
+    'parts drawer collapsed',
+  );
   await waitFor(win, `!document.querySelector('.viewport-status.loading')`, 'kernel idle after selection', 30000);
   await waitFor(
     win,
     `document.querySelector('.selection-breadcrumb')?.textContent?.includes(${JSON.stringify(expectedName)})`,
     'stable selection breadcrumb for ' + expectedName,
   );
+  await waitFor(
+    win,
+    `(document.querySelector('.cad-viewport canvas')?.getBoundingClientRect().width || 0) > 600`,
+    'selected viewport width',
+  );
+  await delay(350);
   await win.webContents.executeJavaScript(`document.querySelector('button[title="Fit model"]')?.click()`, true);
-  await delay(700);
+  await delay(900);
 }
 
 async function setExplode(win, value) {
@@ -137,33 +165,63 @@ async function canvasMetrics(win) {
     return {
       width: box?.width || 0,
       height: box?.height || 0,
-      footer: footer?.textContent || '',
+      family: footer?.querySelector('p')?.textContent || '',
+      documentName: document.querySelector('input[aria-label="Document name"]')?.value || '',
       selected: document.querySelector('.selection-breadcrumb')?.textContent || '',
       explode: document.querySelector('.explode-control output')?.textContent || '',
+      partsCollapsed: Boolean(document.querySelector('.tree-panel.collapsed')) && !document.querySelector('.tree-panel.expanded'),
     };
   })()`, true);
 }
 
 async function captureScenario(win, label) {
+  const captures = {};
+
   await chooseSelect(win, 'Cabinet family', 'Utility');
   await chooseSelect(win, 'Utility cabinet starter', 'Door Base');
+  await waitForDocumentState(win, 'Utility cabinet', 'Door Base');
   await setExplode(win, 0);
-  await capture(win, label + '-utility-normal');
+  captures.utilityNormal = await capture(win, label + '-utility-normal');
+
   await selectPart(win, 'carcass:top-front', 'Top Front Stretcher');
-  await capture(win, label + '-utility-selected');
+  captures.utilitySelected = await capture(win, label + '-utility-selected');
+
   await setExplode(win, 110);
-  await capture(win, label + '-utility-exploded');
+  captures.utilityExploded = await capture(win, label + '-utility-exploded');
 
   await setExplode(win, 0);
   await chooseSelect(win, 'Cabinet family', 'Equipment stand');
   await chooseSelect(win, 'Equipment stand starter', 'Solid-Side Utility Stand');
-  await capture(win, label + '-equipment-normal');
-  await selectPart(win, 'carcass:top-front', 'Front Top Rail');
-  await capture(win, label + '-equipment-selected');
-  await setExplode(win, 110);
-  await capture(win, label + '-equipment-exploded');
+  await waitForDocumentState(win, 'Equipment stand', 'Solid-Side Utility Stand');
+  captures.equipmentNormal = await capture(win, label + '-equipment-normal');
 
-  return canvasMetrics(win);
+  await selectPart(win, 'carcass:top-front', 'Front Top Rail');
+  captures.equipmentSelected = await capture(win, label + '-equipment-selected');
+
+  await setExplode(win, 110);
+  captures.equipmentExploded = await capture(win, label + '-equipment-exploded');
+
+  for (const [name, metrics] of Object.entries(captures)) {
+    if (metrics.width <= 600 || metrics.height <= 300) throw new Error(name + ' viewport is too small: ' + JSON.stringify(metrics));
+    if (!metrics.partsCollapsed) throw new Error(name + ' captured with parts browser expanded: ' + JSON.stringify(metrics));
+  }
+  if (!captures.utilityNormal.family.includes('Utility cabinet') || captures.utilityNormal.documentName !== 'Door Base') {
+    throw new Error('Utility capture state is stale: ' + JSON.stringify(captures.utilityNormal));
+  }
+  if (!captures.equipmentNormal.family.includes('Equipment stand') || captures.equipmentNormal.documentName !== 'Solid-Side Utility Stand') {
+    throw new Error('Equipment capture state is stale: ' + JSON.stringify(captures.equipmentNormal));
+  }
+  if (!captures.utilitySelected.selected.includes('Top Front Stretcher')) {
+    throw new Error('Utility selected capture is stale: ' + JSON.stringify(captures.utilitySelected));
+  }
+  if (!captures.equipmentSelected.selected.includes('Front Top Rail')) {
+    throw new Error('Equipment selected capture is stale: ' + JSON.stringify(captures.equipmentSelected));
+  }
+  if (!captures.utilityExploded.explode.includes('110') || !captures.equipmentExploded.explode.includes('110')) {
+    throw new Error('Exploded capture state is stale: ' + JSON.stringify(captures));
+  }
+
+  return captures;
 }
 
 app.whenReady().then(async () => {
