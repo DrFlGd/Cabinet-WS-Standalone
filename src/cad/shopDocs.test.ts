@@ -107,6 +107,11 @@ describe('Phase 10 shop documentation', () => {
     expect(assemblyHtml).toContain('Exploded assembly guide');
     expect(assemblyHtml).toContain('Hardware checklist');
     expect(assemblyHtml).toContain('<svg');
+    expect(cutHtml).toContain('font:15px/1.55');
+    expect(cutHtml).toContain('font-size:12px');
+    expect(cutHtml).toContain('@page{size:landscape');
+    expect(assemblyHtml).toContain('@page{size:portrait');
+    expect(assemblyHtml).toContain('.assembly-svg text{font:11px');
     expect(cutHtml + assemblyHtml).not.toMatch(/ECHO:|OpenSCAD report/);
   });
 });
