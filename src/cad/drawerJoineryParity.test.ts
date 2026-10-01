@@ -5,7 +5,7 @@ import { familyStarter, parametersFromFamilyValues } from './familyCatalog';
 import { buildFeatureGraph } from './kernel/featureGraph';
 import { buildManufacturingModel } from './manufacturing';
 import { buildShopDocumentation } from './shopDocs';
-import { drawerScrewHeights } from './drawerJoinery';
+import { drawerScrewHeights, effectiveDrawerDadoDepth } from './drawerJoinery';
 
 describe('drawer corner joinery parity', () => {
   it('preserves reference drawer modes and independent machining controls', () => {
@@ -37,6 +37,9 @@ describe('drawer corner joinery parity', () => {
   });
 
   it('matches reference drawer dado receiver depth, clearance, and mating-panel extension', () => {
+    expect(effectiveDrawerDadoDepth(9, 0)).toBe(0.1);
+    expect(effectiveDrawerDadoDepth(9, 20)).toBe(8.5);
+
     const starter = familyStarter('drawer');
     const values = {
       ...starter.values,
