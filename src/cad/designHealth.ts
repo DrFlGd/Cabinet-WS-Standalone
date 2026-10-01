@@ -295,6 +295,40 @@ function checkJoineryMaterial(
 
 function checkDrawerConstruction(document: CabinetDocument, checks: DesignHealthCheck[]) {
   const p = document.parameters;
+
+  if (p.drawerJoineryStyle === 'tab_slot') {
+    checks.push({
+      id: 'drawer-tab-slot-not-modeled',
+      severity: 'warning',
+      category: 'coverage',
+      title: 'Drawer tab/slot corner geometry is not modeled yet',
+      message: 'The tab/slot drawer style is preserved from the family recipe, but Standalone does not yet add mating front/back tabs and side slots.',
+      suggestion: 'Do not manufacture this drawer corner style from Standalone until tab/slot geometry is implemented and verified.',
+    });
+  }
+
+  if (p.drawerJoineryStyle === 'dado') {
+    const residual = p.drawerMaterialThickness - p.drawerDadoDepth;
+    if (residual <= 0) {
+      checks.push({
+        id: 'drawer-corner-dado-breakthrough',
+        severity: 'error',
+        category: 'manufacturing',
+        title: 'Drawer corner dado breaks through side stock',
+        message: `Drawer dado depth ${p.drawerDadoDepth.toFixed(2)} mm exceeds the usable ${p.drawerMaterialThickness.toFixed(2)} mm drawer-side stock.`,
+        suggestion: 'Reduce drawer dado depth or increase drawer-side stock thickness.',
+      });
+    } else if (residual < 2) {
+      checks.push({
+        id: 'drawer-corner-dado-thin-wall',
+        severity: 'warning',
+        category: 'manufacturing',
+        title: 'Thin stock behind drawer corner dado',
+        message: `Only ${residual.toFixed(2)} mm remains behind each front/back drawer-side dado.`,
+      });
+    }
+  }
+
   if (p.drawerBottomStyle === 'captured') {
     const residual = p.drawerMaterialThickness - p.drawerBottomGrooveDepth;
     if (residual <= 0) {
