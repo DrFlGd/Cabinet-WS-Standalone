@@ -39,7 +39,13 @@ async function chooseSelect(win, ariaLabel, optionText) {
     return true;
   })()`, true);
   if (!chosen) throw new Error('Could not choose ' + optionText + ' from ' + ariaLabel);
-  await delay(900);
+  await waitFor(
+    win,
+    `document.querySelector('[aria-label="${ariaLabel.replaceAll('"', '\\"')}"]')?.textContent?.includes(${JSON.stringify(optionText)})`,
+    ariaLabel + ' value ' + optionText,
+  );
+  await waitFor(win, `!document.querySelector('.viewport-status.loading')`, 'kernel idle after ' + optionText, 30000);
+  await delay(500);
 }
 
 async function capture(win, name) {
@@ -98,6 +104,11 @@ async function selectPart(win, partId, expectedName) {
   }
   await waitFor(win, `document.querySelector('[aria-label="Open parts browser"]')`, 'parts drawer closed');
   await waitFor(win, `!document.querySelector('.viewport-status.loading')`, 'kernel idle after selection', 30000);
+  await waitFor(
+    win,
+    `document.querySelector('.selection-breadcrumb')?.textContent?.includes(${JSON.stringify(expectedName)})`,
+    'stable selection breadcrumb for ' + expectedName,
+  );
   await win.webContents.executeJavaScript(`document.querySelector('button[title="Fit model"]')?.click()`, true);
   await delay(700);
 }
