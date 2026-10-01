@@ -18,8 +18,8 @@ export type DrawerCornerJoineryOptions = {
 
 export function effectiveDrawerDadoDepth(wallThickness: number, requestedDepth: number) {
   return Math.min(
-    Math.max(0, requestedDepth),
-    Math.max(0, wallThickness - 0.5),
+    Math.max(0.1, requestedDepth),
+    Math.max(0.1, wallThickness - 0.5),
   );
 }
 
