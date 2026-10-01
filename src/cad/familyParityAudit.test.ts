@@ -232,15 +232,22 @@ describe('family parity audit', () => {
     expect(parameters.depth).not.toBe(expected.cabinetOutsideMm.depth);
   });
 
-  it('keeps the audited drawer joinery mode collapse visible as a behavioral gap', () => {
+  it('preserves distinct drawer joinery intent and no longer maps reference modes to rabbet', () => {
     const starter = familyStarter('drawer');
-    const dadoValues = recipeWithPatch(starter.values, { drawer_joinery_style: 'dado' });
-    const tabValues = recipeWithPatch(starter.values, { drawer_joinery_style: 'tab_slot' });
+    const dadoValues = recipeWithPatch(starter.values, {
+      drawer_joinery_style: 'dado',
+      drawer_dado_depth: 3.5,
+      drawer_dado_fit_clearance: 0.4,
+    });
+    const tabValues = recipeWithPatch(starter.values, {
+      drawer_joinery_style: 'tab_slot',
+      drawer_joint_fit_clearance: 0.55,
+    });
     const dadoParameters = parametersFromFamilyValues('drawer', dadoValues);
     const tabParameters = parametersFromFamilyValues('drawer', tabValues);
 
-    expect(dadoParameters.drawerJoineryStyle).toBe('rabbet');
-    expect(tabParameters.drawerJoineryStyle).toBe('rabbet');
+    expect(dadoParameters.drawerJoineryStyle).toBe('dado');
+    expect(tabParameters.drawerJoineryStyle).toBe('tab_slot');
 
     const dadoDocument = buildFamilyCabinetDocument(dadoParameters, 'Dado audit', 'mm', {
       family: 'drawer',
@@ -253,8 +260,15 @@ describe('family parity audit', () => {
       familyValues: tabValues,
     });
 
-    expect(geometrySnapshot(dadoDocument)).toEqual(geometrySnapshot(tabDocument));
-    expect(buildFeatureGraph(dadoDocument)).toEqual(buildFeatureGraph(tabDocument));
+    expect(geometrySnapshot(dadoDocument)).not.toEqual(geometrySnapshot(tabDocument));
+    expect(
+      buildFeatureGraph(dadoDocument).partFeatures['drawer:1:box:left']
+        .filter(feature => feature.kind === 'dado'),
+    ).toHaveLength(2);
+    expect(
+      buildFeatureGraph(tabDocument).partFeatures['drawer:1:box:left']
+        .some(feature => feature.kind === 'rabbet'),
+    ).toBe(false);
   });
 
   it('keeps divider mounting and groove-depth no-op behavior explicit until machining parity lands', () => {
