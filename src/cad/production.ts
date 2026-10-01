@@ -88,6 +88,7 @@ export type NestedSheet = {
 };
 
 export type UnplacedPart = {
+  stockDefinitionId: string | null;
   partId: string;
   partNumber: string;
   material: string;
@@ -199,7 +200,15 @@ type NestPart = {
 const OPERATION_KINDS: ManufacturingOperationKind[] = ['CUT', 'POCKET', 'DADO_GROOVE', 'DRILL', 'ENGRAVE', 'EDGE'];
 
 export function createDefaultProductionConfiguration(docs: ShopDocumentation): ProductionConfiguration {
-  const stocks: SheetStockDefinition[] = docs.materialGroups.map((group, index) => {
+  const compatibleGroups = new Map<string, { material: string; thickness: number }>();
+  for (const group of docs.materialGroups) {
+    const key = group.material + '|' + group.thickness.toFixed(4);
+    if (!compatibleGroups.has(key)) {
+      compatibleGroups.set(key, { material: group.material, thickness: group.thickness });
+    }
+  }
+
+  const stocks: SheetStockDefinition[] = [...compatibleGroups.values()].map((group, index) => {
     const rows = docs.bom.filter(row =>
       row.material === group.material
       && Math.abs(row.blank[row.thicknessAxis] - group.thickness) < 0.05
@@ -317,7 +326,7 @@ export function buildProductionPlan(
     );
 
     if (!stock) {
-      unplaced.push(unplacedPart(item, 'No compatible sheet stock definition for material/thickness.'));
+      unplaced.push(unplacedPart(item, null, 'No compatible sheet stock definition for material/thickness.'));
       continue;
     }
 
@@ -362,7 +371,7 @@ export function buildProductionPlan(
       const rotationNote = rotations.length
         ? 'No remaining stock piece can fit the part with required margins/spacing.'
         : 'Grain/rotation constraints prevent a valid orientation on this stock.';
-      unplaced.push(unplacedPart(item, rotationNote));
+      unplaced.push(unplacedPart(item, stock.id, rotationNote));
     }
   }
 
@@ -922,8 +931,9 @@ function sanitizeStock(stock: SheetStockDefinition): SheetStockDefinition {
   };
 }
 
-function unplacedPart(item: NestPart, reason: string): UnplacedPart {
+function unplacedPart(item: NestPart, stockDefinitionId: string | null, reason: string): UnplacedPart {
   return {
+    stockDefinitionId,
     partId: item.part.partId,
     partNumber: item.part.partNumber,
     material: item.part.material,

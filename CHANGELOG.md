@@ -6,6 +6,92 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+No unreleased changes.
+
+## [0.14.4] - 2026-10-01
+
+### Joinery integration
+
+- Generate both sides of structural joints from actual panel contacts: tops/stretchers, fixed shelves, section partitions, structural backs, rear rails, toe-kicks, and Equipment Stand frames now participate in screw/dado/tab-slot construction. Adjustable shelves retain removable clearance.
+- Replace fixed two-tab bottom geometry with reference adaptive/fixed tab spacing, per-location custom/edge-biased/stack-safe placement, and matched receiver clearance. Closed slot corners support configured dogbone/T-bone relief.
+- Add true drawer front/back tabs and side slots in shared cabinets and the dedicated Drawer family. Correct captured-bottom insertion and mirrored grooves.
+- Add drawer divider interlocks, equal-clear/custom positions, measured stock, and independent bottom/perimeter mounting grooves.
+- Verify representative exact solids are positive-volume and nonintersecting, export STEP, and preserve geometry across schema-v3 save/reopen. Full legacy-library equivalence is not claimed.
+
+
+### Changed
+
+- Increase Shop Docs typography and spacing across BOM, assembly, manufacturing,
+  and production views; printable BOM/assembly documents use larger screen text,
+  more readable table/caption sizes, and explicit print page orientation.
+- Reorganize sheet stock definitions into aligned material/property rows with
+  horizontal scrolling at narrow widths instead of shrinking controls and labels.
+- Add explicit stock/material selection for production review. Sheet choices,
+  previews, placements, utilization, and unplaced totals are scoped to the selected
+  material/thickness stock and remain valid across replanning.
+- Consolidate duplicate planning stock definitions that differ only by Shop Docs'
+  panel thickness-axis reporting. Materials or physical thicknesses are never
+  combined across compatibility groups.
+
+### Fixed
+
+- Prevent stale nested-sheet selection from falling back to another material's
+  first sheet after stock edits or replanning. Empty selected stocks now remain
+  selected with an explicit no-placement state, while removed stocks reconcile to
+  a valid remaining group.
+
+### Testing
+
+- Add behavioral multi-stock regressions for stock switching, empty/removed stock
+  groups, selected-stock totals, incompatible material/thickness isolation, and
+  printable Shop Docs readability.
+
+### Compatibility
+
+- No project/schema, family/native synchronization, Manual Layout, undo/redo,
+  display-unit, manufacturing-geometry, or STEP export behavior changes. Production
+  planning configuration remains transient editor state.
+### Fixed
+
+- Preserve Cabinet Workshop drawer corner joinery modes instead of mapping recipe `screw`, `dado`, and `tab_slot` choices to the same Standalone rabbet construction.
+- Implement drawer-side screw pilot guides for both front and back joints using measured drawer stock, the recipe hole diameter/edge margin, and captured-bottom groove avoidance; register the cuts through the exact feature graph and manufacturing DRILL output.
+- Implement blind drawer-side front/back dados with independent drawer dado depth/fit clearance and extend each mating box front/back into the receivers by the same depth, including mirrored left/right geometry.
+- Apply the same screw/dado corner generator to shared-cabinet drawers and the dedicated Standalone Drawer family.
+- Stabilize the default shaded-edges viewport for screenshot-like open-top cabinets by separating the intentionally coplanar edge overlay from its owning face in depth. Exact and preview body rendering remain mutually exclusive per part, hidden edges remain depth-tested, and cabinet dimensions/part geometry are unchanged.
+
+### Changed
+
+- Add canonical drawer dado depth/clearance and screw-guide parameters so family/native synchronization preserves those geometry-driving controls through saved edits.
+- Preserve `tab_slot` drawer intent and fit clearance without substituting rabbet geometry; integration adds the mating geometry and removes the obsolete coverage warning.
+- Update the family capability matrix/reference fixture and `FAMILY_PARITY.md` with a joint-by-joint checklist that distinguishes implemented, focused-verified, partial, and missing construction.
+
+### Testing
+
+- Add drawer joinery regressions for adapter preservation, measured stock, dado receiver/mating dimensions, mirrored side features, reference screw-guide placement, manufacturing operation depth/through state, shared-cabinet behavior, and explicit tab-slot gap handling.
+- Extract the production exact-shape builder without changing its operations and exercise representative screw/dado drawer-side solids with the real Replicad/OpenCascade WASM plus STEP serialization.
+- Add screenshot-reproduction coverage for open-top Utility and Equipment Stand frames, including positive-volume overlap checks for the two sides and front/rear top members, plus depth-layer regressions that apply polygon offset only to shaded-edges presentation.
+- Validate the reported shimmer against ordinary, selected, and exploded rendered views at compact and wide desktop sizes; the capture harness remains in CI.
+
+### Compatibility
+
+- No schema/application version or release-request change. Existing schema-v3 projects and v1/v2 migration remain supported; legacy Standalone `rabbet` and `lock_rabbet` drawer values remain accepted.
+### Fixed
+
+- Make the main desktop shell adapt across the supported window range without scaling down the application: constrained side panels retain usable bounds, the central viewport keeps a minimum working width, expanded Hardware/Parts drawers overlay the layout workspace at narrower widths, and the toolbar scrolls intentionally instead of pushing controls off-screen.
+- Bound the Properties header, search, surface navigation, and selected-part return controls independently from the results region so long queries, large match sets, no-match states, and narrow settings panels scroll only their content instead of creating overlapping or unbounded rows.
+
+### Changed
+
+- Present Manual Layout and Fit Solver as persistent sibling workspace tabs. Solver inputs/results remain mounted while switching tabs, Design Health stays accessible below the workspace, and dedicated Drawer/Equipment Stand families explain why the shared layout editor is unavailable while retaining Fit Solver access.
+- Add side category navigation to Family settings and Native model settings with scroll-to-section behavior, wrapped arrow-key/Home/End navigation, visible keyboard focus, active-category feedback, and an explicit return to selected-part properties.
+- Explicit settings/category browsing no longer clears the 3D part selection or allows a later contextual selection refresh to hide the chosen category.
+
+### Testing and compatibility
+
+- Add behavior-level state/navigation coverage for workspace tabs, dedicated-family layout behavior, explicit settings browsing precedence, keyboard category traversal, family search no-match handling, and separation of Design Health from Fit Solver.
+- Project schema remains v3 with existing v1/v2 migration, family/native synchronization, recipes, Manual Layout edits, undo/redo, units, semantic geometry, and STEP export unchanged.
+
+
 ## [0.14.3] - 2026-09-30
 
 ### Fixed

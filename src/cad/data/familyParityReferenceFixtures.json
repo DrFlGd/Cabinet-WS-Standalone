@@ -41,19 +41,25 @@
       "starterId": "default",
       "purpose": "Reference drawer joinery modes are distinct construction choices.",
       "reference": {
-        "path": "public/engine/v5/src/modular_organization/data/scad/drawer.scad",
+        "path": "public/engine/v5/src/modular_organization/data/scad/core/drawers.scad",
         "inputs": {
           "drawer_joinery_style": [
+            "screw",
             "dado",
             "tab_slot"
-          ]
+          ],
+          "drawer_screw_hole_diameter": 3,
+          "drawer_screw_edge_margin": 15,
+          "drawer_dado_depth": 4,
+          "drawer_dado_fit_clearance": 0.2,
+          "drawer_joint_fit_clearance": 0.2
         },
         "expected": {
-          "behavior": "dado and tab_slot select distinct drawer_joint_geometry modes"
+          "behavior": "screw drills through side pilot guides; dado cuts blind side receivers and extends front/back members into them; tab_slot cuts through side slots and adds matching front/back tabs"
         }
       },
-      "standaloneExpectation": "known-gap",
-      "note": "The adapter currently maps both modes to native rabbet drawer joinery."
+      "standaloneExpectation": "focused-implemented",
+      "note": "Distinct screw/dado/tab-slot modes now have mating geometry and focused real-kernel/STEP regressions."
     },
     {
       "id": "drawer-divider-mounting-machining",
@@ -75,8 +81,8 @@
           "behavior": "bottom_only adds bottom locating grooves; bottom_and_perimeter adds bottom grooves plus drawer-wall end grooves"
         }
       },
-      "standaloneExpectation": "known-gap",
-      "note": "Standalone currently generates the divider pieces but ignores mounting/groove semantics."
+      "standaloneExpectation": "focused-implemented",
+      "note": "Independent bottom/perimeter grooves and interlocks drive geometry; representative assembled solids and project persistence are tested."
     },
     {
       "id": "equipment-french-cleat-angle",

@@ -1,5 +1,8 @@
 import { buildCabinetDocument, sanitizeParameters } from './cabinetModel';
 import { applyHardwareDrilling, buildHardwareInstances, hardwareParts } from './hardware';
+import { completeDrawerJoinery } from './completeDrawerJoinery';
+import { joinPanels } from './panelJoinery';
+import { drawerCrossPanelSpan, drawerSideCornerFeatures } from './drawerJoinery';
 import { cloneRecipe } from './familyCatalog';
 import type {
   CabinetDocument,
@@ -40,7 +43,7 @@ export function buildFamilyCabinetDocument(
     return buildEquipmentStand(parameters, name, displayUnits, starterId, familyValues);
   }
 
-  const document = buildCabinetDocument(parameters, name, displayUnits);
+  const document = buildCabinetDocument(parameters, name, displayUnits, familyValues);
   document.family = family;
   document.starterId = starterId;
   document.familyValues = familyValues;
@@ -88,25 +91,87 @@ function buildStandaloneDrawer(
     size: { x: Math.max(1, W - 2 * t), y: grooveDepth, z: bottomT + 0.4 },
   }] : undefined;
 
+  const frontId = 'drawer:1:box:front';
+  const backId = 'drawer:1:box:back';
+  const crossPanel = drawerCrossPanelSpan(p.drawerJoineryStyle, W, t, p.drawerDadoDepth);
+  const left = nativePart(
+    'drawer:1:box:left',
+    'Left Drawer Side',
+    'drawer',
+    { x: 0, y: 0, z: 0 },
+    { x: t, y: D, z: H },
+    wood,
+    boxMaterial,
+    { family: 'drawer', role: 'box-side', joinery: p.drawerJoineryStyle },
+    undefined,
+    sideGroove,
+  );
+  const right = nativePart(
+    'drawer:1:box:right',
+    'Right Drawer Side',
+    'drawer',
+    { x: W - t, y: 0, z: 0 },
+    { x: t, y: D, z: H },
+    wood,
+    boxMaterial,
+    { family: 'drawer', role: 'box-side', joinery: p.drawerJoineryStyle },
+    undefined,
+    sideGroove,
+  );
+  const front = nativePart(
+    frontId,
+    'Drawer Box Front',
+    'drawer',
+    { x: crossPanel.offsetX, y: 0, z: 0 },
+    { x: crossPanel.width, y: t, z: H },
+    wood,
+    boxMaterial,
+    { family: 'drawer', role: 'box-front', joinery: p.drawerJoineryStyle },
+    undefined,
+    endGroove,
+  );
+  const back = nativePart(
+    backId,
+    'Drawer Box Back',
+    'drawer',
+    { x: crossPanel.offsetX, y: D - t, z: 0 },
+    { x: crossPanel.width, y: t, z: H },
+    wood,
+    boxMaterial,
+    { family: 'drawer', role: 'box-back', joinery: p.drawerJoineryStyle },
+    undefined,
+    endGroove,
+  );
+
+  const cornerOptions = {
+    style: p.drawerJoineryStyle,
+    wallThickness: t,
+    boxDepth: D,
+    boxHeight: H,
+    dadoDepth: p.drawerDadoDepth,
+    dadoFitClearance: p.drawerDadoFitClearance,
+    screwHoleDiameter: p.drawerScrewHoleDiameter,
+    screwEdgeMargin: p.drawerScrewEdgeMargin,
+    bottomCaptured: captured,
+    bottomGrooveZ: bottomInset,
+    bottomThickness: bottomT,
+    frontPartId: front.id,
+    backPartId: back.id,
+  };
+  left.renderFeatures = [
+    ...(left.renderFeatures ?? []),
+    ...drawerSideCornerFeatures('left', cornerOptions),
+  ];
+  right.renderFeatures = [
+    ...(right.renderFeatures ?? []),
+    ...drawerSideCornerFeatures('right', cornerOptions),
+  ];
+
   parts.push(
-    nativePart('drawer:1:box:left', 'Left Drawer Side', 'drawer', { x: 0, y: 0, z: 0 }, { x: t, y: D, z: H }, wood, boxMaterial, {
-      family: 'drawer',
-      role: 'box-side',
-      joinery: stringOr(values.drawer_joinery_style, p.drawerJoineryStyle),
-    }, undefined, sideGroove),
-    nativePart('drawer:1:box:right', 'Right Drawer Side', 'drawer', { x: W - t, y: 0, z: 0 }, { x: t, y: D, z: H }, wood, boxMaterial, {
-      family: 'drawer',
-      role: 'box-side',
-      joinery: stringOr(values.drawer_joinery_style, p.drawerJoineryStyle),
-    }, undefined, sideGroove),
-    nativePart('drawer:1:box:front', 'Drawer Box Front', 'drawer', { x: t, y: 0, z: 0 }, { x: W - 2 * t, y: t, z: H }, wood, boxMaterial, {
-      family: 'drawer',
-      role: 'box-front',
-    }, undefined, endGroove),
-    nativePart('drawer:1:box:back', 'Drawer Box Back', 'drawer', { x: t, y: D - t, z: 0 }, { x: W - 2 * t, y: t, z: H }, wood, boxMaterial, {
-      family: 'drawer',
-      role: 'box-back',
-    }, undefined, endGroove),
+    left,
+    right,
+    front,
+    back,
     nativePart(
       'drawer:1:bottom',
       'Drawer Bottom',
@@ -146,6 +211,7 @@ function buildStandaloneDrawer(
     ));
   }
 
+  completeDrawerJoinery(parts, p, familyValues);
   const hardware = buildHardwareInstances(parts, p);
   applyHardwareDrilling(parts, hardware, p);
   parts.push(...hardwareParts(hardware));
@@ -325,6 +391,7 @@ function buildEquipmentStand(
     addFrenchCleats(parts, values, W, H, D, t, material);
   }
 
+  joinPanels(parts.filter(part => ['carcass', 'back'].includes(part.category) && part.id !== 'wall-cleat'), p.joineryStyle, p.dadoDepth, p.dadoFitClearance, familyValues);
   return {
     version: 3,
     id: 'cabinet-root',

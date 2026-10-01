@@ -30,7 +30,10 @@ export type CadPartGeometry = {
 };
 
 export type CadRenderFeature = {
+  semanticRole?: 'tab-slot-receiver' | 'tab-outline';
+  clearance?: number;
   kind: 'dado' | 'rabbet' | 'slot' | 'drill';
+  axis?: 'x' | 'y' | 'z';
   sourcePartId?: string;
   position: Vec3;
   size: Vec3;
@@ -77,7 +80,7 @@ export type DrawerMount = 'wood_rails' | 'metal_slides';
 export type HingeStyle = 'none' | 'euro_35mm';
 export type HardwareDrillingMode = 'off' | 'recommended';
 export type DrawerHeightMode = 'equal' | 'graduated' | 'custom_weights';
-export type DrawerJoineryStyle = 'butt' | 'rabbet' | 'lock_rabbet';
+export type DrawerJoineryStyle = 'butt' | 'screw' | 'dado' | 'tab_slot' | 'rabbet' | 'lock_rabbet';
 export type DrawerBottomStyle = 'captured' | 'applied';
 export type DrawerFrontRegistration = 'centered' | 'flush_top' | 'flush_bottom';
 export type FaceFrameStyle = 'none' | 'full';
@@ -232,6 +235,11 @@ export type CabinetParameters = {
   drawerGap: number;
   shelfStyle: ShelfStyle;
   drawerJoineryStyle: DrawerJoineryStyle;
+  drawerDadoDepth: number;
+  drawerDadoFitClearance: number;
+  drawerJointFitClearance: number;
+  drawerScrewHoleDiameter: number;
+  drawerScrewEdgeMargin: number;
   drawerBottomStyle: DrawerBottomStyle;
   drawerBottomGrooveDepth: number;
   drawerDividerCount: number;

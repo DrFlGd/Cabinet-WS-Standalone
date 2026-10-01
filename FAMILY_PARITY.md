@@ -4,7 +4,8 @@ This audit compares Cabinet WS Standalone with Cabinet Workshop as a behavioral
 reference. It is an evidence baseline for future parity work, not a claim that the
 legacy implementation should be copied architecturally.
 
-**Standalone base:** `5a03133fac30644e0d7cb035f2d8a7b147e1bef3` (v0.14.1)  
+**Audit origin base:** `5a03133fac30644e0d7cb035f2d8a7b147e1bef3` (v0.14.1)  
+**Current implementation checkpoint:** v0.14.4 integration  
 **Cabinet Workshop reference:** `2255216ef7808895ec404bf34a0fb8f8a7b8abe4`
 
 The machine-readable setting inventory is
@@ -36,14 +37,14 @@ rows remain `unverified`; they are not implicitly marked verified.
 
 | Family | Fields | Geometry-driving | Manufacturing-driving | Compatibility-only | Unsupported | Known-gap rows |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Shop Cart | 310 | 81 | 22 | 45 | 162 | 41 |
-| Utility | 310 | 81 | 22 | 45 | 162 | 41 |
-| Benchtop | 222 | 53 | 10 | 37 | 122 | 37 |
-| Stackable | 277 | 60 | 22 | 46 | 149 | 41 |
-| Kitchen | 299 | 84 | 23 | 45 | 147 | 41 |
-| Standalone Drawer | 161 | 57 | 9 | 26 | 69 | 15 |
-| Equipment Stand | 99 | 43 | 6 | 10 | 40 | 20 |
-| **Total** | **1,678** | **459** | **114** | **254** | **851** | — |
+| Shop Cart | 310 | 122 | 21 | 45 | 122 | 25 |
+| Utility | 310 | 122 | 21 | 45 | 122 | 25 |
+| Benchtop | 222 | 92 | 10 | 37 | 83 | 21 |
+| Stackable | 277 | 101 | 21 | 46 | 109 | 25 |
+| Kitchen | 299 | 125 | 22 | 45 | 107 | 25 |
+| Standalone Drawer | 161 | 85 | 8 | 26 | 42 | 6 |
+| Equipment Stand | 99 | 53 | 6 | 10 | 30 | 13 |
+| **Total** | 1678 | 700 | 109 | 254 | 615 | 140 |
 
 These counts are control-ownership coverage, not construction-parity percentages.
 Many unsupported fields are intentionally presentation/export compatibility data,
@@ -58,13 +59,16 @@ claims can be reviewed without depending on mutable `main`.
    resolves a 42 mm, 10 × 8 modular target to a 520 × 384 × 900 mm cabinet with
    422 × 338 × 116.8 mm drawer inside-clear dimensions. Standalone currently retains
    the target controls without applying that envelope solve.
-2. **Standalone Drawer joinery.** Cabinet Workshop distinguishes butt, screw, dado,
-   and tab-slot drawer joints. Standalone currently maps screw, dado, and tab-slot
-   recipe choices to the same native rabbet mode.
+2. **Drawer corner joinery.** Cabinet Workshop distinguishes butt, screw, dado,
+   and tab-slot construction between each drawer side and the box front/back.
+   Standalone now preserves those recipe values and implements screw pilot guides
+   plus blind dado receivers/mating-member extension in both shared-cabinet drawers
+   and the dedicated Drawer family. Integration now adds matching drawer-side slots
+   and front/back tabs without rabbet substitution.
 3. **Drawer divider mounting.** Cabinet Workshop changes machining between
    freestanding, bottom-only, and bottom-plus-perimeter divider grids and uses
-   independent groove depths. Standalone currently generates divider pieces but
-   does not vary drawer machining for those settings.
+   independent groove depths. Standalone now generates opposing interlocks and the selected bottom/perimeter
+   grooves with independent depths.
 4. **Equipment Stand French cleats.** Cabinet Workshop constructs an angle-dependent
    cleat profile. Standalone currently stores `cleatAngle` metadata on rectangular
    rails, and the dedicated Equipment Stand document has no purchased hardware
@@ -72,6 +76,26 @@ claims can be reviewed without depending on mutable `main`.
 
 Behavioral regression tests exercise those Standalone outcomes. They are expected to
 change when the corresponding gaps are implemented.
+
+## Joinery coverage checkpoint
+
+The release integration implements shared contact-based mating joints. Each receiver
+and its mating extension comes from the same resolved joint; machining features carry
+source-part ownership into exact CAD and manufacturing output.
+
+| Construction | Implemented behavior | Validation |
+| --- | --- | --- |
+| Shared carcass bottom/top/stretchers, fixed shelves, section dividers, structural back, rear rails and toe-kick | Screw guides; blind dados with mating extensions; tabs with through slots | Real OpenCascade carcass/section solids, pairwise intersection checks, STEP |
+| Equipment Stand rectangular frame contacts | Same screw/dado/tab-slot engine; skeleton windows remain separate cutouts | Semantic regressions; specialized mounting hardware remains outside this scope |
+| Shared and dedicated drawer corners | Distinct butt/screw/dado/tab-slot construction; mirrored receivers | Real screw/dado cuts and assembled tab-slot drawer solids |
+| Captured drawer bottom | Four correctly mirrored grooves and an inserted bottom | Assembled drawer intersection checks |
+| Drawer organizer grid | Equal-clear/custom positions, measured thickness, opposing half-lap slots, optional bottom/perimeter dados with independent depths | Mounted-grid solid intersections and save/reopen |
+| Tab policies | Adaptive/fixed counts; width/web/margins; location custom/edge-biased/stack-safe centers; receiver fit; closed-corner relief | Reference spacing oracles and manufacturing through-cut regressions |
+
+This is focused construction validation, not certification of every legacy recipe.
+Only panels generated by the current family/layout model can participate. Full-width
+bottom compatibility, unusual intersections, specialized cleat profiles, and every
+possible CNC relief/stacking configuration still need representative shop validation.
 
 ## Prioritized parity gaps
 
@@ -91,10 +115,10 @@ depend on the resolved envelope.
 
 ### P2 — construction and machining semantics
 
-- Preserve distinct reference drawer joinery intent instead of collapsing
-  screw/dado/tab-slot to one rabbet construction.
-- Implement divider mounting, custom divider placement, groove depths/clearances,
-  and interlock orientation before treating divider manufacturing output as parity.
+- Drawer screw/dado/tab-slot and divider machining are implemented; extend the
+  focused regression fixtures with additional saved shop projects.
+- Validate unusual divider placements and relief/tool combinations against
+  additional reference projects.
 - Reconcile applied-back rabbet construction with the reference instead of extending
   the current proof operation by assumption.
 - The shared-cabinet baseline now retains the mating tabs for the outer-side bottom
@@ -129,11 +153,14 @@ controls.
 
 The matrix is intentionally conservative. Direct references plus explicit indirect
 helper/layout ownership identify current behavior, while behavioral regressions cover
-representative indirect mappings such as measured drawer stock and Kitchen section
-nodes. The committed reference fixtures prove selected current outcomes. The audit
-does **not** establish exact OpenCascade parity, packaged Windows interaction,
-visual equivalence for all 110 starters, or manufacturer-correct Equipment Stand
-hardware.
+representative indirect mappings such as measured drawer stock, Kitchen section
+nodes, and the drawer screw/dado formulas above. The committed reference fixtures
+prove selected current outcomes. A focused test proving semantic dimensions,
+feature-graph registration, or manufacturing depth is labeled separately from real
+OpenCascade/STEP validation; neither is silently promoted to full family parity. The
+audit does **not** establish packaged Windows interaction, visual equivalence for all
+110 starters, complete tab-slot construction, or manufacturer-correct Equipment
+Stand hardware.
 
 A full parity sign-off still requires representative saved Cabinet Workshop projects
 evaluated against both implementations for normalized inputs, dimensions and clear

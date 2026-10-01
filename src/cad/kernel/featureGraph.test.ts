@@ -46,6 +46,29 @@ describe('v0.6 exact CAD feature graph', () => {
     }
   });
 
+  it('preserves an explicit machining axis for render-feature drill guides', () => {
+    const document = buildCabinetDocument(utilityStarter('default').parameters);
+    const side = document.parts.find(part => part.id === 'carcass:left')!;
+    side.renderFeatures = [
+      ...(side.renderFeatures ?? []),
+      {
+        kind: 'drill',
+        axis: 'x',
+        sourcePartId: 'fixture:mating-member',
+        position: { x: 0, y: 20, z: 20 },
+        size: { x: side.size.x, y: 3, z: 3 },
+      },
+    ];
+
+    const graph = buildFeatureGraph(document);
+    const drill = graph.partFeatures[side.id].find(feature =>
+      feature.kind === 'hole' && feature.parameters.sourcePartId === 'fixture:mating-member'
+    );
+
+    expect(drill?.axis).toBe('x');
+    expect(drill?.size).toEqual({ x: side.size.x, y: 3, z: 3 });
+  });
+
   it('records hardware as a semantic reference rather than pretending it is fabricated stock', () => {
     const source = utilityStarter('utility_3_drawer_base').parameters;
     const document = buildCabinetDocument({

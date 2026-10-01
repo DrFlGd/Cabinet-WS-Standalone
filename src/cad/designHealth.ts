@@ -2,6 +2,7 @@ import { stockThickness } from './cabinetModel';
 import { hardwareCompatibility } from './hardware';
 import { hardwareDefinition } from './hardwareCatalog';
 import { sectionLayoutErrors } from './sections';
+import { drawerScrewPlacement } from './drawerJoinery';
 import type { CabinetDocument, CadPart, HardwareInstance } from './types';
 import { buildFeatureGraph } from './kernel/featureGraph';
 import type { CadFeature, KernelDiagnostic, KernelStatus } from './kernel/types';
@@ -295,6 +296,59 @@ function checkJoineryMaterial(
 
 function checkDrawerConstruction(document: CabinetDocument, checks: DesignHealthCheck[]) {
   const p = document.parameters;
+
+  if (p.drawerJoineryStyle === 'screw') {
+    const drawerSides = document.parts.filter(part =>
+      part.category === 'drawer' && /:box:(left|right)$/.test(part.id)
+    );
+    for (const side of drawerSides) {
+      const bottomGroove = side.renderFeatures?.find(feature =>
+        feature.kind === 'slot' && feature.sourcePartId?.endsWith(':bottom')
+      );
+      const placement = drawerScrewPlacement({
+        boxHeight: side.size.z,
+        edgeMargin: p.drawerScrewEdgeMargin,
+        diameter: p.drawerScrewHoleDiameter,
+        bottomCaptured: p.drawerBottomStyle === 'captured',
+        bottomGrooveZ: bottomGroove?.position.z ?? 0,
+        bottomThickness: p.drawerBottomThickness,
+      });
+      if (!placement.valid) {
+        checks.push({
+          id: `drawer-screw-margin-${side.id}`,
+          severity: 'error',
+          category: 'manufacturing',
+          title: 'Drawer screw guides do not fit the side',
+          message: `${side.name} cannot place ${p.drawerScrewHoleDiameter.toFixed(2)} mm screw guides with a ${p.drawerScrewEdgeMargin.toFixed(2)} mm edge margin around the current bottom groove.`,
+          partIds: [side.id],
+          suggestion: 'Reduce the screw-guide diameter or edge margin, increase drawer-side height, or move the captured-bottom groove.',
+        });
+      }
+    }
+  }
+
+  if (p.drawerJoineryStyle === 'dado') {
+    const residual = p.drawerMaterialThickness - p.drawerDadoDepth;
+    if (residual <= 0) {
+      checks.push({
+        id: 'drawer-corner-dado-breakthrough',
+        severity: 'error',
+        category: 'manufacturing',
+        title: 'Drawer corner dado breaks through side stock',
+        message: `Drawer dado depth ${p.drawerDadoDepth.toFixed(2)} mm exceeds the usable ${p.drawerMaterialThickness.toFixed(2)} mm drawer-side stock.`,
+        suggestion: 'Reduce drawer dado depth or increase drawer-side stock thickness.',
+      });
+    } else if (residual < 2) {
+      checks.push({
+        id: 'drawer-corner-dado-thin-wall',
+        severity: 'warning',
+        category: 'manufacturing',
+        title: 'Thin stock behind drawer corner dado',
+        message: `Only ${residual.toFixed(2)} mm remains behind each front/back drawer-side dado.`,
+      });
+    }
+  }
+
   if (p.drawerBottomStyle === 'captured') {
     const residual = p.drawerMaterialThickness - p.drawerBottomGrooveDepth;
     if (residual <= 0) {

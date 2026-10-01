@@ -15,59 +15,59 @@
   "counts": {
     "shop_cart": {
       "total": 310,
-      "geometry-driving": 81,
-      "manufacturing-driving": 22,
+      "geometry-driving": 122,
+      "manufacturing-driving": 21,
       "compatibility-only": 45,
-      "unsupported": 162,
-      "known-gap": 41
+      "unsupported": 122,
+      "known-gap": 25
     },
     "utility": {
       "total": 310,
-      "geometry-driving": 81,
-      "manufacturing-driving": 22,
+      "geometry-driving": 122,
+      "manufacturing-driving": 21,
       "compatibility-only": 45,
-      "unsupported": 162,
-      "known-gap": 41
+      "unsupported": 122,
+      "known-gap": 25
     },
     "benchtop": {
       "total": 222,
-      "geometry-driving": 53,
+      "geometry-driving": 92,
       "manufacturing-driving": 10,
       "compatibility-only": 37,
-      "unsupported": 122,
-      "known-gap": 37
+      "unsupported": 83,
+      "known-gap": 21
     },
     "stackable": {
       "total": 277,
-      "geometry-driving": 60,
-      "manufacturing-driving": 22,
+      "geometry-driving": 101,
+      "manufacturing-driving": 21,
       "compatibility-only": 46,
-      "unsupported": 149,
-      "known-gap": 41
+      "unsupported": 109,
+      "known-gap": 25
     },
     "kitchen": {
       "total": 299,
-      "geometry-driving": 84,
-      "manufacturing-driving": 23,
+      "geometry-driving": 125,
+      "manufacturing-driving": 22,
       "compatibility-only": 45,
-      "unsupported": 147,
-      "known-gap": 41
+      "unsupported": 107,
+      "known-gap": 25
     },
     "drawer": {
       "total": 161,
-      "geometry-driving": 57,
-      "manufacturing-driving": 9,
+      "geometry-driving": 85,
+      "manufacturing-driving": 8,
       "compatibility-only": 26,
-      "unsupported": 69,
-      "known-gap": 15
+      "unsupported": 42,
+      "known-gap": 6
     },
     "equipment_stand": {
       "total": 99,
-      "geometry-driving": 43,
+      "geometry-driving": 53,
       "manufacturing-driving": 6,
       "compatibility-only": 10,
-      "unsupported": 40,
-      "known-gap": 20
+      "unsupported": 30,
+      "known-gap": 13
     }
   },
   "rows": [
@@ -129,10 +129,10 @@
       "family": "shop_cart",
       "key": "drawer_divider_stock",
       "section": "Materials / Stock",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -202,9 +202,9 @@
       "key": "custom_drawer_divider_thickness",
       "section": "Materials / Measured Thickness",
       "status": "geometry-driving",
-      "owner": "family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -219,10 +219,10 @@
       "family": "shop_cart",
       "key": "cnc_tool_diameter",
       "section": "Machining / Tool and Kerf",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -246,28 +246,28 @@
       "family": "shop_cart",
       "key": "slot_corner_relief",
       "section": "Machining / Shared Slot Relief",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "carcass_slot_corner_relief",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "carcass_cnc_tool_diameter",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -300,19 +300,19 @@
       "family": "shop_cart",
       "key": "drawer_slot_corner_relief",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "drawer_cnc_tool_diameter",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -320,35 +320,35 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "shop_cart",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
       "key": "drawer_bottom_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "manufacturing-driving",
-      "owner": "family-adapter+family-generator",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -390,37 +390,37 @@
       "family": "shop_cart",
       "key": "drawer_divider_groove_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider groove fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "drawer_divider_interlock_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider interlock fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "drawer_divider_bottom_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a blind locating-groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "drawer_divider_perimeter_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a drawer-wall groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -814,162 +814,162 @@
       "key": "joinery_style",
       "section": "Structure / Frame Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter",
+      "owner": "shared-mating-joinery",
       "parity": "known-gap",
-      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
+      "note": "Generated structural panel contacts support paired screw/dado/tab-slot joints. Specialized legacy construction and nongenerated members remain outside the focused verification."
     },
     {
       "family": "shop_cart",
       "key": "tab_count_mode",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive vs fixed tab count. Standalone tab/slot geometry currently uses a fixed native pattern."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "joint_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls fixed tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "target_tab_spacing",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive tab spacing. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "max_auto_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference caps adaptive tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "joint_tab_width",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab width. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "joint_tab_edge_margin",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab edge margin. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "minimum_joint_web",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference enforces minimum material web between joints. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "edge_joinery_policy",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "top_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "shelf_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "separator_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "top_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "shelf_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "separator_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "bottom_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "bottom_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
-      "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "owner": "family-adapter+drawer-joinery-generator",
+      "parity": "unverified",
+      "note": "Distinct screw/dado/tab-slot geometry is implemented in shared and dedicated drawer generation; representative exact solids and STEP are tested."
     },
     {
       "family": "shop_cart",
@@ -1399,9 +1399,9 @@
       "key": "drawer_bottom_inset",
       "section": "Drawers / Clearances",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -1425,10 +1425,10 @@
       "family": "shop_cart",
       "key": "drawer_divider_layout_mode",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference supports equal/custom divider layout modes. Standalone currently implements count-based dividers only."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -1452,19 +1452,19 @@
       "family": "shop_cart",
       "key": "drawer_divider_custom_x",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider X locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "drawer_divider_custom_y",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider Y locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -1488,10 +1488,10 @@
       "family": "shop_cart",
       "key": "drawer_divider_mounting",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference changes drawer machining for freestanding, bottom-only, and bottom+perimeter divider mounting. Standalone currently does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -1515,10 +1515,10 @@
       "family": "shop_cart",
       "key": "drawer_divider_interlock_orientation",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls which divider set is top-slotted. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
@@ -2100,55 +2100,55 @@
       "family": "shop_cart",
       "key": "include_butt_registration_holes",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "butt_registration_hole_diameter",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "butt_registration_target_spacing",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "butt_registration_edge_margin",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "shop_cart",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
@@ -2919,10 +2919,10 @@
       "family": "utility",
       "key": "drawer_divider_stock",
       "section": "Materials / Stock",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -2992,9 +2992,9 @@
       "key": "custom_drawer_divider_thickness",
       "section": "Materials / Measured Thickness",
       "status": "geometry-driving",
-      "owner": "family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -3009,10 +3009,10 @@
       "family": "utility",
       "key": "cnc_tool_diameter",
       "section": "Machining / Tool and Kerf",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -3036,28 +3036,28 @@
       "family": "utility",
       "key": "slot_corner_relief",
       "section": "Machining / Shared Slot Relief",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "carcass_slot_corner_relief",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "carcass_cnc_tool_diameter",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -3090,19 +3090,19 @@
       "family": "utility",
       "key": "drawer_slot_corner_relief",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "drawer_cnc_tool_diameter",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -3110,35 +3110,35 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "utility",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
       "key": "drawer_bottom_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "manufacturing-driving",
-      "owner": "family-adapter+family-generator",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -3180,37 +3180,37 @@
       "family": "utility",
       "key": "drawer_divider_groove_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider groove fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "drawer_divider_interlock_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider interlock fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "drawer_divider_bottom_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a blind locating-groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "drawer_divider_perimeter_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a drawer-wall groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -3604,162 +3604,162 @@
       "key": "joinery_style",
       "section": "Structure / Frame Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter",
+      "owner": "shared-mating-joinery",
       "parity": "known-gap",
-      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
+      "note": "Generated structural panel contacts support paired screw/dado/tab-slot joints. Specialized legacy construction and nongenerated members remain outside the focused verification."
     },
     {
       "family": "utility",
       "key": "tab_count_mode",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive vs fixed tab count. Standalone tab/slot geometry currently uses a fixed native pattern."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "joint_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls fixed tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "target_tab_spacing",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive tab spacing. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "max_auto_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference caps adaptive tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "joint_tab_width",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab width. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "joint_tab_edge_margin",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab edge margin. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "minimum_joint_web",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference enforces minimum material web between joints. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "edge_joinery_policy",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "top_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "shelf_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "separator_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "top_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "shelf_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "separator_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "bottom_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "bottom_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
-      "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "owner": "family-adapter+drawer-joinery-generator",
+      "parity": "unverified",
+      "note": "Distinct screw/dado/tab-slot geometry is implemented in shared and dedicated drawer generation; representative exact solids and STEP are tested."
     },
     {
       "family": "utility",
@@ -4189,9 +4189,9 @@
       "key": "drawer_bottom_inset",
       "section": "Drawers / Clearances",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -4215,10 +4215,10 @@
       "family": "utility",
       "key": "drawer_divider_layout_mode",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference supports equal/custom divider layout modes. Standalone currently implements count-based dividers only."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -4242,19 +4242,19 @@
       "family": "utility",
       "key": "drawer_divider_custom_x",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider X locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "drawer_divider_custom_y",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider Y locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -4278,10 +4278,10 @@
       "family": "utility",
       "key": "drawer_divider_mounting",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference changes drawer machining for freestanding, bottom-only, and bottom+perimeter divider mounting. Standalone currently does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -4305,10 +4305,10 @@
       "family": "utility",
       "key": "drawer_divider_interlock_orientation",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls which divider set is top-slotted. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
@@ -4890,55 +4890,55 @@
       "family": "utility",
       "key": "include_butt_registration_holes",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "butt_registration_hole_diameter",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "butt_registration_target_spacing",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "butt_registration_edge_margin",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "utility",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
@@ -5700,10 +5700,10 @@
       "family": "benchtop",
       "key": "drawer_divider_stock",
       "section": "Materials / Stock",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -5764,9 +5764,9 @@
       "key": "custom_drawer_divider_thickness",
       "section": "Materials / Measured Thickness",
       "status": "geometry-driving",
-      "owner": "family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -5781,10 +5781,10 @@
       "family": "benchtop",
       "key": "cnc_tool_diameter",
       "section": "Machining / Tool and Kerf",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -5808,28 +5808,28 @@
       "family": "benchtop",
       "key": "slot_corner_relief",
       "section": "Machining / Shared Slot Relief",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "carcass_slot_corner_relief",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "carcass_cnc_tool_diameter",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -5871,19 +5871,19 @@
       "family": "benchtop",
       "key": "drawer_slot_corner_relief",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "drawer_cnc_tool_diameter",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -5891,17 +5891,17 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "benchtop",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "benchtop",
@@ -5979,37 +5979,37 @@
       "family": "benchtop",
       "key": "drawer_divider_groove_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider groove fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "drawer_divider_interlock_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider interlock fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "drawer_divider_bottom_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a blind locating-groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "drawer_divider_perimeter_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a drawer-wall groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -6241,162 +6241,162 @@
       "key": "joinery_style",
       "section": "Structure / Frame Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter",
+      "owner": "shared-mating-joinery",
       "parity": "known-gap",
-      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
+      "note": "Generated structural panel contacts support paired screw/dado/tab-slot joints. Specialized legacy construction and nongenerated members remain outside the focused verification."
     },
     {
       "family": "benchtop",
       "key": "tab_count_mode",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive vs fixed tab count. Standalone tab/slot geometry currently uses a fixed native pattern."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "joint_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls fixed tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "target_tab_spacing",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive tab spacing. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "max_auto_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference caps adaptive tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "joint_tab_width",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab width. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "joint_tab_edge_margin",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab edge margin. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "minimum_joint_web",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference enforces minimum material web between joints. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "edge_joinery_policy",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "top_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "shelf_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "separator_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "top_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "shelf_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "separator_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "bottom_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "bottom_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
-      "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "owner": "family-adapter+drawer-joinery-generator",
+      "parity": "unverified",
+      "note": "Distinct screw/dado/tab-slot geometry is implemented in shared and dedicated drawer generation; representative exact solids and STEP are tested."
     },
     {
       "family": "benchtop",
@@ -6637,9 +6637,9 @@
       "key": "drawer_bottom_inset",
       "section": "Drawers / Clearances",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -6663,10 +6663,10 @@
       "family": "benchtop",
       "key": "drawer_divider_layout_mode",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference supports equal/custom divider layout modes. Standalone currently implements count-based dividers only."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -6690,19 +6690,19 @@
       "family": "benchtop",
       "key": "drawer_divider_custom_x",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider X locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "drawer_divider_custom_y",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider Y locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -6726,10 +6726,10 @@
       "family": "benchtop",
       "key": "drawer_divider_mounting",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference changes drawer machining for freestanding, bottom-only, and bottom+perimeter divider mounting. Standalone currently does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -6753,10 +6753,10 @@
       "family": "benchtop",
       "key": "drawer_divider_interlock_orientation",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls which divider set is top-slotted. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
@@ -7167,55 +7167,55 @@
       "family": "benchtop",
       "key": "include_butt_registration_holes",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "butt_registration_hole_diameter",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "butt_registration_target_spacing",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "butt_registration_edge_margin",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "benchtop",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "benchtop",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "benchtop",
@@ -7707,10 +7707,10 @@
       "family": "stackable",
       "key": "drawer_divider_stock",
       "section": "Materials / Stock",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -7771,9 +7771,9 @@
       "key": "custom_drawer_divider_thickness",
       "section": "Materials / Measured Thickness",
       "status": "geometry-driving",
-      "owner": "family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -7788,10 +7788,10 @@
       "family": "stackable",
       "key": "cnc_tool_diameter",
       "section": "Machining / Tool and Kerf",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -7815,28 +7815,28 @@
       "family": "stackable",
       "key": "slot_corner_relief",
       "section": "Machining / Shared Slot Relief",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "carcass_slot_corner_relief",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "carcass_cnc_tool_diameter",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -7869,19 +7869,19 @@
       "family": "stackable",
       "key": "drawer_slot_corner_relief",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "drawer_cnc_tool_diameter",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -7889,35 +7889,35 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "stackable",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
       "key": "drawer_bottom_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "manufacturing-driving",
-      "owner": "family-adapter+family-generator",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -7959,37 +7959,37 @@
       "family": "stackable",
       "key": "drawer_divider_groove_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider groove fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "drawer_divider_interlock_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider interlock fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "drawer_divider_bottom_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a blind locating-groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "drawer_divider_perimeter_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a drawer-wall groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -8221,162 +8221,162 @@
       "key": "joinery_style",
       "section": "Structure / Frame Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter",
+      "owner": "shared-mating-joinery",
       "parity": "known-gap",
-      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
+      "note": "Generated structural panel contacts support paired screw/dado/tab-slot joints. Specialized legacy construction and nongenerated members remain outside the focused verification."
     },
     {
       "family": "stackable",
       "key": "tab_count_mode",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive vs fixed tab count. Standalone tab/slot geometry currently uses a fixed native pattern."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "joint_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls fixed tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "target_tab_spacing",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive tab spacing. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "max_auto_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference caps adaptive tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "joint_tab_width",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab width. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "joint_tab_edge_margin",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab edge margin. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "minimum_joint_web",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference enforces minimum material web between joints. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "bottom_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "bottom_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "edge_joinery_policy",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "top_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "shelf_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "separator_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "top_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "shelf_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "separator_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
-      "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "owner": "family-adapter+drawer-joinery-generator",
+      "parity": "unverified",
+      "note": "Distinct screw/dado/tab-slot geometry is implemented in shared and dedicated drawer generation; representative exact solids and STEP are tested."
     },
     {
       "family": "stackable",
@@ -8797,9 +8797,9 @@
       "key": "drawer_bottom_inset",
       "section": "Drawers / Clearances",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -8823,10 +8823,10 @@
       "family": "stackable",
       "key": "drawer_divider_layout_mode",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference supports equal/custom divider layout modes. Standalone currently implements count-based dividers only."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -8850,19 +8850,19 @@
       "family": "stackable",
       "key": "drawer_divider_custom_x",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider X locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "drawer_divider_custom_y",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider Y locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -8886,10 +8886,10 @@
       "family": "stackable",
       "key": "drawer_divider_mounting",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference changes drawer machining for freestanding, bottom-only, and bottom+perimeter divider mounting. Standalone currently does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -8913,10 +8913,10 @@
       "family": "stackable",
       "key": "drawer_divider_interlock_orientation",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls which divider set is top-slotted. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
@@ -9579,55 +9579,55 @@
       "family": "stackable",
       "key": "include_butt_registration_holes",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "butt_registration_hole_diameter",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "butt_registration_target_spacing",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "butt_registration_edge_margin",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "stackable",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
@@ -10209,10 +10209,10 @@
       "family": "kitchen",
       "key": "drawer_divider_stock",
       "section": "Materials / Stock",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -10282,9 +10282,9 @@
       "key": "custom_drawer_divider_thickness",
       "section": "Materials / Measured Thickness",
       "status": "geometry-driving",
-      "owner": "family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -10299,10 +10299,10 @@
       "family": "kitchen",
       "key": "cnc_tool_diameter",
       "section": "Machining / Tool and Kerf",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -10326,28 +10326,28 @@
       "family": "kitchen",
       "key": "slot_corner_relief",
       "section": "Machining / Shared Slot Relief",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "carcass_slot_corner_relief",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "carcass_cnc_tool_diameter",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -10380,19 +10380,19 @@
       "family": "kitchen",
       "key": "drawer_slot_corner_relief",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "drawer_cnc_tool_diameter",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -10400,35 +10400,35 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "kitchen",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
       "key": "drawer_bottom_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "manufacturing-driving",
-      "owner": "family-adapter+family-generator",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -10470,37 +10470,37 @@
       "family": "kitchen",
       "key": "drawer_divider_groove_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider groove fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "drawer_divider_interlock_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider interlock fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "drawer_divider_bottom_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a blind locating-groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "drawer_divider_perimeter_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a drawer-wall groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -10903,162 +10903,162 @@
       "key": "joinery_style",
       "section": "Structure / Frame Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter",
+      "owner": "shared-mating-joinery",
       "parity": "known-gap",
-      "note": "Baseline outer-side bottom tab/slot geometry retains mating tabs and matching through-slot receivers; reference tab count, width, placement, and additional joined-member policies are not fully represented."
+      "note": "Generated structural panel contacts support paired screw/dado/tab-slot joints. Specialized legacy construction and nongenerated members remain outside the focused verification."
     },
     {
       "family": "kitchen",
       "key": "tab_count_mode",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive vs fixed tab count. Standalone tab/slot geometry currently uses a fixed native pattern."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "joint_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls fixed tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "target_tab_spacing",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive tab spacing. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "max_auto_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference caps adaptive tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "joint_tab_width",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab width. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "joint_tab_edge_margin",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab edge margin. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "minimum_joint_web",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference enforces minimum material web between joints. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "edge_joinery_policy",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "top_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "shelf_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "separator_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "top_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "shelf_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "separator_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "bottom_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "bottom_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
-      "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "owner": "family-adapter+drawer-joinery-generator",
+      "parity": "unverified",
+      "note": "Distinct screw/dado/tab-slot geometry is implemented in shared and dedicated drawer generation; representative exact solids and STEP are tested."
     },
     {
       "family": "kitchen",
@@ -11569,9 +11569,9 @@
       "key": "drawer_bottom_inset",
       "section": "Drawers / Clearances",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -11595,10 +11595,10 @@
       "family": "kitchen",
       "key": "drawer_divider_layout_mode",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference supports equal/custom divider layout modes. Standalone currently implements count-based dividers only."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -11622,19 +11622,19 @@
       "family": "kitchen",
       "key": "drawer_divider_custom_x",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider X locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "drawer_divider_custom_y",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider Y locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -11658,10 +11658,10 @@
       "family": "kitchen",
       "key": "drawer_divider_mounting",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference changes drawer machining for freestanding, bottom-only, and bottom+perimeter divider mounting. Standalone currently does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -11685,10 +11685,10 @@
       "family": "kitchen",
       "key": "drawer_divider_interlock_orientation",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls which divider set is top-slotted. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
@@ -12270,55 +12270,55 @@
       "family": "kitchen",
       "key": "include_butt_registration_holes",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "butt_registration_hole_diameter",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "butt_registration_target_spacing",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "butt_registration_edge_margin",
       "section": "Hardware / Frame Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "kitchen",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
@@ -12882,10 +12882,10 @@
       "family": "drawer",
       "key": "drawer_divider_stock",
       "section": "Materials / Stock",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -12937,9 +12937,9 @@
       "key": "custom_drawer_divider_thickness",
       "section": "Materials / Measured Thickness",
       "status": "geometry-driving",
-      "owner": "family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -12954,10 +12954,10 @@
       "family": "drawer",
       "key": "cnc_tool_diameter",
       "section": "Machining / Tool and Kerf",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -12981,28 +12981,28 @@
       "family": "drawer",
       "key": "slot_corner_relief",
       "section": "Machining / Shared Slot Relief",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "drawer_slot_corner_relief",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "drawer_cnc_tool_diameter",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13010,35 +13010,35 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "drawer",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
       "key": "drawer_bottom_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "manufacturing-driving",
-      "owner": "family-adapter+family-generator",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13080,37 +13080,37 @@
       "family": "drawer",
       "key": "drawer_divider_groove_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider groove fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "drawer_divider_interlock_clearance",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference applies this to divider interlock fit. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "drawer_divider_bottom_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a blind locating-groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "drawer_divider_perimeter_groove_depth",
       "section": "Machining / Divider Grooves",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses this as a drawer-wall groove depth. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13296,91 +13296,91 @@
       "family": "drawer",
       "key": "edge_joinery_policy",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "top_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "shelf_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "separator_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "top_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "shelf_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "separator_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "bottom_tab_placement",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "bottom_tab_custom_centers",
       "section": "Structure / Tab Placement",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
-      "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "owner": "family-adapter+drawer-joinery-generator",
+      "parity": "unverified",
+      "note": "Distinct screw/dado/tab-slot geometry is implemented in shared and dedicated drawer generation; representative exact solids and STEP are tested."
     },
     {
       "family": "drawer",
@@ -13522,9 +13522,9 @@
       "key": "drawer_bottom_inset",
       "section": "Drawers / Clearances",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13548,10 +13548,10 @@
       "family": "drawer",
       "key": "drawer_divider_layout_mode",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference supports equal/custom divider layout modes. Standalone currently implements count-based dividers only."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13575,19 +13575,19 @@
       "family": "drawer",
       "key": "drawer_divider_custom_x",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider X locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
       "key": "drawer_divider_custom_y",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference uses custom divider Y locations. Standalone currently does not apply them."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13611,10 +13611,10 @@
       "family": "drawer",
       "key": "drawer_divider_mounting",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference changes drawer machining for freestanding, bottom-only, and bottom+perimeter divider mounting. Standalone currently does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13638,10 +13638,10 @@
       "family": "drawer",
       "key": "drawer_divider_interlock_orientation",
       "section": "Dividers / Layout",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls which divider set is top-slotted. Standalone currently does not apply it."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "drawer",
@@ -13980,19 +13980,19 @@
       "family": "drawer",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
@@ -14331,10 +14331,10 @@
       "family": "equipment_stand",
       "key": "slot_corner_relief",
       "section": "Machining / Shared Slot Relief",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
@@ -14349,19 +14349,19 @@
       "family": "equipment_stand",
       "key": "carcass_slot_corner_relief",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
       "key": "carcass_cnc_tool_diameter",
       "section": "Machining / Frame Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
@@ -14647,72 +14647,72 @@
       "key": "joinery_style",
       "section": "Structure / Frame Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter",
+      "owner": "shared-mating-joinery",
       "parity": "known-gap",
-      "note": "Standalone implements native joinery categories, but reference tab/slot placement/count/detail controls are not fully represented."
+      "note": "Generated structural panel contacts support paired screw/dado/tab-slot joints. Specialized legacy construction and nongenerated members remain outside the focused verification."
     },
     {
       "family": "equipment_stand",
       "key": "tab_count_mode",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive vs fixed tab count. Standalone tab/slot geometry currently uses a fixed native pattern."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
       "key": "joint_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls fixed tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
       "key": "target_tab_spacing",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls adaptive tab spacing. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
       "key": "max_auto_tab_count",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference caps adaptive tab count. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
       "key": "joint_tab_width",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab width. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
       "key": "joint_tab_edge_margin",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference controls tab edge margin. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",
       "key": "minimum_joint_web",
       "section": "Structure / Frame Joinery",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
-      "parity": "known-gap",
-      "note": "Reference enforces minimum material web between joints. Standalone does not apply this setting."
+      "status": "geometry-driving",
+      "owner": "shared-mating-joinery",
+      "parity": "unverified",
+      "note": "Consumed by the shared mating-joint policy or drawer completion pass. Focused exact-CAD tests do not certify every legacy configuration."
     },
     {
       "family": "equipment_stand",

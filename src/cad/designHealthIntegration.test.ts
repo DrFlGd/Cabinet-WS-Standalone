@@ -17,13 +17,15 @@ describe('Phase 9 integration boundaries', () => {
 
   it('applies solved targets through one undoable editor-history operation', () => {
     const app = readFileSync('src/App.tsx', 'utf8');
-    const panel = readFileSync('src/components/DesignHealthPanel.tsx', 'utf8');
+    const solver = readFileSync('src/components/FitSolverPanel.tsx', 'utf8');
 
     expect(app).toContain('function applyFitSolution(solution: FitSolution)');
     expect(app).toContain('history.edit(current => ({');
     expect(app).toContain('...solution.patch');
-    expect(panel).toContain('Apply solved result');
-    expect(panel).toContain('How this result was calculated');
-    expect(panel).toContain('one undoable operation');
+    expect(app).toContain('<FitSolverPanel');
+    expect(app).toContain('onApplySolution={applyFitSolution}');
+    expect(solver).toContain('Apply solved result');
+    expect(solver).toContain('How this result was calculated');
+    expect(solver).toContain('one undoable operation');
   });
 });
