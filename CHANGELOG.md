@@ -6,6 +6,23 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Fixed
+
+- Make the main desktop shell adapt across the supported window range without scaling down the application: constrained side panels retain usable bounds, the central viewport keeps a minimum working width, expanded Hardware/Parts drawers overlay the layout workspace at narrower widths, and the toolbar scrolls intentionally instead of pushing controls off-screen.
+- Bound the Properties header, search, surface navigation, and selected-part return controls independently from the results region so long queries, large match sets, no-match states, and narrow settings panels scroll only their content instead of creating overlapping or unbounded rows.
+
+### Changed
+
+- Present Manual Layout and Fit Solver as persistent sibling workspace tabs. Solver inputs/results remain mounted while switching tabs, Design Health stays accessible below the workspace, and dedicated Drawer/Equipment Stand families explain why the shared layout editor is unavailable while retaining Fit Solver access.
+- Add side category navigation to Family settings and Native model settings with scroll-to-section behavior, wrapped arrow-key/Home/End navigation, visible keyboard focus, active-category feedback, and an explicit return to selected-part properties.
+- Explicit settings/category browsing no longer clears the 3D part selection or allows a later contextual selection refresh to hide the chosen category.
+
+### Testing and compatibility
+
+- Add behavior-level state/navigation coverage for workspace tabs, dedicated-family layout behavior, explicit settings browsing precedence, keyboard category traversal, family search no-match handling, and separation of Design Health from Fit Solver.
+- Project schema remains v3 with existing v1/v2 migration, family/native synchronization, recipes, Manual Layout edits, undo/redo, units, semantic geometry, and STEP export unchanged.
+
+
 ## [0.14.3] - 2026-09-30
 
 ### Fixed
