@@ -310,42 +310,11 @@ function checkDrawerConstruction(document: CabinetDocument, checks: DesignHealth
 
   if (p.drawerJoineryStyle === 'screw') {
     const drawerSides = document.parts.filter(part =>
-      part.category === 'drawer' && /:box:(left|right)$/.test(part.id),
-    );
-    const invalidSides = drawerSides.filter(side => {
-      const bottomGroove = (side.renderFeatures ?? []).find(feature =>
-        feature.kind === 'slot' && feature.sourcePartId?.endsWith(':bottom'),
-      );
-      return !drawerScrewPlacement({
-        boxHeight: side.size.z,
-        edgeMargin: p.drawerScrewEdgeMargin,
-        diameter: p.drawerScrewHoleDiameter,
-        bottomCaptured: p.drawerBottomStyle === 'captured',
-        bottomGrooveZ: bottomGroove?.position.z ?? 0,
-        bottomThickness: p.drawerBottomThickness,
-      }).valid;
-    });
-
-    if (invalidSides.length) {
-      checks.push({
-        id: 'drawer-screw-margin-invalid',
-        severity: 'error',
-        category: 'manufacturing',
-        title: 'Drawer screw guides do not fit the side panel',
-        message: `Screw guide diameter ${p.drawerScrewHoleDiameter.toFixed(2)} mm and edge margin ${p.drawerScrewEdgeMargin.toFixed(2)} mm do not fit ${invalidSides.length} drawer side panel${invalidSides.length === 1 ? '' : 's'} with the current bottom groove.`,
-        suggestion: 'Reduce screw diameter/edge margin, increase drawer height, or move the captured-bottom groove.',
-        partIds: invalidSides.map(side => side.id),
-      });
-    }
-  }
-
-  if (p.drawerJoineryStyle === 'screw') {
-    const drawerSides = document.parts.filter(part =>
       part.category === 'drawer' && /:box:(left|right)$/.test(part.id)
     );
     for (const side of drawerSides) {
       const bottomGroove = side.renderFeatures?.find(feature =>
-        feature.kind === 'slot' && feature.sourcePartId?.endsWith(':box:bottom')
+        feature.kind === 'slot' && feature.sourcePartId?.endsWith(':bottom')
       );
       const placement = drawerScrewPlacement({
         boxHeight: side.size.z,
