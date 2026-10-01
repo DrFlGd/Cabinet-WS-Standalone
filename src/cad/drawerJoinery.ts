@@ -18,8 +18,8 @@ export type DrawerCornerJoineryOptions = {
 
 export function effectiveDrawerDadoDepth(wallThickness: number, requestedDepth: number) {
   return Math.min(
-    Math.max(0.5, requestedDepth),
-    Math.max(0.5, wallThickness - 0.5),
+    Math.max(0, requestedDepth),
+    Math.max(0, wallThickness - 0.5),
   );
 }
 
@@ -56,12 +56,13 @@ export function drawerScrewHeights({
   bottomGrooveZ: number;
   bottomThickness: number;
 }) {
-  const requestedMargin = Math.max(diameter, edgeMargin);
-  const grooveSafeLow = bottomCaptured
-    ? bottomGrooveZ + bottomThickness + diameter / 2 + 2
-    : requestedMargin;
-  const low = Math.min(boxHeight / 2, Math.max(requestedMargin, grooveSafeLow));
-  const high = Math.max(low, boxHeight - requestedMargin);
+  const low = Math.max(
+    edgeMargin,
+    bottomCaptured
+      ? bottomGrooveZ + bottomThickness + diameter / 2 + 2
+      : edgeMargin,
+  );
+  const high = boxHeight - edgeMargin;
 
   if (high - low >= diameter + 4) return [low, high];
   return [(low + high) / 2];
@@ -90,10 +91,7 @@ export function drawerSideCornerFeatures(
   if (style === 'butt' || style === 'tab_slot') return [];
 
   if (style === 'screw') {
-    const diameter = Math.min(
-      Math.max(1, screwHoleDiameter),
-      Math.max(1, Math.min(wallThickness - 0.5, boxHeight - 1)),
-    );
+    const diameter = Math.max(0.1, screwHoleDiameter);
     const heights = drawerScrewHeights({
       boxHeight,
       edgeMargin: screwEdgeMargin,
