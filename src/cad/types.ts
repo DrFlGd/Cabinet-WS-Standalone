@@ -31,6 +31,7 @@ export type CadPartGeometry = {
 
 export type CadRenderFeature = {
   kind: 'dado' | 'rabbet' | 'slot' | 'drill';
+  axis?: 'x' | 'y' | 'z';
   sourcePartId?: string;
   position: Vec3;
   size: Vec3;
