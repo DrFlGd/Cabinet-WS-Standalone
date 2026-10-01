@@ -27,7 +27,7 @@ jobs:
             curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
             sleep 0.1
           done
-          timeout 75s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts minimum
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts minimum
       - name: Capture laptop window
         env:
           RESPONSIVE_VISUAL_URL: http://127.0.0.1:4173
@@ -39,7 +39,7 @@ jobs:
             curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
             sleep 0.1
           done
-          timeout 75s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts laptop
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts laptop
       - name: Capture maximized desktop window
         env:
           RESPONSIVE_VISUAL_URL: http://127.0.0.1:4173
@@ -51,7 +51,7 @@ jobs:
             curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
             sleep 0.1
           done
-          timeout 75s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts desktop
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts desktop
       - name: Capture 125 percent scale-pressure window
         env:
           RESPONSIVE_VISUAL_URL: http://127.0.0.1:4173
@@ -63,7 +63,7 @@ jobs:
             curl --fail --silent http://127.0.0.1:4173/ >/dev/null && break
             sleep 0.1
           done
-          timeout 75s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts scaled
+          timeout 75s xvfb-run -a -s "-screen 0 2560x1440x24" ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts scaled
       - uses: actions/upload-artifact@v4
         with:
           name: responsive-workspace-visual-validation
