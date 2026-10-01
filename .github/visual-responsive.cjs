@@ -121,6 +121,54 @@ async function validateBounds(win, label) {
   return metrics;
 }
 
+async function verifyConstrainedDrawers(win) {
+  const opened = await win.webContents.executeJavaScript(`(() => {
+    const hardware = document.querySelector('.hardware-drawer-toggle.collapsed');
+    const parts = document.querySelector('.parts-drawer-toggle.collapsed');
+    if (!hardware || !parts) return false;
+    hardware.click();
+    parts.click();
+    return true;
+  })()`, true);
+  if (!opened) throw new Error('Could not open constrained Hardware and Parts drawers');
+  await waitFor(win, `document.querySelector('.hardware-drawer.expanded') && document.querySelector('.tree-panel.expanded')`, 'both responsive drawers');
+
+  const result = await win.webContents.executeJavaScript(`(() => {
+    const box = node => {
+      const rect = node.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height };
+    };
+    const row = document.querySelector('.layout-navigation-row');
+    const hardware = document.querySelector('.hardware-drawer.expanded');
+    const parts = document.querySelector('.tree-panel.expanded');
+    const hardwareClose = document.querySelector('.hardware-drawer-collapse');
+    const partsClose = document.querySelector('.parts-drawer-collapse');
+    if (!row || !hardware || !parts || !hardwareClose || !partsClose) return null;
+    return {
+      row: box(row),
+      hardware: box(hardware),
+      parts: box(parts),
+      hardwareClose: box(hardwareClose),
+      partsClose: box(partsClose),
+    };
+  })()`, true);
+
+  if (!result) throw new Error('Could not measure responsive drawers');
+  if (result.hardware.right > result.parts.left + 1) throw new Error('Constrained drawers overlap each other');
+  for (const [name, control] of [['hardware', result.hardwareClose], ['parts', result.partsClose]]) {
+    if (control.left < result.row.left - 1 || control.right > result.row.right + 1 || control.top < result.row.top - 1 || control.bottom > result.row.bottom + 1) {
+      throw new Error(name + ' drawer close control is not reachable inside the workspace');
+    }
+  }
+
+  await win.webContents.executeJavaScript(`(() => {
+    document.querySelector('.hardware-drawer-collapse')?.click();
+    document.querySelector('.parts-drawer-collapse')?.click();
+  })()`, true);
+  await waitFor(win, `document.querySelector('.hardware-drawer.collapsed') && document.querySelector('.tree-panel.collapsed')`, 'collapsed responsive drawers');
+  return result;
+}
+
 async function verifySolverPersistence(win) {
   await clickByText(win, '.layout-workspace-tabs button', 'Fit Solver');
   await waitFor(win, `document.querySelector('.fit-solver-panel')?.offsetParent !== null`, 'visible Fit Solver');
@@ -220,6 +268,7 @@ app.whenReady().then(async () => {
   try {
     const minimum = await openApp(1100, 700);
     validation.minimum = await validateBounds(minimum, 'minimum-1100x700');
+    validation.minimumDrawers = await verifyConstrainedDrawers(minimum);
     validation.minimumSearch = await verifySearch(minimum, 'this-query-intentionally-matches-no-family-setting-1234567890', false);
     await capture(minimum, 'minimum-1100x700-no-match');
     minimum.destroy();
