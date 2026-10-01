@@ -134,7 +134,7 @@ export function featuresForPart(document: CabinetDocument, part: CadPart): CadFe
       semanticRole: feature.kind,
       position: { ...feature.position },
       size: { ...feature.size },
-      axis: inferRenderFeatureAxis(feature),
+      axis: feature.axis ?? inferFeatureAxis(feature.size),
       parameters: {
         width: feature.size.x,
         depth: feature.size.y,
@@ -195,17 +195,13 @@ function renderFeatureLabel(kind: CadRenderFeature['kind']) {
   }
 }
 
-function inferRenderFeatureAxis(feature: CadRenderFeature): 'x' | 'y' | 'z' {
+function inferFeatureAxis(size: CadPart['size']): 'x' | 'y' | 'z' {
   const values = [
-    ['x', feature.size.x] as const,
-    ['y', feature.size.y] as const,
-    ['z', feature.size.z] as const,
+    ['x', size.x] as const,
+    ['y', size.y] as const,
+    ['z', size.z] as const,
   ].sort((a, b) => a[1] - b[1]);
-
-  // Drill feature boxes encode the through length on the drill axis and the
-  // circular diameter on the two shorter axes. Subtractive box features use
-  // their shallow dimension as machining depth.
-  return feature.kind === 'drill' ? values[2][0] : values[0][0];
+  return values[0][0];
 }
 
 function backRabbetForPart(document: CabinetDocument, part: CadPart): CadFeature | null {
