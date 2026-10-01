@@ -1070,7 +1070,7 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
       ['butt', 'screw', 'dado', 'tab_slot', 'rabbet', 'lock_rabbet'] as const,
       defaults.drawerJoineryStyle,
     ),
-    drawerDadoDepth: clampNumber(source.drawerDadoDepth, 0.5, 18, defaults.drawerDadoDepth),
+    drawerDadoDepth: clampNumber(source.drawerDadoDepth, 0, 18, defaults.drawerDadoDepth),
     drawerDadoFitClearance: clampNumber(source.drawerDadoFitClearance, 0, 2, defaults.drawerDadoFitClearance),
     drawerJointFitClearance: clampNumber(source.drawerJointFitClearance, 0, 2, defaults.drawerJointFitClearance),
     drawerScrewHoleDiameter: clampNumber(source.drawerScrewHoleDiameter, 1, 8, defaults.drawerScrewHoleDiameter),
