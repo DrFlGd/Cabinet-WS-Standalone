@@ -67,7 +67,8 @@ async function openApp(width, height) {
   return win;
 }
 
-async function selectPart(win, partId) {
+async function selectPart(win, partId, expectedName) {
+  await waitFor(win, `!document.querySelector('.viewport-status.loading')`, 'kernel idle before selection', 30000);
   const opened = await win.webContents.executeJavaScript(`(() => {
     const button = document.querySelector('[aria-label="Open parts browser"]');
     if (!button) return false;
@@ -77,11 +78,28 @@ async function selectPart(win, partId) {
   if (!opened) throw new Error('Could not open parts browser');
   await waitFor(win, `document.querySelector('.tree-select[title="${partId}"]')`, partId);
   await win.webContents.executeJavaScript(`document.querySelector('.tree-select[title="${partId}"]')?.click()`, true);
-  await delay(300);
-  await win.webContents.executeJavaScript(`document.querySelector('[aria-label="Collapse parts browser"]')?.click()`, true);
-  await delay(300);
+  await waitFor(
+    win,
+    `document.querySelector('.selection-breadcrumb')?.textContent?.includes(${JSON.stringify(expectedName)})`,
+    'selection breadcrumb for ' + expectedName,
+  );
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const closed = await win.webContents.executeJavaScript(
+      `Boolean(document.querySelector('[aria-label="Open parts browser"]'))`,
+      true,
+    );
+    if (closed) break;
+    await win.webContents.executeJavaScript(
+      `document.querySelector('[aria-label="Collapse parts browser"]')?.click()`,
+      true,
+    );
+    await delay(250);
+  }
+  await waitFor(win, `document.querySelector('[aria-label="Open parts browser"]')`, 'parts drawer closed');
+  await waitFor(win, `!document.querySelector('.viewport-status.loading')`, 'kernel idle after selection', 30000);
   await win.webContents.executeJavaScript(`document.querySelector('button[title="Fit model"]')?.click()`, true);
-  await delay(600);
+  await delay(700);
 }
 
 async function setExplode(win, value) {
@@ -120,7 +138,7 @@ async function captureScenario(win, label) {
   await chooseSelect(win, 'Utility cabinet starter', 'Door Base');
   await setExplode(win, 0);
   await capture(win, label + '-utility-normal');
-  await selectPart(win, 'carcass:top-front');
+  await selectPart(win, 'carcass:top-front', 'Top Front Stretcher');
   await capture(win, label + '-utility-selected');
   await setExplode(win, 110);
   await capture(win, label + '-utility-exploded');
@@ -129,7 +147,7 @@ async function captureScenario(win, label) {
   await chooseSelect(win, 'Cabinet family', 'Equipment stand');
   await chooseSelect(win, 'Equipment stand starter', 'Solid-Side Utility Stand');
   await capture(win, label + '-equipment-normal');
-  await selectPart(win, 'carcass:top-front');
+  await selectPart(win, 'carcass:top-front', 'Front Top Rail');
   await capture(win, label + '-equipment-selected');
   await setExplode(win, 110);
   await capture(win, label + '-equipment-exploded');
