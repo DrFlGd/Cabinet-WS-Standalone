@@ -6,6 +6,40 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
+### Changed
+
+- Increase Shop Docs typography and spacing across BOM, assembly, manufacturing,
+  and production views; printable BOM/assembly documents use larger screen text,
+  more readable table/caption sizes, and explicit print page orientation.
+- Reorganize sheet stock definitions into aligned material/property rows with
+  horizontal scrolling at narrow widths instead of shrinking controls and labels.
+- Add explicit stock/material selection for production review. Sheet choices,
+  previews, placements, utilization, and unplaced totals are scoped to the selected
+  material/thickness stock and remain valid across replanning.
+- Consolidate duplicate planning stock definitions that differ only by Shop Docs'
+  panel thickness-axis reporting. Materials or physical thicknesses are never
+  combined across compatibility groups.
+
+### Fixed
+
+- Prevent stale nested-sheet selection from falling back to another material's
+  first sheet after stock edits or replanning. Empty selected stocks now remain
+  selected with an explicit no-placement state, while removed stocks reconcile to
+  a valid remaining group.
+
+### Testing
+
+- Add behavioral multi-stock regressions for stock switching, empty/removed stock
+  groups, selected-stock totals, incompatible material/thickness isolation, and
+  printable Shop Docs readability.
+
+### Compatibility
+
+- No project/schema, family/native synchronization, Manual Layout, undo/redo,
+  display-unit, manufacturing-geometry, or STEP export behavior changes. Production
+  planning configuration remains transient editor state.
+
+
 ## [0.14.3] - 2026-09-30
 
 ### Fixed
