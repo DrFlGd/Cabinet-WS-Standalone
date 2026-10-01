@@ -256,6 +256,7 @@ function applySlideDrilling(parts: CadPart[], instance: HardwareInstance, parame
         .filter(y => y >= 0 && y <= drawerSide.size.y)
         .map(y => ({
           kind: 'drill' as const,
+          axis: 'x' as const,
           position: {
             x: drawerSide.id.endsWith(':left') ? -0.6 : Math.max(0, drawerSide.size.x - 0.6),
             y,
@@ -294,6 +295,7 @@ function applyHingeDrilling(parts: CadPart[], instance: HardwareInstance, parame
     ...(door.renderFeatures ?? []),
     {
       kind: 'drill' as const,
+      axis: 'y' as const,
       position: {
         x: Math.max(0, localX - cupDiameter / 2),
         y: Math.max(0, door.size.y - cupDepth),
@@ -317,6 +319,7 @@ function applyHingeDrilling(parts: CadPart[], instance: HardwareInstance, parame
       if (z <= diameter / 2 || z >= door.size.z - diameter / 2) continue;
       doorFeatures.push({
         kind: 'drill' as const,
+        axis: 'y' as const,
         position: {
           x: Math.max(0, localX - diameter / 2),
           y: Math.max(0, door.size.y - Math.min(5, door.size.y)),
@@ -375,6 +378,7 @@ function appendMountDrilling(
     ...(part.renderFeatures ?? []),
     ...offsets.map(offset => ({
       kind: 'drill' as const,
+      axis: 'x' as const,
       position: {
         x: -0.6,
         y: Math.max(0, yBase + offset - diameter / 2),
