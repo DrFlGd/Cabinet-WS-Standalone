@@ -5,6 +5,7 @@ import { sectionLayoutErrors } from './sections';
 import { drawerScrewPlacement } from './drawerJoinery';
 import type { CabinetDocument, CadPart, HardwareInstance } from './types';
 import { buildFeatureGraph } from './kernel/featureGraph';
+import { drawerScrewPlacement } from './drawerJoinery';
 import type { CadFeature, KernelDiagnostic, KernelStatus } from './kernel/types';
 
 export type DesignHealthSeverity = 'error' | 'warning' | 'info';
@@ -336,6 +337,36 @@ function checkDrawerConstruction(document: CabinetDocument, checks: DesignHealth
         suggestion: 'Reduce screw diameter/edge margin, increase drawer height, or move the captured-bottom groove.',
         partIds: invalidSides.map(side => side.id),
       });
+    }
+  }
+
+  if (p.drawerJoineryStyle === 'screw') {
+    const drawerSides = document.parts.filter(part =>
+      part.category === 'drawer' && /:box:(left|right)$/.test(part.id)
+    );
+    for (const side of drawerSides) {
+      const bottomGroove = side.renderFeatures?.find(feature =>
+        feature.kind === 'slot' && feature.sourcePartId?.endsWith(':box:bottom')
+      );
+      const placement = drawerScrewPlacement({
+        boxHeight: side.size.z,
+        edgeMargin: p.drawerScrewEdgeMargin,
+        diameter: p.drawerScrewHoleDiameter,
+        bottomCaptured: p.drawerBottomStyle === 'captured',
+        bottomGrooveZ: bottomGroove?.position.z ?? 0,
+        bottomThickness: p.drawerBottomThickness,
+      });
+      if (!placement.valid) {
+        checks.push({
+          id: `drawer-screw-margin-${side.id}`,
+          severity: 'error',
+          category: 'manufacturing',
+          title: 'Drawer screw guides do not fit the side',
+          message: `${side.name} cannot place ${p.drawerScrewHoleDiameter.toFixed(2)} mm screw guides with a ${p.drawerScrewEdgeMargin.toFixed(2)} mm edge margin around the current bottom groove.`,
+          partIds: [side.id],
+          suggestion: 'Reduce the screw-guide diameter or edge margin, increase drawer-side height, or move the captured-bottom groove.',
+        });
+      }
     }
   }
 
