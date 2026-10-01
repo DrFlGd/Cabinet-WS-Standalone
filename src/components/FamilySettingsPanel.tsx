@@ -69,7 +69,8 @@ export default function FamilySettingsPanel({
   });
 
   const roots = FAMILY_SETTINGS_SECTION_ORDER.filter(root =>
-    visibleRows.some(row => familySectionRoot(row.field) === root),
+    visibleRows.some(row => familySectionRoot(row.field) === root)
+      || (root === activeCategory && rows.some(row => familySectionRoot(row.field) === root)),
   );
 
   const activeCount = rows.filter(row => !row.inactiveReason && !row.field.expression).length;
@@ -147,6 +148,11 @@ export default function FamilySettingsPanel({
               <strong>{root}</strong>
               <span>{rootRows.length}</span>
             </button>
+            {!collapsed && rootRows.length === 0 && (
+              <p className="family-category-empty">
+                No settings in this category are visible with the current Advanced and Inactive filters.
+              </p>
+            )}
             {!collapsed && subSections.map(section => {
               const sectionRows = rootRows.filter(row => familySectionName(row.field) === section);
               return (
