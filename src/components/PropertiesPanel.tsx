@@ -193,11 +193,10 @@ export default function PropertiesPanel({
           )}
         </label>
 
-        <div className="property-mode-tabs" role="tablist" aria-label="Property surface">
+        <div className="property-mode-tabs" role="group" aria-label="Property surface">
           <button
             type="button"
-            role="tab"
-            aria-selected={browse.surface === 'family'}
+            aria-pressed={browse.surface === 'family'}
             className={browse.surface === 'family' ? 'active' : ''}
             onClick={() => selectSurface('family')}
           >
@@ -205,8 +204,7 @@ export default function PropertiesPanel({
           </button>
           <button
             type="button"
-            role="tab"
-            aria-selected={browse.surface === 'model'}
+            aria-pressed={browse.surface === 'model'}
             className={browse.surface === 'model' ? 'active' : ''}
             onClick={() => selectSurface('model')}
           >
