@@ -2691,7 +2691,9 @@ button { color: inherit; }
 
 .production-stock-table-wrap {
   min-width: 0;
-  overflow-x: auto;
+  max-height: min(52vh, 520px);
+  overflow: auto;
+  scrollbar-gutter: stable;
   border: 1px solid #303a41;
   border-radius: 8px;
   background: #151a1d;
