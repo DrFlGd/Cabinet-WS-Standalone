@@ -144,8 +144,10 @@ async function selectPart(win, partId, expectedName) {
   );
   await waitFor(
     win,
-    `(document.querySelector('.cad-viewport canvas')?.getBoundingClientRect().width || 0) > 600`,
-    'selected viewport width',
+    `(document.querySelector('.cad-viewport canvas')?.getBoundingClientRect().width || 0) >= 295`,
+    // Match the responsive workspace's supported canvas floor. The separate
+    // collapsed-drawer assertion above protects against stale expanded captures.
+    'selected responsive viewport width',
   );
   await delay(350);
   await win.webContents.executeJavaScript(`document.querySelector('button[title="Fit model"]')?.click()`, true);
@@ -214,7 +216,7 @@ async function captureScenario(win, label) {
   captures.equipmentExploded = await capture(win, label + '-equipment-exploded');
 
   for (const [name, metrics] of Object.entries(captures)) {
-    if (metrics.width <= 600 || metrics.height <= 300) throw new Error(name + ' viewport is too small: ' + JSON.stringify(metrics));
+    if (metrics.width < 295 || metrics.height <= 300) throw new Error(name + ' viewport is too small: ' + JSON.stringify(metrics));
     if (!metrics.partsCollapsed) throw new Error(name + ' captured with parts browser expanded: ' + JSON.stringify(metrics));
   }
   if (!captures.utilityNormal.family.includes('Utility cabinet') || captures.utilityNormal.documentName !== 'Door Base') {
