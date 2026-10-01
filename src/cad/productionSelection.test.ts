@@ -95,14 +95,12 @@ describe('production stock selection', () => {
   it('does not combine incompatible material or thickness definitions', () => {
     const { docs, manufacturing, configuration } = multiStockFixture();
     const first = configuration.stocks[0];
-    configuration.stocks = configuration.stocks.map(stock =>
-      stock.id === first.id ? { ...stock, material: stock.material + ' incompatible' } : stock
-    );
+    configuration.stocks = [{ ...first, material: first.material + ' incompatible' }];
 
     const plan = buildProductionPlan(manufacturing, docs, configuration);
-    const incompatibleSheets = plan.sheets.filter(sheet => sheet.stockDefinitionId === first.id);
 
-    expect(incompatibleSheets).toHaveLength(0);
+    expect(plan.sheets.every(sheet => sheet.stockDefinitionId === first.id)).toBe(true);
+    expect(plan.sheets.every(sheet => sheet.material === first.material + ' incompatible')).toBe(true);
     expect(plan.unplaced.some(part => part.material === first.material && part.stockDefinitionId === null)).toBe(true);
   });
 });
