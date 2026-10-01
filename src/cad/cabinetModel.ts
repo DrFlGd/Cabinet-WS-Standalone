@@ -3,6 +3,7 @@ import type { DisplayUnits } from './units';
 import { makeUtilityDefaults, UTILITY_STARTERS } from './utilityStarters';
 import { cloneSectionNodes, sectionLayoutErrors, sectionPanels, sectionRects, sectionRoot, treeErrors } from './sections';
 import { applyHardwareDrilling, buildHardwareInstances, hardwareParts } from './hardware';
+import { drawerCrossPanelSpan, drawerSideCornerFeatures } from './drawerJoinery';
 
 export const DEFAULT_PARAMETERS: CabinetParameters = makeUtilityDefaults();
 
@@ -648,6 +649,9 @@ function addDrawerBox(
     frontRegistration: p.drawerFrontRegistration,
   };
 
+  const frontId = `${area.idPrefix}:box:front`;
+  const backId = `${area.idPrefix}:box:back`;
+  const crossPanel = drawerCrossPanelSpan(p.drawerJoineryStyle, width, wall, p.drawerDadoDepth);
   const left = part(
     `${area.idPrefix}:box:left`, `${area.namePrefix} Left Side`, 'drawer',
     { x, y, z: sideZ }, { x: wall, y: depth, z: sideHeight }, darkWood, material, metadata,
@@ -657,12 +661,16 @@ function addDrawerBox(
     { x: x + width - wall, y, z: sideZ }, { x: wall, y: depth, z: sideHeight }, darkWood, material, metadata,
   );
   const front = part(
-    `${area.idPrefix}:box:front`, `${area.namePrefix} Box Front`, 'drawer',
-    { x: x + wall, y, z: sideZ }, { x: insideWidth, y: wall, z: sideHeight }, darkWood, material, metadata,
+    frontId, `${area.namePrefix} Box Front`, 'drawer',
+    { x: x + crossPanel.offsetX, y, z: sideZ },
+    { x: crossPanel.width, y: wall, z: sideHeight },
+    darkWood, material, metadata,
   );
   const back = part(
-    `${area.idPrefix}:box:back`, `${area.namePrefix} Box Back`, 'drawer',
-    { x: x + wall, y: y + depth - wall, z: sideZ }, { x: insideWidth, y: wall, z: sideHeight }, darkWood, material, metadata,
+    backId, `${area.namePrefix} Box Back`, 'drawer',
+    { x: x + crossPanel.offsetX, y: y + depth - wall, z: sideZ },
+    { x: crossPanel.width, y: wall, z: sideHeight },
+    darkWood, material, metadata,
   );
 
   if (p.drawerBottomStyle === 'captured') {
@@ -674,20 +682,32 @@ function addDrawerBox(
     back.renderFeatures = [{ kind: 'slot', sourcePartId: `${area.idPrefix}:box:bottom`, position: { x: 0, y: 0, z: grooveZ }, size: { x: insideWidth, y: grooveDepth, z: bottom + 0.4 } }];
   }
 
-  if (p.drawerJoineryStyle !== 'butt') {
-    const rabbetDepth = Math.min(Math.max(2, wall * 0.45), Math.max(2, wall - 1));
-    const ends = [left, right];
-    ends.forEach(side => {
-      side.renderFeatures = [
-        ...(side.renderFeatures ?? []),
-        { kind: 'rabbet', sourcePartId: front.id, position: { x: 0, y: 0, z: 0 }, size: { x: side.size.x, y: rabbetDepth, z: side.size.z } },
-        { kind: 'rabbet', sourcePartId: back.id, position: { x: 0, y: side.size.y - rabbetDepth, z: 0 }, size: { x: side.size.x, y: rabbetDepth, z: side.size.z } },
-      ];
-      if (p.drawerJoineryStyle === 'lock_rabbet') {
-        side.renderFeatures.push({ kind: 'slot', sourcePartId: front.id, position: { x: 0, y: rabbetDepth, z: side.size.z * 0.25 }, size: { x: side.size.x, y: Math.min(wall, 4), z: Math.max(3, wall * 0.5) } });
-      }
-    });
-  }
+  const grooveZ = p.drawerBottomStyle === 'captured'
+    ? Math.min(sideHeight - bottom - 2, Math.max(4, sideHeight * 0.12))
+    : 0;
+  const cornerOptions = {
+    style: p.drawerJoineryStyle,
+    wallThickness: wall,
+    boxDepth: depth,
+    boxHeight: sideHeight,
+    dadoDepth: p.drawerDadoDepth,
+    dadoFitClearance: p.drawerDadoFitClearance,
+    screwHoleDiameter: p.drawerScrewHoleDiameter,
+    screwEdgeMargin: p.drawerScrewEdgeMargin,
+    bottomCaptured: p.drawerBottomStyle === 'captured',
+    bottomGrooveZ: grooveZ,
+    bottomThickness: bottom,
+    frontPartId: front.id,
+    backPartId: back.id,
+  };
+  left.renderFeatures = [
+    ...(left.renderFeatures ?? []),
+    ...drawerSideCornerFeatures('left', cornerOptions),
+  ];
+  right.renderFeatures = [
+    ...(right.renderFeatures ?? []),
+    ...drawerSideCornerFeatures('right', cornerOptions),
+  ];
 
   parts.push(left, right, front, back);
 
@@ -1045,7 +1065,16 @@ export function sanitizeParameters(input: Partial<CabinetParameters>): CabinetPa
     doorGap: clampNumber(source.doorGap, 0.5, 20, defaults.doorGap),
     drawerGap: clampNumber(source.drawerGap, 0.5, 20, defaults.drawerGap),
     shelfStyle: oneOf(source.shelfStyle, ['fixed', 'adjustable'] as const, defaults.shelfStyle),
-    drawerJoineryStyle: oneOf(source.drawerJoineryStyle, ['butt', 'rabbet', 'lock_rabbet'] as const, defaults.drawerJoineryStyle),
+    drawerJoineryStyle: oneOf(
+      source.drawerJoineryStyle,
+      ['butt', 'screw', 'dado', 'tab_slot', 'rabbet', 'lock_rabbet'] as const,
+      defaults.drawerJoineryStyle,
+    ),
+    drawerDadoDepth: clampNumber(source.drawerDadoDepth, 0.5, 18, defaults.drawerDadoDepth),
+    drawerDadoFitClearance: clampNumber(source.drawerDadoFitClearance, 0, 2, defaults.drawerDadoFitClearance),
+    drawerJointFitClearance: clampNumber(source.drawerJointFitClearance, 0, 2, defaults.drawerJointFitClearance),
+    drawerScrewHoleDiameter: clampNumber(source.drawerScrewHoleDiameter, 1, 8, defaults.drawerScrewHoleDiameter),
+    drawerScrewEdgeMargin: clampNumber(source.drawerScrewEdgeMargin, 5, 50, defaults.drawerScrewEdgeMargin),
     drawerBottomStyle: oneOf(source.drawerBottomStyle, ['captured', 'applied'] as const, defaults.drawerBottomStyle),
     drawerBottomGrooveDepth: clampNumber(source.drawerBottomGrooveDepth, 1, 10, defaults.drawerBottomGrooveDepth),
     drawerDividerCount: clampInteger(source.drawerDividerCount, 0, 4, defaults.drawerDividerCount),
