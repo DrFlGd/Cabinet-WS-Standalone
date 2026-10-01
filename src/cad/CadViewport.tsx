@@ -10,6 +10,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { CabinetDocument, CadPart, ViewPreset } from './types';
 import type { KernelFaceGroup, KernelSelection, TessellatedPart } from './kernel/types';
 import { shouldShowViewportHandle } from './viewportInteraction';
+import { edgeOverlayTreatment, surfaceDepthTreatment } from './viewportRendering';
 
 export type CadViewportHandle = {
   setView: (preset: ViewPreset) => void;
@@ -524,12 +525,14 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
       if (hiddenIds.has(part.id) || !part.visible) continue;
       const exact = exactByPartId.get(part.id);
       const geometry = exact ? createKernelPartGeometry(part, exact) : createPartGeometry(part);
+      const depthTreatment = surfaceDepthTreatment(displayMode);
       const material = new THREE.MeshStandardMaterial({
         color: part.color,
         roughness: 0.72,
         metalness: part.category === 'hardware' ? 0.28 : 0,
         wireframe: displayMode === 'wireframe',
         clippingPlanes: clipEnabled ? [new THREE.Plane(new THREE.Vector3(0, 0, -1), clipZ)] : [],
+        ...depthTreatment,
       });
       const mesh: PartObject = new THREE.Mesh(geometry, material);
       const explodeVector = explodeOffset(part, explode, cadDocument.parameters.width, cadDocument.parameters.depth);
@@ -551,8 +554,16 @@ const CadViewport = forwardRef<CadViewportHandle, Props>(function CadViewport(
         addKernelEdges(rt.model, part, exact, partCenter, explodeVector, displayMode === 'shaded-edges');
       } else {
         const edges = new THREE.EdgesGeometry(geometry, 20);
-        const edgeMaterial = new THREE.LineBasicMaterial({ color: '#4d3828', transparent: true, opacity: 0.68 });
+        const edgeDepth = edgeOverlayTreatment();
+        const edgeMaterial = new THREE.LineBasicMaterial({
+          color: '#4d3828',
+          transparent: true,
+          opacity: 0.68,
+          depthTest: edgeDepth.depthTest,
+          depthWrite: edgeDepth.depthWrite,
+        });
         const line = new THREE.LineSegments(edges, edgeMaterial);
+        line.renderOrder = edgeDepth.renderOrder;
         setBasePosition(line, partCenter, explodeVector);
         line.userData.decorative = true;
         line.userData.partId = part.id;
@@ -822,12 +833,16 @@ function addKernelEdges(
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
     geometry.translate(-part.size.x / 2, -part.size.y / 2, -part.size.z / 2);
 
+    const edgeDepth = edgeOverlayTreatment();
     const material = new THREE.LineBasicMaterial({
       color: '#4d3828',
       transparent: true,
       opacity: 0.76,
+      depthTest: edgeDepth.depthTest,
+      depthWrite: edgeDepth.depthWrite,
     });
     const line = new THREE.LineSegments(geometry, material);
+    line.renderOrder = edgeDepth.renderOrder;
     setBasePosition(line, partCenter, explodeVector);
     line.userData.partId = part.id;
     line.userData.decorative = true;
