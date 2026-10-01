@@ -1,6 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { makeUtilityDefaults } from '../cad/utilityStarters';
 import type { DesignHealthReport } from '../cad/designHealth';
 import DesignHealthPanel from './DesignHealthPanel';
 
@@ -43,9 +42,6 @@ describe('DesignHealthPanel', () => {
     const markup = renderToStaticMarkup(
       <DesignHealthPanel
         report={report}
-        parameters={makeUtilityDefaults()}
-        units="mm"
-        onApplySolution={() => undefined}
       />,
     );
 
@@ -53,5 +49,6 @@ describe('DesignHealthPanel', () => {
     expect(markup).toContain('Design Health · WARNING');
     expect(markup).toContain('0 errors · 1 warnings · manufacturing review');
     expect(markup).toContain('Clearance needs review');
+    expect(markup).not.toContain('Fit Solver');
   });
 });
