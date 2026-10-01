@@ -5,7 +5,6 @@ import { sectionLayoutErrors } from './sections';
 import { drawerScrewPlacement } from './drawerJoinery';
 import type { CabinetDocument, CadPart, HardwareInstance } from './types';
 import { buildFeatureGraph } from './kernel/featureGraph';
-import { drawerScrewPlacement } from './drawerJoinery';
 import type { CadFeature, KernelDiagnostic, KernelStatus } from './kernel/types';
 
 export type DesignHealthSeverity = 'error' | 'warning' | 'info';
