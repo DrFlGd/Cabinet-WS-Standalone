@@ -106,6 +106,28 @@ Preview fallback is an interaction aid only; it is not permission to export an
 incomplete exact assembly. An in-progress export uses its captured request snapshot,
 not subsequent edits.
 
+## Workspace presentation and settings navigation
+
+The desktop shell treats the native 1100 × 700 minimum window as a real supported
+workspace rather than a scaled-down desktop. Header, toolbar, left workspace, viewport,
+and Properties panel keep independent overflow boundaries. At constrained widths,
+expanded Hardware and Parts drawers overlay their owning left workspace instead of
+consuming the model viewport; Shop Docs and Production Planning retain their own
+scoped layout rules.
+
+Manual Layout and Fit Solver are sibling presentation tabs over the same semantic
+document. Both tab surfaces remain mounted while switching so transient solver inputs
+and results are not discarded. Applying a feasible fit still uses the existing single
+undoable parameter edit. Design Health is outside the tab switch and remains visible
+beneath either surface. Drawer and Equipment Stand do not gain a synthetic section
+editor; their Layout tab explains the dedicated-generator boundary.
+
+The Properties panel keeps 3D selection separate from browsing state. Explicit Family
+or Native category browsing only changes local navigation/scroll state and never
+clears the selected semantic part or edits cabinet data. A selected-part return action
+restores contextual properties. Search remains scoped to the chosen settings surface,
+while category activation clears search and scrolls the results region to its section.
+
 ## Direct editing and hardware
 
 Viewport dimensions, shelf movement and section-divider handles update semantic
