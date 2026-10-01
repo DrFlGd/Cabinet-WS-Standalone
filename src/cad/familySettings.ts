@@ -590,6 +590,11 @@ function projectParametersToFamilyValues(
   set('shelf_style', parameters.shelfStyle);
 
   set('drawer_joinery_style', parameters.drawerJoineryStyle);
+  set('drawer_dado_depth', parameters.drawerDadoDepth);
+  set('drawer_dado_fit_clearance', parameters.drawerDadoFitClearance);
+  set('drawer_joint_fit_clearance', parameters.drawerJointFitClearance);
+  set('drawer_screw_hole_diameter', parameters.drawerScrewHoleDiameter);
+  set('drawer_screw_edge_margin', parameters.drawerScrewEdgeMargin);
   set('drawer_bottom_joinery', parameters.drawerBottomStyle === 'captured' ? 'dado' : 'applied');
   set('drawer_bottom_dado_depth', parameters.drawerBottomGrooveDepth);
   const hasDrawerDividers = parameters.drawerDividerCount > 0 || parameters.drawerDividerRows > 0;
