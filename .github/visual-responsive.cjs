@@ -57,6 +57,16 @@ async function openApp(width, height, zoomFactor = 1) {
       backgroundThrottling: false,
     },
   });
+  win.webContents.on('did-fail-load', (_event, code, description, url) => {
+    console.error('RESPONSIVE_VISUAL_LOAD_FAILURE', JSON.stringify({ code, description, url }));
+  });
+  win.webContents.on('console-message', (_event, level, message, line, sourceId) => {
+    console.log('RESPONSIVE_VISUAL_CONSOLE', JSON.stringify({ level, message, line, sourceId }));
+  });
+  win.webContents.on('render-process-gone', (_event, details) => {
+    console.error('RESPONSIVE_VISUAL_RENDERER_GONE', JSON.stringify(details));
+  });
+
   const visualUrl = process.env.RESPONSIVE_VISUAL_URL;
   if (visualUrl) await win.loadURL(visualUrl);
   else await win.loadFile(path.join(process.cwd(), 'dist', 'index.html'));
@@ -64,7 +74,21 @@ async function openApp(width, height, zoomFactor = 1) {
     win.webContents.setZoomFactor(zoomFactor);
     await delay(300);
   }
-  await waitFor(win, `document.querySelector('.workspace') && document.querySelector('.properties-panel')`, 'main workspace');
+  try {
+    await waitFor(win, `document.querySelector('.workspace') && document.querySelector('.properties-panel')`, 'main workspace');
+  } catch (error) {
+    const diagnostic = await win.webContents.executeJavaScript(`(() => ({
+      location: location.href,
+      title: document.title,
+      readyState: document.readyState,
+      root: document.querySelector('#root')?.innerHTML?.slice(0, 4000) || '',
+      bodyText: document.body?.innerText?.slice(0, 4000) || '',
+      scripts: [...document.scripts].map(script => ({ src: script.src, type: script.type })),
+      resources: performance.getEntriesByType('resource').map(entry => entry.name).slice(-20)
+    }))()`, true).catch(diagnosticError => ({ diagnosticError: String(diagnosticError) }));
+    console.error('RESPONSIVE_VISUAL_STARTUP_DIAGNOSTIC', JSON.stringify(diagnostic));
+    throw error;
+  }
   await delay(500);
   return win;
 }
