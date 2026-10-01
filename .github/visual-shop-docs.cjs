@@ -9,6 +9,7 @@ fs.mkdirSync(outputDir, { recursive: true });
 
 app.commandLine.appendSwitch('ignore-gpu-blocklist');
 app.commandLine.appendSwitch('use-angle', 'swiftshader');
+app.on('window-all-closed', event => event.preventDefault());
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -78,7 +79,7 @@ async function selectSecondStock(win) {
     return material;
   })()`, true);
   await waitFor(win, `document.querySelectorAll('.production-stock-identity')[1]?.getAttribute('aria-pressed') === 'true'`, 'second stock selection');
-  await delay(250);
+  await delay(900);
   return result;
 }
 
@@ -124,7 +125,6 @@ app.whenReady().then(async () => {
       wide.destroy();
 
       console.log('VISUAL_VALIDATION opening baseline narrow');
-      console.log('VISUAL_VALIDATION opening updated narrow');
       const narrow = await openProduction(760, 900);
       console.log('VISUAL_VALIDATION capturing baseline narrow');
       await capture(narrow, 'before-narrow');
@@ -139,8 +139,12 @@ app.whenReady().then(async () => {
       console.log('VISUAL_VALIDATION selected second stock', secondMaterial);
       const validation = await afterValidation(wide, secondMaterial);
       await capture(wide, 'after-wide-stock-2');
+      await wide.webContents.executeJavaScript(`document.querySelector('.production-sheet-toolbar')?.scrollIntoView({ block: 'start' })`, true);
+      await delay(500);
+      await capture(wide, 'after-wide-stock-2-review');
       wide.destroy();
 
+      console.log('VISUAL_VALIDATION opening updated narrow');
       const narrow = await openProduction(760, 900);
       const narrowMaterial = await selectSecondStock(narrow);
       const narrowValidation = await afterValidation(narrow, narrowMaterial);
@@ -152,7 +156,7 @@ app.whenReady().then(async () => {
         secondMaterial,
         validation,
         narrowValidation,
-        captured: ['after-wide-stock-1', 'after-wide-stock-2', 'after-narrow-stock-2'],
+        captured: ['after-wide-stock-1', 'after-wide-stock-2', 'after-wide-stock-2-review', 'after-narrow-stock-2'],
       }));
     }
     clearTimeout(hardTimeout);
