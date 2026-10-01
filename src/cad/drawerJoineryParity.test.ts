@@ -144,6 +144,35 @@ describe('drawer corner joinery parity', () => {
     )).toBe(true);
   });
 
+  it('reports reference-invalid screw margins instead of relocating guides', () => {
+    const starter = familyStarter('drawer');
+    const values = {
+      ...starter.values,
+      drawer_joinery_style: 'screw',
+      drawer_screw_hole_diameter: 8,
+      drawer_screw_edge_margin: 5,
+    };
+    const parameters = parametersFromFamilyValues('drawer', values);
+    const document = buildFamilyCabinetDocument(parameters, 'Invalid screw margin', 'mm', {
+      family: 'drawer',
+      starterId: null,
+      familyValues: values,
+    });
+
+    expect(analyzeDesignHealth(document).checks).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: 'drawer-screw-margin-drawer:1:box:left',
+        severity: 'error',
+        category: 'manufacturing',
+      }),
+      expect.objectContaining({
+        id: 'drawer-screw-margin-drawer:1:box:right',
+        severity: 'error',
+        category: 'manufacturing',
+      }),
+    ]));
+  });
+
   it('applies the same dado corner construction to shared-cabinet drawer boxes', () => {
     const starter = familyStarter('utility');
     const parameters = {
