@@ -200,7 +200,15 @@ type NestPart = {
 const OPERATION_KINDS: ManufacturingOperationKind[] = ['CUT', 'POCKET', 'DADO_GROOVE', 'DRILL', 'ENGRAVE', 'EDGE'];
 
 export function createDefaultProductionConfiguration(docs: ShopDocumentation): ProductionConfiguration {
-  const stocks: SheetStockDefinition[] = docs.materialGroups.map((group, index) => {
+  const compatibleGroups = new Map<string, { material: string; thickness: number }>();
+  for (const group of docs.materialGroups) {
+    const key = group.material + '|' + group.thickness.toFixed(4);
+    if (!compatibleGroups.has(key)) {
+      compatibleGroups.set(key, { material: group.material, thickness: group.thickness });
+    }
+  }
+
+  const stocks: SheetStockDefinition[] = [...compatibleGroups.values()].map((group, index) => {
     const rows = docs.bom.filter(row =>
       row.material === group.material
       && Math.abs(row.blank[row.thicknessAxis] - group.thickness) < 0.05
