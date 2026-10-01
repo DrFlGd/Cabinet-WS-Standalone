@@ -2,7 +2,7 @@ const { app, BrowserWindow } = require('electron');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const outputDir = path.resolve(process.argv[2] || 'responsive-visual-artifacts');
+const outputDir = path.resolve(process.argv[3] || 'responsive-visual-artifacts');
 fs.mkdirSync(outputDir, { recursive: true });
 
 app.commandLine.appendSwitch('disable-gpu');
@@ -263,7 +263,7 @@ async function verifySearch(win, query, expectMatch) {
   }))()`, true);
 }
 
-const scenario = process.argv[3] || 'minimum';
+const scenario = process.argv[4] || 'minimum';
 
 app.whenReady().then(async () => {
   const validation = {};
