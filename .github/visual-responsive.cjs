@@ -5,8 +5,8 @@ const path = require('node:path');
 const outputDir = path.resolve(process.argv[3] || 'responsive-visual-artifacts');
 fs.mkdirSync(outputDir, { recursive: true });
 
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-software-rasterizer');
+app.commandLine.appendSwitch('use-gl', 'swiftshader');
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
