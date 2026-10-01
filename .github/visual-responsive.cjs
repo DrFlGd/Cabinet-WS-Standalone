@@ -10,7 +10,7 @@ app.commandLine.appendSwitch('disable-software-rasterizer');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-async function waitFor(win, expression, label, timeoutMs = 30000) {
+async function waitFor(win, expression, label, timeoutMs = 10000) {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     try {
@@ -263,38 +263,44 @@ async function verifySearch(win, query, expectMatch) {
   }))()`, true);
 }
 
+const scenario = process.argv[3] || 'minimum';
+
 app.whenReady().then(async () => {
   const validation = {};
+  let win;
   try {
-    const minimum = await openApp(1100, 700);
-    validation.minimum = await validateBounds(minimum, 'minimum-1100x700');
-    validation.minimumDrawers = await verifyConstrainedDrawers(minimum);
-    validation.minimumSearch = await verifySearch(minimum, 'this-query-intentionally-matches-no-family-setting-1234567890', false);
-    await capture(minimum, 'minimum-1100x700-no-match');
-    minimum.destroy();
+    console.log('RESPONSIVE_VISUAL_START ' + scenario);
+    if (scenario === 'minimum') {
+      win = await openApp(1100, 700);
+      validation.bounds = await validateBounds(win, 'minimum-1100x700');
+      validation.drawers = await verifyConstrainedDrawers(win);
+      validation.search = await verifySearch(win, 'this-query-intentionally-matches-no-family-setting-1234567890', false);
+      await capture(win, 'minimum-1100x700-no-match');
+    } else if (scenario === 'laptop') {
+      win = await openApp(1366, 768);
+      validation.bounds = await validateBounds(win, 'laptop-1366x768');
+      validation.selectedCategory = await verifySelectedCategoryBrowse(win);
+      await capture(win, 'laptop-1366x768-selected-category');
+    } else if (scenario === 'desktop') {
+      win = await openApp(1920, 1080);
+      validation.bounds = await validateBounds(win, 'desktop-1920x1080');
+      validation.solver = await verifySolverPersistence(win);
+      await capture(win, 'desktop-1920x1080-fit-solver');
+    } else if (scenario === 'scaled') {
+      win = await openApp(1100, 700, 1.25);
+      validation.bounds = await validateBounds(win, 'scale-pressure-125');
+      validation.search = await verifySearch(win, 'width', true);
+      await capture(win, 'scale-pressure-125-width-search');
+    } else {
+      throw new Error('Unknown responsive visual scenario: ' + scenario);
+    }
 
-    const laptop = await openApp(1366, 768);
-    validation.laptop = await validateBounds(laptop, 'laptop-1366x768');
-    validation.selectedCategory = await verifySelectedCategoryBrowse(laptop);
-    await capture(laptop, 'laptop-1366x768-selected-category');
-    laptop.destroy();
-
-    const desktop = await openApp(1920, 1080);
-    validation.desktop = await validateBounds(desktop, 'desktop-1920x1080');
-    validation.solver = await verifySolverPersistence(desktop);
-    await capture(desktop, 'desktop-1920x1080-fit-solver');
-    desktop.destroy();
-
-    const scaled = await openApp(1100, 700, 1.25);
-    validation.scaled = await validateBounds(scaled, 'scale-pressure-125');
-    validation.scaledSearch = await verifySearch(scaled, 'width', true);
-    await capture(scaled, 'scale-pressure-125-width-search');
-    scaled.destroy();
-
-    fs.writeFileSync(path.join(outputDir, 'validation.json'), JSON.stringify(validation, null, 2));
-    console.log('RESPONSIVE_VISUAL_VALIDATION ' + JSON.stringify(validation));
+    fs.writeFileSync(path.join(outputDir, 'validation-' + scenario + '.json'), JSON.stringify(validation, null, 2));
+    console.log('RESPONSIVE_VISUAL_VALIDATION ' + scenario + ' ' + JSON.stringify(validation));
+    win?.destroy();
     app.quit();
   } catch (error) {
+    win?.destroy();
     console.error(error);
     app.exit(1);
   }
