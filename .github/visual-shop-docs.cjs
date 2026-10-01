@@ -6,9 +6,6 @@ const outputDir = path.resolve(process.argv[2] || 'visual-artifacts');
 const mode = process.argv[3] || 'after';
 fs.mkdirSync(outputDir, { recursive: true });
 
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-software-rasterizer');
-
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 async function waitFor(win, expression, label, timeoutMs = 30000) {
@@ -38,7 +35,7 @@ async function openProduction(width, height) {
   const win = new BrowserWindow({
     width,
     height,
-    show: false,
+    show: true,
     backgroundColor: '#171a1d',
     webPreferences: {
       contextIsolation: true,
@@ -57,7 +54,13 @@ async function openProduction(width, height) {
 }
 
 async function capture(win, name) {
-  const image = await win.webContents.capturePage();
+  win.show();
+  win.focus();
+  await delay(300);
+  const image = await Promise.race([
+    win.webContents.capturePage(),
+    new Promise((_resolve, reject) => setTimeout(() => reject(new Error('Timed out capturing ' + name)), 10000)),
+  ]);
   fs.writeFileSync(path.join(outputDir, name + '.png'), image.toPNG());
 }
 
