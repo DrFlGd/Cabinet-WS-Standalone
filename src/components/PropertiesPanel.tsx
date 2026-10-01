@@ -90,14 +90,14 @@ export default function PropertiesPanel({
     });
   }, [applicableFields, normalizedQuery, parameters]);
 
-  const familyCategories = useMemo(() => {
+  const familyCategories = useMemo<string[]>(() => {
     const fields = familyFieldDefinitions(family);
     return FAMILY_SETTINGS_SECTION_ORDER.filter(root =>
       fields.some(field => familySectionRoot(field) === root),
     );
   }, [family]);
 
-  const modelCategories = useMemo(
+  const modelCategories = useMemo<string[]>(
     () => PARAMETER_SECTIONS.filter(
       section => section !== 'Layout' && applicableFields.some(field => field.section === section),
     ),
