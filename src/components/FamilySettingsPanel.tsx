@@ -21,6 +21,7 @@ type Props = {
   familyValues: FamilyRecipeValues;
   displayUnits: DisplayUnits;
   query: string;
+  activeCategory: string | null;
   onChange: (key: string, value: JsonValue) => void;
   onOpenManualLayout: () => void;
 };
@@ -30,6 +31,7 @@ export default function FamilySettingsPanel({
   familyValues,
   displayUnits,
   query,
+  activeCategory,
   onChange,
   onOpenManualLayout,
 }: Props) {
@@ -73,6 +75,16 @@ export default function FamilySettingsPanel({
   const activeCount = rows.filter(row => !row.inactiveReason && !row.field.expression).length;
   const hiddenInactiveCount = rows.filter(row => row.inactiveReason).length;
   const hiddenAdvancedCount = rows.filter(row => row.field.advanced && !row.inactiveReason).length;
+
+  useEffect(() => {
+    if (!activeCategory) return;
+    setCollapsedRoots(current => {
+      if (!current.has(activeCategory)) return current;
+      const next = new Set(current);
+      next.delete(activeCategory);
+      return next;
+    });
+  }, [activeCategory]);
 
   function toggleRoot(root: string) {
     setCollapsedRoots(current => {
@@ -125,7 +137,11 @@ export default function FamilySettingsPanel({
         const subSections = [...new Set(rootRows.map(row => familySectionName(row.field)))];
 
         return (
-          <section className="family-settings-root" key={root}>
+          <section
+            className="family-settings-root"
+            id={familyCategoryTargetId(root)}
+            key={root}
+          >
             <button type="button" className="family-settings-root-heading" onClick={() => toggleRoot(root)}>
               {collapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
               <strong>{root}</strong>
@@ -472,6 +488,11 @@ function stringifyValue(value: JsonValue | null) {
   if (Array.isArray(value)) return JSON.stringify(value);
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
+}
+
+function familyCategoryTargetId(category: string) {
+  const slug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `settings-family-${slug || 'category'}`;
 }
 
 function humanizeOption(value: string) {
