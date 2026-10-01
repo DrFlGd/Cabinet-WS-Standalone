@@ -57,7 +57,9 @@ async function openApp(width, height, zoomFactor = 1) {
       backgroundThrottling: false,
     },
   });
-  await win.loadFile(path.join(process.cwd(), 'dist', 'index.html'));
+  const visualUrl = process.env.RESPONSIVE_VISUAL_URL;
+  if (visualUrl) await win.loadURL(visualUrl);
+  else await win.loadFile(path.join(process.cwd(), 'dist', 'index.html'));
   if (zoomFactor !== 1) {
     win.webContents.setZoomFactor(zoomFactor);
     await delay(300);
