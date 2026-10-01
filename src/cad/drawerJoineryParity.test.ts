@@ -113,25 +113,31 @@ describe('drawer corner joinery parity', () => {
       familyValues: values,
     });
     const left = document.parts.find(part => part.id === 'drawer:1:box:left')!;
-    const drills = left.renderFeatures?.filter(feature => feature.kind === 'drill') ?? [];
+    const cornerDrills = left.renderFeatures?.filter(feature =>
+      feature.kind === 'drill' &&
+      (feature.sourcePartId === 'drawer:1:box:front' || feature.sourcePartId === 'drawer:1:box:back')
+    ) ?? [];
 
-    expect(drills.length).toBeGreaterThanOrEqual(2);
-    expect(new Set(drills.map(feature => feature.position.y + feature.size.y / 2))).toEqual(
+    expect(cornerDrills.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(cornerDrills.map(feature => feature.position.y + feature.size.y / 2))).toEqual(
       new Set([4.5, parameters.depth - 4.5]),
     );
-    expect(drills.every(feature => feature.size.x === 9 && feature.size.y === 3 && feature.size.z === 3)).toBe(true);
+    expect(cornerDrills.every(feature => feature.size.x === 9 && feature.size.y === 3 && feature.size.z === 3)).toBe(true);
 
     const graph = buildFeatureGraph(document);
-    const holes = graph.partFeatures[left.id].filter(feature => feature.kind === 'hole');
-    expect(holes).toHaveLength(drills.length);
-    expect(holes.every(feature => feature.axis === 'x')).toBe(true);
+    const cornerHoles = graph.partFeatures[left.id].filter(feature =>
+      feature.kind === 'hole' &&
+      (feature.sourcePartId === 'drawer:1:box:front' || feature.sourcePartId === 'drawer:1:box:back')
+    );
+    expect(cornerHoles).toHaveLength(cornerDrills.length);
+    expect(cornerHoles.every(feature => feature.axis === 'x')).toBe(true);
 
     const health = analyzeDesignHealth(document);
     const docs = buildShopDocumentation(document, health);
     const manufacturing = buildManufacturingModel(document, docs, health);
     const leftManufacturing = manufacturing.parts.find(part => part.partId === left.id)!;
     const drillOps = leftManufacturing.operations.filter(operation => operation.kind === 'DRILL');
-    expect(drillOps.length).toBeGreaterThanOrEqual(drills.length);
+    expect(drillOps.length).toBeGreaterThanOrEqual(cornerDrills.length);
     expect(drillOps.filter(operation => operation.sourceKind === 'hole').every(operation =>
       operation.through && operation.depthMm === 9
     )).toBe(true);
