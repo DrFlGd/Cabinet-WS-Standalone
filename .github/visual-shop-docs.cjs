@@ -36,6 +36,55 @@ async function clickByText(win, selector, text) {
   if (!clicked) throw new Error('Could not find ' + text + ' in ' + selector);
 }
 
+async function downloadByButton(win, buttonText, fileName) {
+  const targetPath = path.join(outputDir, fileName);
+  return new Promise(async (resolve, reject) => {
+    let settled = false;
+    const timeout = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      reject(new Error('Timed out downloading ' + fileName));
+    }, 10000);
+    win.webContents.session.once('will-download', (_event, item) => {
+      item.setSavePath(targetPath);
+      item.once('done', (_downloadEvent, state) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        if (state === 'completed') resolve(targetPath);
+        else reject(new Error(fileName + ' download ended with state ' + state));
+      });
+    });
+    try {
+      await clickByText(win, '.shop-docs-actions button', buttonText);
+    } catch (error) {
+      clearTimeout(timeout);
+      reject(error);
+    }
+  });
+}
+
+async function captureHtmlDocument(filePath, name) {
+  const win = new BrowserWindow({
+    width: 1280,
+    height: 900,
+    show: true,
+    backgroundColor: '#ffffff',
+    webPreferences: { contextIsolation: true, nodeIntegration: false },
+  });
+  await win.loadFile(filePath);
+  await delay(500);
+  const typography = await win.webContents.executeJavaScript(`(() => {
+    const body = getComputedStyle(document.body);
+    const table = document.querySelector('table');
+    const tableStyle = table ? getComputedStyle(table) : null;
+    return { bodyFontSize: body.fontSize, bodyLineHeight: body.lineHeight, tableFontSize: tableStyle?.fontSize || '' };
+  })()`, true);
+  await capture(win, name);
+  win.destroy();
+  return typography;
+}
+
 async function openProduction(width, height) {
   const win = new BrowserWindow({
     width,
@@ -142,8 +191,18 @@ app.whenReady().then(async () => {
       await wide.webContents.executeJavaScript(`document.querySelector('.production-sheet-toolbar')?.scrollIntoView({ block: 'start' })`, true);
       await delay(500);
       await capture(wide, 'after-wide-stock-2-review');
+
+      await clickByText(wide, '.shop-docs-tabs button', 'BOM / Cut List');
+      await waitFor(wide, `document.querySelector('.bom-view')`, 'BOM view');
+      const cutListPath = await downloadByButton(wide, 'Printable report', 'visual-bom-cut-list.html');
+      await clickByText(wide, '.shop-docs-tabs button', 'Assembly');
+      await waitFor(wide, `document.querySelector('.assembly-view')`, 'Assembly view');
+      const assemblyPath = await downloadByButton(wide, 'Printable assembly packet', 'visual-assembly-packet.html');
+      const cutListTypography = await captureHtmlDocument(cutListPath, 'after-printable-bom');
+      const assemblyTypography = await captureHtmlDocument(assemblyPath, 'after-printable-assembly');
       wide.destroy();
 
+      console.log('VISUAL_VALIDATION printable typography', { cutListTypography, assemblyTypography });
       console.log('VISUAL_VALIDATION opening updated narrow');
       const narrow = await openProduction(760, 900);
       const narrowMaterial = await selectSecondStock(narrow);
@@ -156,7 +215,9 @@ app.whenReady().then(async () => {
         secondMaterial,
         validation,
         narrowValidation,
-        captured: ['after-wide-stock-1', 'after-wide-stock-2', 'after-wide-stock-2-review', 'after-narrow-stock-2'],
+        cutListTypography,
+        assemblyTypography,
+        captured: ['after-wide-stock-1', 'after-wide-stock-2', 'after-wide-stock-2-review', 'after-printable-bom', 'after-printable-assembly', 'after-narrow-stock-2'],
       }));
     }
     clearTimeout(hardTimeout);
