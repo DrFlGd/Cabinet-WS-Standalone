@@ -50,6 +50,8 @@ import Toolbar from './components/Toolbar';
 import TreePanel from './components/TreePanel';
 import MeasurementPanel from './components/MeasurementPanel';
 import DesignHealthPanel from './components/DesignHealthPanel';
+import FitSolverPanel from './components/FitSolverPanel';
+import LayoutWorkspace, { type LayoutWorkspaceTab } from './components/LayoutWorkspace';
 import ShopDocsPanel from './components/ShopDocsPanel';
 import AboutDialog from './components/AboutDialog';
 import HelpDialog from './components/HelpDialog';
@@ -123,6 +125,7 @@ export default function App() {
   const [appInfo, setAppInfo] = useState<AppInfo>(FALLBACK_APP_INFO);
   const [partBrowserExpanded, setPartBrowserExpanded] = useState(false);
   const [sectionSelectedId, setSectionSelectedId] = useState(0);
+  const [layoutWorkspaceTab, setLayoutWorkspaceTab] = useState<LayoutWorkspaceTab>('layout');
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [explode, setExplode] = useState(0);
   const [notice, setNotice] = useState('Ready');
@@ -820,6 +823,7 @@ export default function App() {
 
   function openSection(sectionNodeId: number) {
     setSectionSelectedId(sectionNodeId);
+    setLayoutWorkspaceTab('layout');
     setNotice(`Editing Section ${sectionNodeId + 1} in Manual Layout Editor`);
   }
 
@@ -1067,23 +1071,31 @@ export default function App() {
             onToggle={() => setHardwareCatalogExpanded(current => !current)}
             onApply={applyHardware}
           />
-          <div className={`layout-primary-column ${hasSharedLayout ? 'shared-layout' : 'dedicated-layout'}`}>
-            {hasSharedLayout && <SectionLayoutPanel
-              parameters={editor.parameters}
-              thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
-              units={editor.displayUnits}
-              selectedSectionId={sectionSelectedId}
-              onParameterChange={updateParameter}
-              onSelectedSectionChange={setSectionSelectedId}
-              onChange={updateSections}
-            />}
-            <DesignHealthPanel
-              report={designHealth}
-              parameters={editor.parameters}
-              units={editor.displayUnits}
-              onApplySolution={applyFitSolution}
-            />
-          </div>
+          <LayoutWorkspace
+            activeTab={layoutWorkspaceTab}
+            hasSharedLayout={hasSharedLayout}
+            familyLabel={familyDefinition(editor.family).name}
+            onTabChange={setLayoutWorkspaceTab}
+            layout={(
+              <SectionLayoutPanel
+                parameters={editor.parameters}
+                thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
+                units={editor.displayUnits}
+                selectedSectionId={sectionSelectedId}
+                onParameterChange={updateParameter}
+                onSelectedSectionChange={setSectionSelectedId}
+                onChange={updateSections}
+              />
+            )}
+            solver={(
+              <FitSolverPanel
+                parameters={editor.parameters}
+                units={editor.displayUnits}
+                onApplySolution={applyFitSolution}
+              />
+            )}
+            health={<DesignHealthPanel report={designHealth} />}
+          />
           <TreePanel
             document={cadDocument}
             selectedId={selectedId}
@@ -1162,7 +1174,6 @@ export default function App() {
         onChange={updateParameter}
         onFamilyValueChange={updateFamilyValue}
         kernelDiagnostics={kernel.diagnostics}
-        onShowCabinetSettings={() => select(null)}
         onOpenSection={openSection}
       />
     </div>
