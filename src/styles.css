@@ -2569,3 +2569,354 @@ button { color: inherit; }
 @media (max-width: 700px) {
   .help-body dl > div { grid-template-columns: 1fr; gap: 3px; }
 }
+
+
+/* Shop Docs readability and stock-planning layout */
+.shop-docs-dialog {
+  font-size: 12px;
+}
+.shop-docs-header strong { font-size: 14px; }
+.shop-docs-header span { font-size: 10px; line-height: 1.35; }
+.shop-readiness { font-size: 9px; padding: 4px 8px; }
+.shop-docs-summary > div { gap: 3px; padding: 10px 14px; }
+.shop-docs-summary strong { font-size: 17px; }
+.shop-docs-summary span { font-size: 9px; line-height: 1.3; }
+.shop-docs-tabs button { padding: 7px 11px; font-size: 11px; }
+.shop-docs-body { padding: 14px; }
+.shop-docs-actions { gap: 8px; margin-bottom: 12px; }
+.shop-docs-actions button,
+.manufacturing-toolbar button,
+.manufacturing-package button,
+.production-stock-actions button,
+.production-remnant-row button,
+.production-sheet-toolbar button {
+  padding: 7px 9px;
+  font-size: 10px;
+}
+.shop-search input { padding: 8px 9px; font-size: 11px; }
+.material-groups { padding: 11px; }
+.material-groups h3,
+.hardware-table-wrap h3,
+.assembly-hardware-checklist h3,
+.manufacturing-operations h3,
+.manufacturing-issues h3,
+.production-stock-section > h3,
+.production-unplaced h3,
+.production-placement-list h3 {
+  font-size: 11px;
+}
+.material-groups article { gap: 4px; padding: 9px; }
+.material-groups strong { font-size: 11px; }
+.material-groups span,
+.material-groups small { font-size: 10px; line-height: 1.4; }
+.hardware-table-wrap { padding: 11px; }
+.bom-table,
+.hardware-table {
+  font-size: 11px;
+  line-height: 1.4;
+}
+.bom-table { min-width: 1160px; }
+.hardware-table { min-width: 840px; }
+.bom-table th, .bom-table td,
+.hardware-table th, .hardware-table td {
+  padding: 8px 9px;
+  overflow-wrap: anywhere;
+}
+.bom-table th,
+.hardware-table th { font-size: 9px; }
+.bom-table td:first-child strong { font-size: 10px; }
+.bom-table td:first-child small { font-size: 8px; margin-top: 2px; }
+.shop-empty,
+.shop-helper { font-size: 11px; line-height: 1.55; }
+.assembly-step-list { gap: 9px; }
+.assembly-step-list article {
+  grid-template-columns: 34px minmax(0,1fr) auto;
+  gap: 11px;
+  padding: 11px;
+}
+.assembly-step-number { width: 30px; height: 30px; font-size: 12px; }
+.assembly-step-list strong { font-size: 12px; }
+.assembly-step-list p { font-size: 11px; line-height: 1.55; }
+.assembly-step-list article > button { padding: 7px 9px; font-size: 10px; }
+.assembly-callouts span { padding: 3px 5px; font-size: 9px; }
+.assembly-hardware-checklist { gap: 7px; padding: 11px; }
+.assembly-hardware-checklist label { font-size: 11px; line-height: 1.4; }
+.assembly-hardware-checklist strong { font-size: 10px; }
+
+.manufacturing-toolbar { gap: 8px; }
+.manufacturing-toolbar .select-control { min-width: 220px; font-size: 11px; }
+.manufacturing-status-grid span { font-size: 9px; }
+.manufacturing-preview header { padding: 10px 11px; }
+.manufacturing-preview header strong { font-size: 12px; }
+.manufacturing-preview header span,
+.manufacturing-preview header small,
+.manufacturing-preview > p,
+.manufacturing-operations strong,
+.manufacturing-operations span,
+.manufacturing-operations small,
+.manufacturing-operations p,
+.manufacturing-issues article strong,
+.manufacturing-issues article p,
+.manufacturing-package p {
+  font-size: 10px;
+  line-height: 1.5;
+}
+.manufacturing-operations article { gap: 5px; padding: 9px; }
+.manufacturing-issues > p { font-size: 11px; line-height: 1.5; }
+.manufacturing-package strong { font-size: 12px; }
+
+.production-planning-view { gap: 12px; }
+.production-assumptions,
+.production-machine-boundary { padding: 12px; }
+.production-assumptions strong,
+.production-machine-boundary strong { font-size: 12px; }
+.production-assumptions p,
+.production-machine-boundary p { font-size: 10px; line-height: 1.5; }
+.production-assumptions > span { padding: 4px 8px; font-size: 9px; }
+.production-settings-grid { gap: 9px; padding: 11px; }
+.production-settings-grid > label > span,
+.production-stock-row-main > label > span,
+.production-sheet-filter > span {
+  color: #91a0a7;
+  font-size: 9px;
+  line-height: 1.25;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.production-toggle { min-height: 36px; padding: 7px 8px; }
+.production-toggle span { font-size: 10px !important; line-height: 1.35; }
+.production-clearance { padding: 7px 8px; }
+.production-clearance strong { font-size: 11px; }
+.production-clearance span { font-size: 9px; line-height: 1.3; }
+
+.production-stock-table-wrap {
+  min-width: 0;
+  overflow-x: auto;
+  border: 1px solid #303a41;
+  border-radius: 8px;
+  background: #151a1d;
+}
+.production-stock-table {
+  min-width: 980px;
+}
+.production-stock-columns,
+.production-stock-row-main {
+  display: grid;
+  grid-template-columns:
+    minmax(190px, 1.45fr)
+    minmax(112px, .8fr)
+    minmax(112px, .8fr)
+    minmax(105px, .72fr)
+    minmax(180px, 1.2fr)
+    minmax(88px, .58fr)
+    minmax(122px, .8fr);
+  gap: 8px;
+  align-items: center;
+}
+.production-stock-columns {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 8px 10px;
+  border-bottom: 1px solid #374149;
+  background: #232a2f;
+  color: #95a4ab;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.production-stock-row {
+  border-bottom: 1px solid #2a3339;
+  background: #171c20;
+}
+.production-stock-row:last-child { border-bottom: 0; }
+.production-stock-row.selected {
+  background: #182623;
+  box-shadow: inset 3px 0 #35d0ba;
+}
+.production-stock-row-main { padding: 9px 10px; }
+.production-stock-row-main > label {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.production-stock-row-main > label > span {
+  display: none;
+}
+.production-stock-identity {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  padding: 4px 5px;
+  text-align: left;
+  cursor: pointer;
+}
+.production-stock-identity:hover,
+.production-stock-identity[aria-pressed="true"] {
+  border-radius: 5px;
+  background: #20302d;
+}
+.production-stock-identity strong {
+  color: #dce6e9;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.production-stock-identity span,
+.production-stock-identity small {
+  color: #84949b;
+  font-size: 9px;
+  line-height: 1.35;
+}
+.production-stock-row .select-control {
+  min-width: 0;
+  width: 100%;
+  font-size: 10px;
+}
+.production-quantity {
+  padding: 7px;
+  font-size: 10px;
+}
+.production-stock-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+.production-remnants {
+  margin: 0 10px 9px 208px;
+  padding-top: 8px;
+}
+.production-remnants > small { font-size: 9px; line-height: 1.4; }
+.production-remnant-row {
+  grid-template-columns: minmax(90px,1fr) minmax(105px,140px) auto minmax(105px,140px) 32px;
+  gap: 7px;
+}
+.production-remnant-row > span { font-size: 10px; }
+
+.production-plan-total {
+  margin: 0;
+  color: #8b9aa1;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.production-sheet-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, .9fr) minmax(220px, .9fr) minmax(0, 1.7fr);
+  align-items: end;
+  gap: 9px;
+}
+.production-sheet-filter {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+.production-sheet-filter .select-control {
+  width: 100%;
+  min-width: 0;
+  font-size: 11px;
+}
+.production-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.production-selected-stock-summary {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #354149;
+  border-radius: 7px;
+  background: #171d20;
+}
+.production-selected-stock-summary > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.production-selected-stock-summary > header > div {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+}
+.production-selected-stock-summary > header strong {
+  color: #dce6e9;
+  font-size: 12px;
+}
+.production-selected-stock-summary > header span,
+.production-selected-stock-summary > header small {
+  color: #84949b;
+  font-size: 10px;
+}
+.production-summary-grid article { padding: 9px; }
+.production-summary-grid strong { font-size: 16px; }
+.production-summary-grid span { font-size: 9px; line-height: 1.3; }
+.production-unplaced { padding: 10px; }
+.production-unplaced button { padding-top: 8px; }
+.production-unplaced button strong { font-size: 10px; }
+.production-unplaced button span { font-size: 10px; line-height: 1.4; }
+.production-stock-empty {
+  margin: 0;
+  padding: 14px;
+  border: 1px dashed #526068;
+  border-radius: 7px;
+  background: #171c20;
+  color: #9aa8ae;
+  font-size: 11px;
+  line-height: 1.55;
+}
+.production-sheet-review {
+  min-height: 400px;
+  grid-template-columns: minmax(0,1.45fr) minmax(300px,.55fr);
+}
+.production-sheet-preview {
+  grid-template-rows: auto minmax(320px,1fr);
+}
+.production-sheet-preview header { padding: 10px 11px; }
+.production-sheet-preview strong { font-size: 12px; }
+.production-sheet-preview span,
+.production-sheet-preview small { font-size: 10px; line-height: 1.4; }
+.production-sheet-preview img { min-height: 320px; }
+.production-placement-list { padding: 10px; }
+.production-placement-list button { gap: 4px; padding: 9px 3px; }
+.production-placement-list strong { font-size: 10px; }
+.production-placement-list span,
+.production-placement-list small { font-size: 9px; line-height: 1.4; }
+.production-machine-facts span { font-size: 9px; }
+
+@media (max-width: 1180px) {
+  .production-sheet-toolbar {
+    grid-template-columns: minmax(220px,1fr) minmax(220px,1fr);
+  }
+  .production-sheet-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 760px) {
+  .shop-docs-backdrop { padding: 8px; }
+  .shop-docs-dialog {
+    width: 100vw;
+    height: 100vh;
+    min-height: 0;
+    border-radius: 0;
+  }
+  .shop-docs-summary { grid-template-columns: repeat(2,1fr); }
+  .shop-docs-tabs { overflow-x: auto; }
+  .shop-docs-tabs button { flex: 0 0 auto; }
+  .shop-docs-body { padding: 10px; }
+  .production-settings-grid { grid-template-columns: repeat(2,minmax(150px,1fr)); overflow-x: auto; }
+  .production-stock-table-wrap { margin-inline: -2px; }
+  .production-sheet-toolbar { grid-template-columns: 1fr; }
+  .production-sheet-actions { grid-column: auto; }
+  .production-selected-stock-summary > header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .production-summary-grid { grid-template-columns: repeat(2,1fr); }
+  .production-sheet-review { grid-template-columns: 1fr; min-height: 0; }
+}
