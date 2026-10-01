@@ -114,6 +114,7 @@ export function drawerSideCornerFeatures(
     return yCenters.flatMap((y, jointIndex) =>
       heights.map(z => ({
         kind: 'drill' as const,
+        axis: 'x' as const,
         sourcePartId: jointIndex === 0 ? frontPartId : backPartId,
         position: {
           x: 0,
