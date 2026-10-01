@@ -292,6 +292,27 @@ button { color: inherit; }
   .layout-navigation-row.hardware-open.parts-open .tree-panel.expanded {
     width: min(205px, calc(50% - 2px));
   }
+  .layout-navigation-row.hardware-open .hardware-drawer-heading,
+  .layout-navigation-row.parts-open .parts-drawer-heading {
+    position: relative;
+    overflow: hidden;
+  }
+  .layout-navigation-row.hardware-open .hardware-drawer-heading {
+    padding-left: 36px;
+  }
+  .layout-navigation-row.parts-open .parts-drawer-heading {
+    padding-right: 36px;
+  }
+  .layout-navigation-row.hardware-open .hardware-drawer-collapse,
+  .layout-navigation-row.parts-open .parts-drawer-collapse {
+    position: absolute;
+    z-index: 1;
+    top: 50%;
+    margin: 0;
+    transform: translateY(-50%);
+  }
+  .layout-navigation-row.hardware-open .hardware-drawer-collapse { left: 4px; }
+  .layout-navigation-row.parts-open .parts-drawer-collapse { right: 4px; }
   .app-header { grid-template-columns: minmax(190px, .8fr) minmax(260px,1.25fr) minmax(170px,.7fr); }
   .document-name span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
   .viewport-footer p { display: none; }
