@@ -46,13 +46,14 @@ describe('v0.6 exact CAD feature graph', () => {
     }
   });
 
-  it('orients render-feature drill guides along their through dimension', () => {
+  it('preserves an explicit machining axis for render-feature drill guides', () => {
     const document = buildCabinetDocument(utilityStarter('default').parameters);
     const side = document.parts.find(part => part.id === 'carcass:left')!;
     side.renderFeatures = [
       ...(side.renderFeatures ?? []),
       {
         kind: 'drill',
+        axis: 'x',
         sourcePartId: 'fixture:mating-member',
         position: { x: 0, y: 20, z: 20 },
         size: { x: side.size.x, y: 3, z: 3 },
