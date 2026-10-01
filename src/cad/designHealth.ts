@@ -315,7 +315,7 @@ function checkDrawerConstruction(document: CabinetDocument, checks: DesignHealth
     );
     const invalidSides = drawerSides.filter(side => {
       const bottomGroove = (side.renderFeatures ?? []).find(feature =>
-        feature.kind === 'slot' && feature.sourcePartId?.endsWith(':box:bottom'),
+        feature.kind === 'slot' && feature.sourcePartId?.endsWith(':bottom'),
       );
       return !drawerScrewPlacement({
         boxHeight: side.size.z,
