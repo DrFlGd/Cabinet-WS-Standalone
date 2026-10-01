@@ -16,8 +16,14 @@ jobs:
           node-version: '24'
       - run: npm install
       - run: npm run build
-      - name: Capture and validate responsive workspace
-        run: xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts
+      - name: Capture minimum supported window
+        run: timeout 90s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts minimum
+      - name: Capture laptop window
+        run: timeout 90s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts laptop
+      - name: Capture maximized desktop window
+        run: timeout 90s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts desktop
+      - name: Capture 125 percent scale-pressure window
+        run: timeout 90s xvfb-run -a ./node_modules/.bin/electron --no-sandbox .github/visual-responsive.cjs responsive-visual-artifacts scaled
       - uses: actions/upload-artifact@v4
         with:
           name: responsive-workspace-visual-validation
