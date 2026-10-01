@@ -12,6 +12,7 @@ The project follows milestone versions while the standalone CAD architecture is 
 - Implement drawer-side screw pilot guides for both front and back joints using measured drawer stock, the recipe hole diameter/edge margin, and captured-bottom groove avoidance; register the cuts through the exact feature graph and manufacturing DRILL output.
 - Implement blind drawer-side front/back dados with independent drawer dado depth/fit clearance and extend each mating box front/back into the receivers by the same depth, including mirrored left/right geometry.
 - Apply the same screw/dado corner generator to shared-cabinet drawers and the dedicated Standalone Drawer family.
+- Stabilize the default shaded-edges viewport for screenshot-like open-top cabinets by separating the intentionally coplanar edge overlay from its owning face in depth. Exact and preview body rendering remain mutually exclusive per part, hidden edges remain depth-tested, and cabinet dimensions/part geometry are unchanged.
 
 ### Changed
 
@@ -23,7 +24,8 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 - Add drawer joinery regressions for adapter preservation, measured stock, dado receiver/mating dimensions, mirrored side features, reference screw-guide placement, manufacturing operation depth/through state, shared-cabinet behavior, and explicit tab-slot gap handling.
 - Extract the production exact-shape builder without changing its operations and exercise representative screw/dado drawer-side solids with the real Replicad/OpenCascade WASM plus STEP serialization.
-- Shimmering diagnosis remains image-driven and is not claimed fixed until the reported visual reproduction is supplied and validated.
+- Add screenshot-reproduction coverage for open-top Utility and Equipment Stand frames, including positive-volume overlap checks for the two sides and front/rear top members, plus depth-layer regressions that apply polygon offset only to shaded-edges presentation.
+- Validate the reported shimmer against ordinary, selected, and exploded rendered views at compact and wide desktop sizes; the temporary capture harness is removed after evidence is collected.
 
 ### Compatibility
 
