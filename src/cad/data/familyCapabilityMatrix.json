@@ -15,51 +15,51 @@
   "counts": {
     "shop_cart": {
       "total": 310,
-      "geometry-driving": 81,
+      "geometry-driving": 85,
       "manufacturing-driving": 22,
       "compatibility-only": 45,
-      "unsupported": 162,
-      "known-gap": 41
+      "unsupported": 158,
+      "known-gap": 42
     },
     "utility": {
       "total": 310,
-      "geometry-driving": 81,
+      "geometry-driving": 85,
       "manufacturing-driving": 22,
       "compatibility-only": 45,
-      "unsupported": 162,
-      "known-gap": 41
+      "unsupported": 158,
+      "known-gap": 42
     },
     "benchtop": {
       "total": 222,
-      "geometry-driving": 53,
+      "geometry-driving": 56,
       "manufacturing-driving": 10,
       "compatibility-only": 37,
-      "unsupported": 122,
-      "known-gap": 37
+      "unsupported": 119,
+      "known-gap": 38
     },
     "stackable": {
       "total": 277,
-      "geometry-driving": 60,
+      "geometry-driving": 64,
       "manufacturing-driving": 22,
       "compatibility-only": 46,
-      "unsupported": 149,
-      "known-gap": 41
+      "unsupported": 145,
+      "known-gap": 42
     },
     "kitchen": {
       "total": 299,
-      "geometry-driving": 84,
+      "geometry-driving": 88,
       "manufacturing-driving": 23,
       "compatibility-only": 45,
-      "unsupported": 147,
-      "known-gap": 41
+      "unsupported": 143,
+      "known-gap": 42
     },
     "drawer": {
       "total": 161,
-      "geometry-driving": 57,
+      "geometry-driving": 61,
       "manufacturing-driving": 9,
       "compatibility-only": 26,
-      "unsupported": 69,
-      "known-gap": 15
+      "unsupported": 65,
+      "known-gap": 16
     },
     "equipment_stand": {
       "total": 99,
@@ -320,26 +320,26 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "shop_cart",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
@@ -967,9 +967,9 @@
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "note": "Reference butt/screw/dado/tab-slot intent is preserved. Screw and dado corner geometry are implemented; drawer tab-slot mating tabs/slots remain a known gap. Standalone legacy rabbet/lock-rabbet modes remain supported."
     },
     {
       "family": "shop_cart",
@@ -2136,19 +2136,19 @@
       "family": "shop_cart",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "shop_cart",
@@ -3110,26 +3110,26 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "utility",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
@@ -3757,9 +3757,9 @@
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "note": "Reference butt/screw/dado/tab-slot intent is preserved. Screw and dado corner geometry are implemented; drawer tab-slot mating tabs/slots remain a known gap. Standalone legacy rabbet/lock-rabbet modes remain supported."
     },
     {
       "family": "utility",
@@ -4926,19 +4926,19 @@
       "family": "utility",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "utility",
@@ -5891,17 +5891,17 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "benchtop",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "benchtop",
@@ -6394,9 +6394,9 @@
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "note": "Reference butt/screw/dado/tab-slot intent is preserved. Screw and dado corner geometry are implemented; drawer tab-slot mating tabs/slots remain a known gap. Standalone legacy rabbet/lock-rabbet modes remain supported."
     },
     {
       "family": "benchtop",
@@ -7203,19 +7203,19 @@
       "family": "benchtop",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "benchtop",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "benchtop",
@@ -7889,26 +7889,26 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "stackable",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
@@ -8374,9 +8374,9 @@
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "note": "Reference butt/screw/dado/tab-slot intent is preserved. Screw and dado corner geometry are implemented; drawer tab-slot mating tabs/slots remain a known gap. Standalone legacy rabbet/lock-rabbet modes remain supported."
     },
     {
       "family": "stackable",
@@ -9615,19 +9615,19 @@
       "family": "stackable",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "stackable",
@@ -10400,26 +10400,26 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "kitchen",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
@@ -11056,9 +11056,9 @@
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "note": "Reference butt/screw/dado/tab-slot intent is preserved. Screw and dado corner geometry are implemented; drawer tab-slot mating tabs/slots remain a known gap. Standalone legacy rabbet/lock-rabbet modes remain supported."
     },
     {
       "family": "kitchen",
@@ -12306,19 +12306,19 @@
       "family": "kitchen",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "kitchen",
@@ -13010,26 +13010,26 @@
       "section": "Machining / Drawer Joints",
       "status": "unsupported",
       "owner": "unimplemented-reference-setting",
-      "parity": "unverified",
-      "note": null
+      "parity": "known-gap",
+      "note": "Reference controls drawer tab/slot fit. Standalone preserves the value but drawer tab-slot corner geometry remains unimplemented."
     },
     {
       "family": "drawer",
       "key": "drawer_dado_fit_clearance",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
       "key": "drawer_dado_depth",
       "section": "Machining / Drawer Joints",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner dado generator; receiver depth/clearance and mating front/back extension are covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
@@ -13378,9 +13378,9 @@
       "key": "drawer_joinery_style",
       "section": "Structure / Drawer Joinery",
       "status": "geometry-driving",
-      "owner": "family-adapter+family-generator",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "known-gap",
-      "note": "Reference distinguishes butt/screw/dado/tab-slot drawer joints. Standalone currently collapses screw/dado/tab-slot recipe modes to the native rabbet mode."
+      "note": "Reference butt/screw/dado/tab-slot intent is preserved. Screw and dado corner geometry are implemented; drawer tab-slot mating tabs/slots remain a known gap. Standalone legacy rabbet/lock-rabbet modes remain supported."
     },
     {
       "family": "drawer",
@@ -13980,19 +13980,19 @@
       "family": "drawer",
       "key": "drawer_screw_hole_diameter",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
       "key": "drawer_screw_edge_margin",
       "section": "Hardware / Drawer Fasteners",
-      "status": "unsupported",
-      "owner": "unimplemented-reference-setting",
+      "status": "geometry-driving",
+      "owner": "family-adapter+drawer-joinery-generator",
       "parity": "unverified",
-      "note": null
+      "note": "Consumed by the drawer corner screw-guide generator; reference screw placement is covered by focused behavioral regression tests."
     },
     {
       "family": "drawer",
