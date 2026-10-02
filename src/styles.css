@@ -3201,3 +3201,4 @@ button { color: inherit; }
 .layout-editor-stack { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
 .layout-editor-stack > .section-layout-panel { flex: 1; min-height: 0; }
 .layout-editor-stack > .recipe-layout-options { flex: 0 0 auto; max-height: 45%; overflow: auto; }
+.layout-editor-stack .section-simple-layout { min-height: 0; align-self: stretch; overflow-y: auto; }
