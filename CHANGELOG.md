@@ -6,7 +6,14 @@ The project follows milestone versions while the standalone CAD architecture is 
 
 ## [Unreleased]
 
-No unreleased changes.
+### Changed
+
+- Combine Family settings and Native Model into one categorized Cabinet Settings panel, with one control for shared settings and preserved family-specific controls.
+- Keep door/drawer counts and arrangements in Layout; move recipe-specific module/bank controls into that workspace for Simple cabinets. Keep clearances, reveals, joinery, and hardware on the right.
+- Add independent, remembered Show unused options and Show advanced settings checkboxes, both off by default. Search obeys both filters; unused controls show why they are inactive.
+- Keep setting names beside checkboxes instead of changing their labels to On/Off. Selecting a part no longer replaces the settings browser.
+- Retain dedicated Drawer and Equipment Stand sizing controls and schema-v3 compatibility; no file migration.
+
 
 ## [0.14.4] - 2026-10-01
 

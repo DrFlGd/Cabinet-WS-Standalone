@@ -1,189 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, ChevronRight, Eye, EyeOff, FunctionSquare, SlidersHorizontal } from 'lucide-react';
-import {
-  FAMILY_SETTINGS_SECTION_ORDER,
-  familyFieldDefinitions,
-  familyFieldInactiveReason,
-  familyFieldIsComputed,
-  familyFieldIsSectionTree,
-  familyFieldLabel,
-  familyFieldValue,
-  familySectionName,
-  familySectionRoot,
-  type FamilyFieldDefinition,
-} from '../cad/familySettings';
+import { useEffect, useRef, useState } from 'react';
+import { FunctionSquare } from 'lucide-react';
+import { familyFieldIsComputed, familyFieldIsSectionTree, familyFieldLabel, type FamilyFieldDefinition } from '../cad/familySettings';
 import { fromMillimeters, toMillimeters, unitLabel, type DisplayUnits } from '../cad/units';
-import type { CabinetFamily, FamilyRecipeValues, JsonValue } from '../cad/types';
+import type { JsonValue } from '../cad/types';
 import SelectControl from './SelectControl';
 
-type Props = {
-  family: CabinetFamily;
-  familyValues: FamilyRecipeValues;
-  displayUnits: DisplayUnits;
-  query: string;
-  activeCategory: string | null;
-  onChange: (key: string, value: JsonValue) => void;
-  onOpenManualLayout: () => void;
-};
-
-export default function FamilySettingsPanel({
-  family,
-  familyValues,
-  displayUnits,
-  query,
-  activeCategory,
-  onChange,
-  onOpenManualLayout,
-}: Props) {
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [showInactive, setShowInactive] = useState(false);
-  const [collapsedRoots, setCollapsedRoots] = useState<Set<string>>(
-    () => new Set(['Machining', 'Output', 'System']),
-  );
-
-  const normalizedQuery = query.trim().toLowerCase();
-  const fields = useMemo(() => familyFieldDefinitions(family), [family]);
-
-  const rows = useMemo(
-    () => fields.map(field => {
-      const value = familyFieldValue(familyValues, field);
-      const inactiveReason = familyFieldInactiveReason(family, field, familyValues);
-      const haystack = [
-        familyFieldLabel(field.key),
-        field.key,
-        field.section,
-        field.description,
-        field.options ? field.options.join(' ') : '',
-        stringifyValue(value),
-      ].join(' ').toLowerCase();
-      return { field, value, inactiveReason, matches: !normalizedQuery || haystack.includes(normalizedQuery) };
-    }),
-    [family, familyValues, fields, normalizedQuery],
-  );
-
-  const visibleRows = rows.filter(row => {
-    if (!row.matches) return false;
-    if (!normalizedQuery && row.field.advanced && !showAdvanced) return false;
-    if (!normalizedQuery && row.inactiveReason && !showInactive) return false;
-    return true;
-  });
-
-  const roots = FAMILY_SETTINGS_SECTION_ORDER.filter(root =>
-    visibleRows.some(row => familySectionRoot(row.field) === root)
-      || (root === activeCategory && rows.some(row => familySectionRoot(row.field) === root)),
-  );
-
-  const activeCount = rows.filter(row => !row.inactiveReason && !row.field.expression).length;
-  const hiddenInactiveCount = rows.filter(row => row.inactiveReason).length;
-  const hiddenAdvancedCount = rows.filter(row => row.field.advanced && !row.inactiveReason).length;
-
-  useEffect(() => {
-    if (!activeCategory) return;
-    setCollapsedRoots(current => {
-      if (!current.has(activeCategory)) return current;
-      const next = new Set(current);
-      next.delete(activeCategory);
-      return next;
-    });
-  }, [activeCategory]);
-
-  function toggleRoot(root: string) {
-    setCollapsedRoots(current => {
-      const next = new Set(current);
-      if (next.has(root)) next.delete(root);
-      else next.add(root);
-      return next;
-    });
-  }
-
-  return (
-    <div className="family-settings-panel">
-      <section className="family-settings-summary">
-        <div>
-          <span className="eyebrow">NATIVE FAMILY SETTINGS</span>
-          <strong>{fields.length} schema fields</strong>
-          <p>{activeCount} currently editable for this configuration. Dependency rules hide settings that do not affect the active design.</p>
-        </div>
-        <div className="family-settings-actions">
-          <button
-            type="button"
-            className={showAdvanced ? 'active' : ''}
-            onClick={() => setShowAdvanced(current => !current)}
-            title="Show advanced construction and machining settings"
-          >
-            <SlidersHorizontal size={12} />
-            {showAdvanced ? 'Advanced on' : 'Advanced (' + hiddenAdvancedCount + ')'}
-          </button>
-          <button
-            type="button"
-            className={showInactive ? 'active' : ''}
-            onClick={() => setShowInactive(current => !current)}
-            title="Show settings disabled by current dependency choices"
-          >
-            {showInactive ? <EyeOff size={12} /> : <Eye size={12} />}
-            {showInactive ? 'Hide inactive' : 'Inactive (' + hiddenInactiveCount + ')'}
-          </button>
-        </div>
-      </section>
-
-      {normalizedQuery && (
-        <div className="family-settings-search-count">
-          {visibleRows.length} family setting{visibleRows.length === 1 ? '' : 's'} match “{query.trim()}”
-        </div>
-      )}
-
-      {roots.map(root => {
-        const rootRows = visibleRows.filter(row => familySectionRoot(row.field) === root);
-        const collapsed = !normalizedQuery && collapsedRoots.has(root);
-        const subSections = [...new Set(rootRows.map(row => familySectionName(row.field)))];
-
-        return (
-          <section
-            className="family-settings-root"
-            id={familyCategoryTargetId(root)}
-            key={root}
-          >
-            <button type="button" className="family-settings-root-heading" onClick={() => toggleRoot(root)}>
-              {collapsed ? <ChevronRight size={13} /> : <ChevronDown size={13} />}
-              <strong>{root}</strong>
-              <span>{rootRows.length}</span>
-            </button>
-            {!collapsed && rootRows.length === 0 && (
-              <p className="family-category-empty">
-                No settings in this category are visible with the current Advanced and Inactive filters.
-              </p>
-            )}
-            {!collapsed && subSections.map(section => {
-              const sectionRows = rootRows.filter(row => familySectionName(row.field) === section);
-              return (
-                <div className="family-settings-section" key={section}>
-                  {section !== root && <h4>{section.replace(root + ' / ', '')}</h4>}
-                  {sectionRows.map(({ field, value, inactiveReason }) => (
-                    <FamilyFieldControl
-                      key={field.key}
-                      field={field}
-                      value={value}
-                      inactiveReason={inactiveReason}
-                      displayUnits={displayUnits}
-                      onChange={next => onChange(field.key, next)}
-                      onOpenManualLayout={onOpenManualLayout}
-                    />
-                  ))}
-                </div>
-              );
-            })}
-          </section>
-        );
-      })}
-
-      {!visibleRows.length && (
-        <p className="property-search-empty">No family settings match the current filters.</p>
-      )}
-    </div>
-  );
-}
-
-function FamilyFieldControl({
+export default function FamilyFieldControl({
   field,
   value,
   inactiveReason,
@@ -209,13 +31,13 @@ function FamilyFieldControl({
       className={'family-field-control' + (disabled ? ' disabled' : '') + (field.advanced ? ' advanced' : '')}
       title={inactiveReason || description}
     >
-      <div className="family-field-label">
+      {(type !== 'boolean' || computed || sectionTree) && <div className="family-field-label">
         <span>{familyFieldLabel(field.key)}</span>
         <div className="family-field-badges">
           {computed && <small title={'Computed: ' + field.expression}><FunctionSquare size={10} /> FX</small>}
           {field.advanced && <small>ADV</small>}
         </div>
-      </div>
+      </div>}
 
       {sectionTree ? (
         <button type="button" className="family-manual-layout-link" onClick={onOpenManualLayout}>
@@ -240,7 +62,7 @@ function FamilyFieldControl({
             disabled={Boolean(inactiveReason)}
             onChange={event => onChange(event.target.checked)}
           />
-          <span>{value ? 'On' : 'Off'}</span>
+          <span>{familyFieldLabel(field.key)}</span>
         </label>
       ) : type === 'number' ? (
         <FamilyNumberInput
@@ -262,6 +84,7 @@ function FamilyFieldControl({
         <input
           className="family-text-input"
           type="text"
+          aria-label={familyFieldLabel(field.key)}
           value={typeof value === 'string' ? value : ''}
           disabled={Boolean(inactiveReason)}
           onChange={event => onChange(event.currentTarget.value)}
@@ -305,6 +128,7 @@ function FamilyNumberInput({
     <div className="number-input family-number-input">
       <input
         type="number"
+        aria-label={familyFieldLabel(field.key)}
         value={Number.isFinite(shown) ? roundInput(shown) : ''}
         min={min}
         max={max}
@@ -412,6 +236,7 @@ function FamilyArrayInput({
     <input
       className="family-text-input family-array-input"
       type="text"
+          aria-label={familyFieldLabel(field.key)}
       value={draft}
       disabled={disabled}
       placeholder="comma-separated values"
@@ -494,11 +319,6 @@ function stringifyValue(value: JsonValue | null) {
   if (Array.isArray(value)) return JSON.stringify(value);
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
-}
-
-function familyCategoryTargetId(category: string) {
-  const slug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `settings-family-${slug || 'category'}`;
 }
 
 function humanizeOption(value: string) {

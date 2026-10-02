@@ -248,7 +248,6 @@ async function verifySelectedCategoryBrowse(win) {
     dimensions: document.querySelector('.viewport-footer')?.textContent || ''
   }))()`, true);
 
-  await clickByText(win, '.property-mode-tabs button', 'Family settings');
   await waitFor(win, `document.querySelector('.settings-category-nav button')`, 'settings category rail');
   const category = await win.webContents.executeJavaScript(`(() => {
     const button = document.querySelector('.settings-category-nav button');
@@ -257,38 +256,74 @@ async function verifySelectedCategoryBrowse(win) {
     button.click();
     return label;
   })()`, true);
-  if (!category) throw new Error('Could not activate a Family settings category');
-  await waitFor(win, `document.querySelector('.selected-context-return')`, 'selected-part return control');
+  if (!category) throw new Error('Could not activate a Cabinet Settings category');
+  await waitFor(win, `document.querySelector('.selected-part-details summary')`, 'selected-part summary');
 
   const after = await win.webContents.executeJavaScript(`(() => ({
     selection: document.querySelector('.selection-breadcrumb')?.textContent || '',
     dimensions: document.querySelector('.viewport-footer')?.textContent || '',
-    returnLabel: document.querySelector('.selected-context-return')?.textContent || '',
+    returnLabel: document.querySelector('.selected-part-details summary')?.textContent || '',
     activeCategory: document.querySelector('.settings-category-nav button.active')?.textContent?.trim() || ''
   }))()`, true);
 
   if (before.selection !== after.selection) throw new Error('Explicit category browse changed the selected part');
   if (before.dimensions !== after.dimensions) throw new Error('Category navigation changed cabinet dimensions');
-  if (!after.returnLabel.includes('Return to selected part')) throw new Error('Selected-part return control is missing');
+  if (!after.returnLabel.includes('Selected part')) throw new Error('Selected-part summary is missing');
   if (after.activeCategory !== category) throw new Error('Activated category did not stay visibly active');
   return { category, selection: after.selection };
 }
 
 async function verifySearch(win, query, expectMatch) {
-  await clickByText(win, '.property-mode-tabs button', 'Family settings');
   await setInput(win, '[aria-label="Search properties"]', query);
   if (expectMatch) {
-    await waitFor(win, `Number.parseInt(document.querySelector('.family-settings-search-count')?.textContent || '0', 10) > 0`, 'family search matches');
+    await waitFor(win, `Number.parseInt(document.querySelector('.settings-search-count')?.textContent || '0', 10) > 0`, 'family search matches');
   } else {
-    await waitFor(win, `document.querySelector('.property-search-empty')?.textContent?.includes('No family settings match')`, 'family no-match state');
+    await waitFor(win, `document.querySelector('.property-search-empty')?.textContent?.includes('No settings match')`, 'family no-match state');
   }
   return win.webContents.executeJavaScript(`(() => ({
     query: document.querySelector('[aria-label="Search properties"]')?.value || '',
-    summary: document.querySelector('.family-settings-search-count')?.textContent || '',
+    summary: document.querySelector('.settings-search-count')?.textContent || '',
     empty: document.querySelector('.property-search-empty')?.textContent || '',
     scrollHeight: document.querySelector('.properties-scroll')?.scrollHeight || 0,
     clientHeight: document.querySelector('.properties-scroll')?.clientHeight || 0
   }))()`, true);
+}
+
+async function verifyUnifiedSettings(win) {
+  // Exercise both filters independently, verify search never bypasses them,
+  // and reload the renderer to prove preferences survive an application restart.
+  const toggle = async (text, checked) => {
+    await win.webContents.executeJavaScript(`(() => {
+      const label = [...document.querySelectorAll('.settings-visibility label')].find(el => el.textContent.includes(${JSON.stringify(text)}));
+      const input = label?.querySelector('input');
+      if (!input) throw new Error('Missing visibility preference');
+      if (input.checked !== ${checked}) input.click();
+    })()`, true);
+    await delay(100);
+  };
+  await toggle('Show unused options', false);
+  await toggle('Show advanced settings', false);
+  const before = await win.webContents.executeJavaScript(`document.querySelectorAll('[data-setting-id]').length`);
+  await toggle('Show unused options', true);
+  await toggle('Show advanced settings', true);
+  const after = await win.webContents.executeJavaScript(`(() => {
+    const rows = [...document.querySelectorAll('[data-setting-id]')];
+    if (document.querySelector('.property-mode-tabs')) throw new Error('Duplicate settings surfaces remain');
+    if (rows.some(el => /family:(drawer_count|door_count|section_nodes)$/.test(el.dataset.settingId))) throw new Error('Layout controls duplicated in settings');
+    if ([...document.querySelectorAll('.properties-panel .toggle-control')].some(el => /^(On|Off)$/.test(el.textContent.trim()))) throw new Error('Unstable checkbox label');
+    return rows.length;
+  })()`, true);
+  if (after <= before) throw new Error('Visibility controls did not reveal additional settings');
+  await setInput(win, '[aria-label="Search properties"]', 'worktopThickness');
+  await waitFor(win, `document.querySelector('[data-setting-id="parameter:worktopThickness"]')`, 'unused worktop setting in search');
+  await toggle('Show unused options', false);
+  await waitFor(win, `!document.querySelector('[data-setting-id="parameter:worktopThickness"]')`, 'search honoring unused filter');
+  await toggle('Show unused options', true);
+  win.webContents.reload();
+  await waitFor(win, `document.querySelectorAll('.settings-visibility input:checked').length === 2`, 'remembered visibility preferences');
+  await toggle('Show unused options', false);
+  await toggle('Show advanced settings', false);
+  return { visibleInitially: before, visibleWithBothFilters: after, preferencesSurviveReload: true, searchRespectsFilters: true };
 }
 
 const scenario = process.argv[4] || 'minimum';
@@ -308,6 +343,7 @@ app.whenReady().then(async () => {
       win = await openApp(1366, 768);
       validation.bounds = await validateBounds(win, 'laptop-1366x768');
       validation.selectedCategory = await verifySelectedCategoryBrowse(win);
+      validation.settings = await verifyUnifiedSettings(win);
       await capture(win, 'laptop-1366x768-selected-category');
     } else if (scenario === 'desktop') {
       win = await openApp(1920, 1080);

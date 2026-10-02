@@ -122,11 +122,17 @@ undoable parameter edit. Design Health is outside the tab switch and remains vis
 beneath either surface. Drawer and Equipment Stand do not gain a synthetic section
 editor; their Layout tab explains the dedicated-generator boundary.
 
-The Properties panel keeps 3D selection separate from browsing state. Explicit Family
-or Native category browsing only changes local navigation/scroll state and never
-clears the selected semantic part or edits cabinet data. A selected-part return action
-restores contextual properties. Search remains scoped to the chosen settings surface,
-while category activation clears search and scrolls the results region to its section.
+The right-side Cabinet Settings panel uses `cad/cabinetSettings.ts` to combine
+canonical parameter controls with family-specific fields. Explicit aliases remove
+duplicate editable controls; richer family enums and dedicated-generator sizing
+retain their own semantics. Existing parameter/family edit paths still own history
+and persistence. Layout counts and arrangements are owned by the Layout workspace;
+recipe-only module/bank inputs remain there for Simple cabinets.
+
+Category browsing changes navigation only. Selection stays available as a collapsed
+read-only part summary. Show unused options and Show advanced settings are separate
+localStorage preferences, defaulting off. Search honors both filters. Unused controls
+are disabled with a dependency explanation; displaying them does not edit the model.
 
 ## Direct editing and hardware
 

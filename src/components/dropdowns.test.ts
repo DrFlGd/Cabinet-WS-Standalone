@@ -55,10 +55,10 @@ describe('desktop dropdown controls', () => {
     expect(schemaSource).not.toContain("key: 'layoutMode'");
 
     expect(propertiesSource).toContain('aria-label="Search properties"');
-    expect(propertiesSource).toContain("field.section !== 'Layout'");
+    expect(propertiesSource).toContain('cabinetSettings');
     expect(propertiesSource).not.toContain("import HardwarePicker");
     expect(propertiesSource).toContain('partSettingsContext');
-    expect(propertiesSource).toContain('Edit this section');
+    expect(propertiesSource).toContain('Open Layout editor');
   });
 
   it('keeps exact CAD worker, STEP export, and semantic topology wired into the desktop shell', () => {
