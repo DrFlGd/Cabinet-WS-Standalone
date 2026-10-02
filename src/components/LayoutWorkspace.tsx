@@ -95,7 +95,7 @@ export default function LayoutWorkspace({
               <Columns3 size={18} />
               <div>
                 <strong>No shared Manual Layout for {familyLabel}</strong>
-                <p>This family uses its dedicated generator. Edit construction in Family settings or selected-part properties, or use Fit Solver from the neighboring tab.</p>
+                <p>This family uses its dedicated generator. Edit construction in Cabinet Settings, or use Fit Solver from the neighboring tab.</p>
               </div>
             </section>
           )}

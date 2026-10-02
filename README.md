@@ -14,8 +14,12 @@ See [FAMILY_PARITY.md](FAMILY_PARITY.md) for the capability matrix and prioritiz
 - Seven cabinet families: Shop Cart, Utility, Benchtop Drawers, Stackable, Kitchen,
   Standalone Drawer, and Equipment Stand.
 - All 110 shipped example recipes and 1,678 family field definitions.
-- Family settings with dependencies, search, advanced controls, dimensions, arrays,
-  and computed values; contextual Native model controls remain available.
+- One categorized Cabinet Settings panel combines shared and family-specific controls.
+  Remembered Show unused options and Show advanced settings toggles default off;
+  search respects both. Unused controls show their dependency and remain disabled.
+- Door/drawer counts and arrangements live in Layout; global construction settings
+  remain on the right. Family-specific layout inputs are available within Layout
+  for Simple cabinets. Selecting a part leaves the settings browser available.
 - Central Manual Layout editor with sections/bays, shelf/divider editing, and
   independent Hardware and Parts drawers. Drawer and Equipment Stand use dedicated
   generators rather than the shared section editor.

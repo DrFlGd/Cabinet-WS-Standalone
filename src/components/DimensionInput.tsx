@@ -3,13 +3,15 @@ import { formatDimension, toMillimeters, unitLabel, type DisplayUnits } from '..
 
 type Props = {
   value: number;
+  ariaLabel?: string;
+  disabled?: boolean;
   units: DisplayUnits;
   step?: number;
   min?: number;
   onChange: (millimeters: number) => void;
 };
 
-export default function DimensionInput({ value, units, step, min, onChange }: Props) {
+export default function DimensionInput({ value, units, step, min, onChange, ariaLabel, disabled }: Props) {
   const focused = useRef(false);
   const [draft, setDraft] = useState(() => formatDimension(value, units));
 
@@ -21,6 +23,8 @@ export default function DimensionInput({ value, units, step, min, onChange }: Pr
     <div className="number-input">
       <input
         type="number"
+        aria-label={ariaLabel}
+        disabled={disabled}
         value={draft}
         min={min}
         step={step ?? (units === 'in' ? 0.01 : 1)}

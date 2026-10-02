@@ -51,6 +51,7 @@ import TreePanel from './components/TreePanel';
 import MeasurementPanel from './components/MeasurementPanel';
 import DesignHealthPanel from './components/DesignHealthPanel';
 import FitSolverPanel from './components/FitSolverPanel';
+import FamilyLayoutOptions from './components/FamilyLayoutOptions';
 import LayoutWorkspace, { type LayoutWorkspaceTab } from './components/LayoutWorkspace';
 import ShopDocsPanel from './components/ShopDocsPanel';
 import AboutDialog from './components/AboutDialog';
@@ -1077,6 +1078,7 @@ export default function App() {
             familyLabel={familyDefinition(editor.family).name}
             onTabChange={setLayoutWorkspaceTab}
             layout={(
+              <div className="layout-editor-stack">
               <SectionLayoutPanel
                 parameters={editor.parameters}
                 thickness={stockThickness(editor.parameters.carcassStock, editor.parameters.materialThickness)}
@@ -1086,6 +1088,8 @@ export default function App() {
                 onSelectedSectionChange={setSectionSelectedId}
                 onChange={updateSections}
               />
+              {editor.parameters.layoutMode === 'legacy' && <FamilyLayoutOptions family={editor.family} values={editor.familyValues} units={editor.displayUnits} onChange={updateFamilyValue} />}
+              </div>
             )}
             solver={(
               <FitSolverPanel

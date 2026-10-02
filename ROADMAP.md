@@ -14,6 +14,14 @@ implementation details belong in [CHANGELOG.md](CHANGELOG.md) and
 - Keep Manual Layout central and avoid duplicate section editors.
 - Record each notable change in the changelog.
 
+## Settings consolidation
+
+- [x] One categorized Cabinet Settings panel with shared controls deduplicated.
+- [x] Layout owns door/drawer counts and arrangements; construction stays in Settings.
+- [x] Remembered unused/advanced visibility filters, respected by search.
+- [x] Stable checkbox labels and settings browsing independent of part selection.
+
+
 ## Completed baseline
 
 | Area | Current implementation | Qualification |

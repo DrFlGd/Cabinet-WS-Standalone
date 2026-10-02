@@ -1,28 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Columns3, Search, SlidersHorizontal, X } from 'lucide-react';
-import { PARAMETER_SECTIONS, UTILITY_PARAMETER_SCHEMA, type ParameterDefinition } from '../cad/parameterSchema';
-import {
-  FAMILY_SETTINGS_SECTION_ORDER,
-  familyFieldDefinitions,
-  familySectionRoot,
-} from '../cad/familySettings';
+import type { ParameterDefinition } from '../cad/parameterSchema';
+import { cabinetSettings, filterCabinetSettings, readSettingsVisibility, SETTINGS_CATEGORIES, SETTINGS_VISIBILITY_KEY, supportsLayoutEditor } from '../cad/cabinetSettings';
+import { familyFieldValue } from '../cad/familySettings';
 import { partSettingsContext } from '../cad/partContext';
 import { formatDimension, unitLabel, type DisplayUnits } from '../cad/units';
 import type { CabinetFamily, CabinetParameters, CadPart, FamilyRecipeValues, JsonValue } from '../cad/types';
 import type { KernelDiagnostic } from '../cad/kernel/types';
 import DimensionInput from './DimensionInput';
 import SelectControl from './SelectControl';
-import FamilySettingsPanel from './FamilySettingsPanel';
-
+import FamilyFieldControl from './FamilyFieldControl';
 type ParameterValue = CabinetParameters[keyof CabinetParameters];
-export type SettingsSurface = 'selection' | 'family' | 'model';
-
-export type SettingsBrowseState = {
-  surface: SettingsSurface;
-  explicitBrowse: boolean;
-  activeCategory: string | null;
-};
-
 type Props = {
   parameters: CabinetParameters;
   family: CabinetFamily;
@@ -36,312 +24,69 @@ type Props = {
   onOpenSection: (sectionNodeId: number) => void;
 };
 
-export default function PropertiesPanel({
-  parameters,
-  family,
-  familyValues,
-  familyLabel = 'Utility Cabinet',
-  selected,
-  displayUnits,
-  onChange,
-  onFamilyValueChange,
-  kernelDiagnostics,
-  onOpenSection,
-}: Props) {
+export default function PropertiesPanel({ parameters, family, familyValues, familyLabel = 'Utility Cabinet', selected,
+  displayUnits, onChange, onFamilyValueChange, kernelDiagnostics, onOpenSection }: Props) {
   const [query, setQuery] = useState('');
-  const [browse, setBrowse] = useState<SettingsBrowseState>(() => ({
-    surface: selected ? 'selection' : 'family',
-    explicitBrowse: false,
-    activeCategory: null,
-  }));
-  const previousSelection = useRef(selected?.id ?? null);
-  const context = selected ? partSettingsContext(selected, parameters) : null;
-  const normalizedQuery = query.trim().toLowerCase();
-
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [visibility, setVisibility] = useState(() => {
+    try { return readSettingsVisibility(window.localStorage); } catch { return readSettingsVisibility(); }
+  });
   useEffect(() => {
-    const nextSelection = selected?.id ?? null;
-    if (previousSelection.current === nextSelection) return;
-    previousSelection.current = nextSelection;
-    setBrowse(current => settingsBrowseAfterSelection(current, Boolean(selected)));
-  }, [selected]);
-
-  const applicableFields = useMemo(
-    () => UTILITY_PARAMETER_SCHEMA.filter(
-      field => field.section !== 'Layout' && (!field.visibleWhen || field.visibleWhen(parameters)),
-    ),
-    [parameters],
-  );
-
-  const searchResults = useMemo(() => {
-    if (!normalizedQuery) return [];
-    return applicableFields.filter(field => {
-      const optionText = field.kind === 'select'
-        ? field.options.map(option => option.label).join(' ')
-        : '';
-      const haystack = [
-        field.label,
-        field.description,
-        field.section,
-        String(field.key),
-        String(parameters[field.key]),
-        optionText,
-      ].join(' ').toLowerCase();
-      return haystack.includes(normalizedQuery);
-    });
-  }, [applicableFields, normalizedQuery, parameters]);
-
-  const familyCategories = useMemo<string[]>(() => {
-    const fields = familyFieldDefinitions(family);
-    return FAMILY_SETTINGS_SECTION_ORDER.filter(root =>
-      fields.some(field => familySectionRoot(field) === root),
-    );
-  }, [family]);
-
-  const modelCategories = useMemo<string[]>(
-    () => PARAMETER_SECTIONS.filter(
-      section => section !== 'Layout' && applicableFields.some(field => field.section === section),
-    ),
-    [applicableFields],
-  );
-
-  const contextualFields = context
-    ? context.fields.filter(field => field.section !== 'Layout')
-    : [];
-
-  const activeCategories = browse.surface === 'family'
-    ? familyCategories
-    : browse.surface === 'model'
-      ? modelCategories
-      : [];
-  const activeCategory = activeCategories.includes(browse.activeCategory ?? '')
-    ? browse.activeCategory
-    : activeCategories[0] ?? null;
-
-  const panelContextLabel = browse.surface === 'selection' && selected
-    ? selected.name
-    : browse.surface === 'family'
-      ? familyLabel + ' family settings'
-      : 'Native model settings';
-
-  function selectSurface(surface: 'family' | 'model') {
-    const categories = surface === 'family' ? familyCategories : modelCategories;
-    const category = categories.includes(browse.activeCategory ?? '')
-      ? browse.activeCategory
-      : categories[0] ?? null;
-    const next = settingsBrowseForCategory(
-      browse,
-      surface,
-      category,
-      Boolean(selected),
-    );
-    setBrowse(next);
-    if (category) scrollToCategory(surface, category);
-  }
-
+    try { window.localStorage.setItem(SETTINGS_VISIBILITY_KEY, JSON.stringify(visibility)); } catch { /* Storage may be unavailable. */ }
+  }, [visibility]);
+  const rows = useMemo(() => cabinetSettings(family, familyValues, parameters), [family, familyValues, parameters]);
+  const visible = filterCabinetSettings(rows, query, visibility);
+  const categories = SETTINGS_CATEGORIES.filter(category => visible.some(row => row.category === category));
+  const context = selected ? partSettingsContext(selected, parameters) : null;
+  const hiddenMatches = query.trim() ? filterCabinetSettings(rows, query, { showAdvanced: true, showUnused: true }).length - visible.length : 0;
   function selectCategory(category: string) {
-    if (browse.surface !== 'family' && browse.surface !== 'model') return;
-    setQuery('');
-    setBrowse(current => settingsBrowseForCategory(current, browse.surface as 'family' | 'model', category, Boolean(selected)));
-    scrollToCategory(browse.surface, category);
+    setQuery(''); setActiveCategory(category);
+    requestAnimationFrame(() => document.getElementById(settingsCategoryTargetId(category))?.scrollIntoView({ block: 'start', behavior: 'smooth' }));
   }
-
-  function showSelectedPart() {
-    if (!selected) return;
-    setQuery('');
-    setBrowse(current => ({
-      ...current,
-      surface: 'selection',
-      explicitBrowse: false,
-    }));
-  }
-
-  function scrollToCategory(surface: 'family' | 'model', category: string) {
-    requestAnimationFrame(() => {
-      document.getElementById(settingsCategoryTargetId(surface, category))?.scrollIntoView({
-        block: 'start',
-        behavior: 'smooth',
-      });
-    });
-  }
-
-  return (
-    <aside className="panel properties-panel">
-      <div className="properties-navigation">
-        <div className="panel-heading">
-          <SlidersHorizontal size={17} />
-          <div><strong>Properties</strong><span>{panelContextLabel}</span></div>
-        </div>
-
-        <label className="property-search">
-          <Search size={13} />
-          <input
-            value={query}
-            onChange={event => setQuery(event.target.value)}
-            placeholder="Search properties…"
-            aria-label="Search properties"
-          />
-          {query && (
-            <button
-              type="button"
-              className="property-search-clear"
-              onClick={() => setQuery('')}
-              aria-label="Clear property search"
-              title="Clear search"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </label>
-
-        <div className="property-mode-tabs" role="group" aria-label="Property surface">
-          <button
-            type="button"
-            aria-pressed={browse.surface === 'family'}
-            className={browse.surface === 'family' ? 'active' : ''}
-            onClick={() => selectSurface('family')}
-          >
-            Family settings
-          </button>
-          <button
-            type="button"
-            aria-pressed={browse.surface === 'model'}
-            className={browse.surface === 'model' ? 'active' : ''}
-            onClick={() => selectSurface('model')}
-          >
-            Native model
-          </button>
-        </div>
-
-        {selected && browse.surface !== 'selection' && (
-          <button type="button" className="selected-context-return" onClick={showSelectedPart}>
-            Return to selected part · {selected.name}
-          </button>
-        )}
-
-        {normalizedQuery && browse.surface !== 'selection' && (
-          <div className="settings-search-scope">
-            Searching all {browse.surface === 'family' ? 'family' : 'native model'} settings. Choosing a category clears the search and jumps to that section.
-          </div>
-        )}
+  return <aside className="panel properties-panel">
+    <div className="properties-navigation">
+      <div className="panel-heading"><SlidersHorizontal size={17} /><div><strong>Cabinet Settings</strong><span>{familyLabel}</span></div></div>
+      <label className="property-search"><Search size={13} />
+        <input value={query} onChange={event => setQuery(event.target.value)} placeholder="Search settings…" aria-label="Search properties" />
+        {query && <button type="button" className="property-search-clear" onClick={() => setQuery('')} aria-label="Clear property search"><X size={12} /></button>}
+      </label>
+      <div className="settings-visibility">
+        <label><input type="checkbox" checked={visibility.showUnused} onChange={event => setVisibility(current => ({ ...current, showUnused: event.target.checked }))} />Show unused options</label>
+        <label><input type="checkbox" checked={visibility.showAdvanced} onChange={event => setVisibility(current => ({ ...current, showAdvanced: event.target.checked }))} />Show advanced settings</label>
       </div>
-
-      <div className={`properties-content-shell ${browse.surface === 'selection' ? 'selection-surface' : 'settings-surface'}`}>
-        {browse.surface !== 'selection' && (
-          <SettingsCategoryNav
-            surface={browse.surface}
-            categories={activeCategories}
-            activeCategory={activeCategory}
-            searching={Boolean(normalizedQuery)}
-            onSelect={selectCategory}
-          />
-        )}
-
-        {browse.surface === 'family' ? (
-          <div className="properties-scroll family-properties-scroll">
-            <KernelDiagnostics diagnostics={kernelDiagnostics} />
-            <FamilySettingsPanel
-              family={family}
-              familyValues={familyValues}
-              displayUnits={displayUnits}
-              query={query}
-              activeCategory={activeCategory}
-              onChange={onFamilyValueChange}
-              onOpenManualLayout={() => onOpenSection(0)}
-            />
-          </div>
-        ) : normalizedQuery ? (
-          <div className="properties-scroll">
-            <KernelDiagnostics diagnostics={kernelDiagnostics} />
-            <section className="property-section property-search-results">
-              <div className="property-search-results-heading">
-                <h3>Search results</h3>
-                <span>{searchResults.length}</span>
-              </div>
-              {searchResults.length ? (
-                <GroupedParameterFields
-                  fields={searchResults}
-                  parameters={parameters}
-                  displayUnits={displayUnits}
-                  onChange={onChange}
-                />
-              ) : (
-                <p className="property-search-empty">No applicable properties match “{query.trim()}”.</p>
-              )}
-            </section>
-          </div>
-        ) : browse.surface === 'selection' && selected && context ? (
-          <div className="properties-scroll">
-            <KernelDiagnostics diagnostics={kernelDiagnostics} />
-            <div className="part-context-toolbar">
-              <button type="button" onClick={() => selectSurface('model')}>Browse native settings</button>
-            </div>
-
-            {context.sectionNodeId !== null && (
-              <section className="part-section-link">
-                <div>
-                  <span className="eyebrow">SECTION SOURCE</span>
-                  <strong>Section {context.sectionNodeId + 1}</strong>
-                  <p>Count, contents, sizing, and divider placement live in the Manual Layout Editor.</p>
-                </div>
-                <button type="button" onClick={() => onOpenSection(context.sectionNodeId!)}>
-                  <Columns3 size={13} /> Edit this section
-                </button>
-              </section>
-            )}
-
-            <section className="property-section contextual-settings">
-              <h3>{context.title}</h3>
-              <p className="context-description">{context.description}</p>
-              <GroupedParameterFields
-                fields={contextualFields}
-                parameters={parameters}
-                displayUnits={displayUnits}
-                onChange={onChange}
-              />
-            </section>
-
-            <PartProperties part={selected} displayUnits={displayUnits} />
-          </div>
-        ) : (
-          <div className="properties-scroll">
-            <KernelDiagnostics diagnostics={kernelDiagnostics} />
-            {PARAMETER_SECTIONS
-              .filter(section => section !== 'Layout')
-              .map(section => {
-                const fields = applicableFields.filter(field => field.section === section);
-                if (!fields.length) return null;
-
-                return (
-                  <section
-                    className="property-section"
-                    id={settingsCategoryTargetId('model', section)}
-                    key={section}
-                  >
-                    <h3>{section}</h3>
-                    <ParameterFields
-                      fields={fields}
-                      parameters={parameters}
-                      displayUnits={displayUnits}
-                      onChange={onChange}
-                    />
-                  </section>
-                );
-              })}
-          </div>
-        )}
+      {query.trim() && <p className="settings-search-scope"><span className="settings-search-count">{visible.length} matching settings.</span> {hiddenMatches > 0 && `${hiddenMatches} hidden by visibility filters.`}</p>}
+    </div>
+    <div className="properties-content-shell settings-surface">
+      <SettingsCategoryNav categories={categories} activeCategory={categories.includes(activeCategory ?? '') ? activeCategory : categories[0] ?? null} searching={Boolean(query.trim())} onSelect={selectCategory} />
+      <div className="properties-scroll">
+        <KernelDiagnostics diagnostics={kernelDiagnostics} />
+        {supportsLayoutEditor(family) && !query.trim() && <section className="part-section-link">
+          <p>Set door/drawer counts, bays, and arrangements in the Layout editor.</p>
+          <button type="button" onClick={() => onOpenSection(context?.sectionNodeId ?? 0)}><Columns3 size={13} />Open Layout editor</button>
+        </section>}
+        {selected && !query.trim() && <details className="selected-part-details"><summary>Selected part · {selected.name}</summary><PartProperties part={selected} displayUnits={displayUnits} /></details>}
+        {!visible.length && <p className="property-search-empty">No settings match the current filters.</p>}
+        {categories.map(category => <section className="property-section" id={settingsCategoryTargetId(category)} key={category}>
+          <h3>{category}</h3>
+          {visible.filter(row => row.category === category).map(row => <div key={row.id} data-setting-id={row.id}>
+            {row.source === 'family' ? <FamilyFieldControl field={row.field} value={familyFieldValue(familyValues, row.field)} inactiveReason={row.inactiveReason}
+              displayUnits={displayUnits} onChange={value => onFamilyValueChange(row.field.key, value)} onOpenManualLayout={() => onOpenSection(0)} /> : <>
+              <ParameterFields fields={[{ ...row.field, label: row.label }]} parameters={parameters} displayUnits={displayUnits} onChange={onChange} disabled={Boolean(row.inactiveReason)} />
+              {row.inactiveReason && <small className="family-field-inactive-reason">{row.inactiveReason}</small>}
+            </>}
+          </div>)}
+        </section>)}
       </div>
-    </aside>
-  );
+    </div>
+  </aside>;
 }
 
 function SettingsCategoryNav({
-  surface,
   categories,
   activeCategory,
   searching,
   onSelect,
 }: {
-  surface: 'family' | 'model';
   categories: string[];
   activeCategory: string | null;
   searching: boolean;
@@ -350,7 +95,7 @@ function SettingsCategoryNav({
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
 
   return (
-    <nav className={`settings-category-nav ${searching ? 'searching' : ''}`} aria-label={surface === 'family' ? 'Family setting categories' : 'Native model categories'}>
+    <nav className={`settings-category-nav ${searching ? 'searching' : ''}`} aria-label="Cabinet setting categories">
       {categories.map((category, index) => (
         <button
           ref={element => { buttons.current[index] = element; }}
@@ -375,33 +120,6 @@ function SettingsCategoryNav({
   );
 }
 
-export function settingsBrowseAfterSelection(
-  current: SettingsBrowseState,
-  hasSelection: boolean,
-): SettingsBrowseState {
-  if (hasSelection && !current.explicitBrowse) {
-    return { ...current, surface: 'selection' };
-  }
-  if (!hasSelection && current.surface === 'selection') {
-    return { ...current, surface: 'family', explicitBrowse: false };
-  }
-  return current;
-}
-
-export function settingsBrowseForCategory(
-  current: SettingsBrowseState,
-  surface: 'family' | 'model',
-  category: string | null,
-  hasSelection: boolean,
-): SettingsBrowseState {
-  return {
-    ...current,
-    surface,
-    explicitBrowse: hasSelection,
-    activeCategory: category,
-  };
-}
-
 export function nextSettingsCategoryIndex(
   current: number,
   key: string,
@@ -415,9 +133,9 @@ export function nextSettingsCategoryIndex(
   return current;
 }
 
-export function settingsCategoryTargetId(surface: 'family' | 'model', category: string) {
+export function settingsCategoryTargetId(category: string) {
   const slug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  return `settings-${surface}-${slug || 'category'}`;
+  return `settings-cabinet-${slug || 'category'}`;
 }
 
 function KernelDiagnostics({ diagnostics }: { diagnostics: KernelDiagnostic[] }) {
@@ -442,62 +160,32 @@ function KernelDiagnostics({ diagnostics }: { diagnostics: KernelDiagnostic[] })
   );
 }
 
-function GroupedParameterFields({
-  fields,
-  parameters,
-  displayUnits,
-  onChange,
-}: {
-  fields: ParameterDefinition[];
-  parameters: CabinetParameters;
-  displayUnits: DisplayUnits;
-  onChange: Props['onChange'];
-}) {
-  const sections = [...new Set(fields.map(field => field.section))];
-
-  if (!fields.length) {
-    return <p className="muted">This part is driven by layout geometry or fixed semantic construction rather than a dedicated right-side property.</p>;
-  }
-
-  return (
-    <div className="context-groups">
-      {sections.map(section => (
-        <div className="context-group" key={section}>
-          <h4>{section}</h4>
-          <ParameterFields
-            fields={fields.filter(field => field.section === section)}
-            parameters={parameters}
-            displayUnits={displayUnits}
-            onChange={onChange}
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-
 function ParameterFields({
   fields,
   parameters,
   displayUnits,
   onChange,
+  disabled = false,
 }: {
   fields: ParameterDefinition[];
   parameters: CabinetParameters;
   displayUnits: DisplayUnits;
   onChange: Props['onChange'];
+  disabled?: boolean;
 }) {
   return (
     <>
       {fields.map(field => (
         <div className="parameter-control" key={field.key} title={field.description}>
-          <div className="parameter-label">
+          {field.kind !== 'boolean' && <div className="parameter-label">
             <span>{field.label}</span>
             {field.advanced && <small>ADV</small>}
-          </div>
+          </div>}
 
           {field.kind === 'dimension' && (
             <DimensionInput
+              ariaLabel={field.label}
+              disabled={disabled}
               value={parameters[field.key] as number}
               units={displayUnits}
               step={field.step}
@@ -510,6 +198,8 @@ function ParameterFields({
             <div className="number-input count-input">
               <input
                 type="number"
+                aria-label={field.label}
+                disabled={disabled}
                 value={parameters[field.key] as number}
                 min={field.min}
                 max={field.max}
@@ -526,6 +216,8 @@ function ParameterFields({
             <div className="number-input count-input">
               <input
                 type="number"
+                aria-label={field.label}
+                disabled={disabled}
                 value={parameters[field.key] as number}
                 min={field.min}
                 max={field.max}
@@ -541,6 +233,7 @@ function ParameterFields({
           {field.kind === 'select' && (
             <SelectControl
               className="parameter-select"
+              disabled={disabled}
               ariaLabel={field.label}
               value={String(parameters[field.key])}
               options={field.options.map(option => ({
@@ -555,10 +248,11 @@ function ParameterFields({
             <label className="toggle-control">
               <input
                 type="checkbox"
+                disabled={disabled}
                 checked={Boolean(parameters[field.key])}
                 onChange={event => onChange(field.key, event.target.checked)}
               />
-              <span>{parameters[field.key] ? 'On' : 'Off'}</span>
+              <span>{field.label}</span>
             </label>
           )}
         </div>

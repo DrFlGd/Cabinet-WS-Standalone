@@ -3183,3 +3183,21 @@ button { color: inherit; }
   .production-summary-grid { grid-template-columns: repeat(2,1fr); }
   .production-sheet-review { grid-template-columns: 1fr; min-height: 0; }
 }
+
+/* One settings browser, with persistent visibility controls. */
+.settings-visibility { display: grid; gap: 6px; padding: 0 12px 10px; font-size: 12px; }
+.settings-visibility label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.settings-visibility input { accent-color: var(--accent); }
+.selected-part-details { margin: 8px 0 12px; font-size: 12px; }
+.selected-part-details summary { cursor: pointer; overflow-wrap: anywhere; }
+.properties-panel .settings-category-nav button { font-size: 11px; }
+.properties-panel .toggle-control { justify-content: flex-start; gap: 8px; font-size: 12px; }
+.properties-panel .family-field-description, .properties-panel .family-field-inactive-reason { font-size: 11px; line-height: 1.45; }
+.properties-panel [data-setting-id] { min-width: 0; margin-bottom: 10px; }
+.recipe-layout-options { padding: 12px; border-top: 1px solid var(--line); font-size: 12px; }
+.recipe-layout-options summary { cursor: pointer; font-weight: 600; }
+.recipe-layout-options > p { color: var(--muted); line-height: 1.5; }
+
+.layout-editor-stack { display: flex; flex-direction: column; height: 100%; min-height: 0; overflow: hidden; }
+.layout-editor-stack > .section-layout-panel { flex: 1; min-height: 0; }
+.layout-editor-stack > .recipe-layout-options { flex: 0 0 auto; max-height: 45%; overflow: auto; }
